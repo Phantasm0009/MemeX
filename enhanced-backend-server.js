@@ -445,8 +445,8 @@ app.get('/api/market', (req, res) => {
 // Stocks endpoint with metadata
 app.get('/api/stocks', (req, res) => {
   try {
-    const marketPath = join(__dirname, 'market.json');
-    const metaPath = join(__dirname, 'meta.json');
+    const marketPath = path.join(__dirname, 'market.json');
+    const metaPath = path.join(__dirname, 'meta.json');
     
     let stocks = stockDatabase;
     let meta = {};
