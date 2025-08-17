@@ -312,6 +312,117 @@ app.get('/api/dashboard/quests', (req, res) => {
   }
 });
 
+// Enhanced Backend API Proxy Routes
+const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:3001';
+
+// Proxy route for enhanced backend market data
+app.get('/api/market', async (req, res) => {
+  try {
+    const response = await fetch(`${BACKEND_URL}/api/market`);
+    if (!response.ok) {
+      throw new Error(`Backend responded with ${response.status}`);
+    }
+    const data = await response.json();
+    res.json(data);
+  } catch (error) {
+    console.error('Error proxying market data:', error);
+    res.status(500).json({ error: 'Failed to fetch market data from backend' });
+  }
+});
+
+// Proxy route for enhanced backend stocks data
+app.get('/api/stocks', async (req, res) => {
+  try {
+    const response = await fetch(`${BACKEND_URL}/api/stocks`);
+    if (!response.ok) {
+      throw new Error(`Backend responded with ${response.status}`);
+    }
+    const data = await response.json();
+    res.json(data);
+  } catch (error) {
+    console.error('Error proxying stocks data:', error);
+    res.status(500).json({ error: 'Failed to fetch stocks data from backend' });
+  }
+});
+
+// Proxy route for individual stock data
+app.get('/api/stock/:symbol', async (req, res) => {
+  try {
+    const { symbol } = req.params;
+    const response = await fetch(`${BACKEND_URL}/api/stock/${symbol}`);
+    if (!response.ok) {
+      throw new Error(`Backend responded with ${response.status}`);
+    }
+    const data = await response.json();
+    res.json(data);
+  } catch (error) {
+    console.error('Error proxying stock data:', error);
+    res.status(500).json({ error: 'Failed to fetch stock data from backend' });
+  }
+});
+
+// Proxy route for global events
+app.get('/api/global-events', async (req, res) => {
+  try {
+    const response = await fetch(`${BACKEND_URL}/api/global-events`);
+    if (!response.ok) {
+      throw new Error(`Backend responded with ${response.status}`);
+    }
+    const data = await response.json();
+    res.json(data);
+  } catch (error) {
+    console.error('Error proxying global events:', error);
+    res.status(500).json({ error: 'Failed to fetch global events from backend' });
+  }
+});
+
+// Proxy route for TikTok scraping
+app.get('/api/scrape/tiktok/:symbol', async (req, res) => {
+  try {
+    const { symbol } = req.params;
+    const response = await fetch(`${BACKEND_URL}/api/scrape/tiktok/${symbol}`);
+    if (!response.ok) {
+      throw new Error(`Backend responded with ${response.status}`);
+    }
+    const data = await response.json();
+    res.json(data);
+  } catch (error) {
+    console.error('Error proxying TikTok data:', error);
+    res.status(500).json({ error: 'Failed to fetch TikTok data from backend' });
+  }
+});
+
+// Proxy route for trend analysis
+app.get('/api/trends/:symbol', async (req, res) => {
+  try {
+    const { symbol } = req.params;
+    const response = await fetch(`${BACKEND_URL}/api/trends/${symbol}`);
+    if (!response.ok) {
+      throw new Error(`Backend responded with ${response.status}`);
+    }
+    const data = await response.json();
+    res.json(data);
+  } catch (error) {
+    console.error('Error proxying trend data:', error);
+    res.status(500).json({ error: 'Failed to fetch trend data from backend' });
+  }
+});
+
+// Proxy route for backend health check
+app.get('/api/health', async (req, res) => {
+  try {
+    const response = await fetch(`${BACKEND_URL}/api/health`);
+    if (!response.ok) {
+      throw new Error(`Backend responded with ${response.status}`);
+    }
+    const data = await response.json();
+    res.json(data);
+  } catch (error) {
+    console.error('Error proxying health check:', error);
+    res.status(500).json({ error: 'Backend health check failed' });
+  }
+});
+
 // Page routes - Fixed order and redirects
 app.get('/', (req, res) => {
   // Redirect root to dashboard

@@ -272,7 +272,7 @@ class DashboardManager {
 
     // Add global events update function
     updateGlobalEvents() {
-        const container = document.getElementById('global-events-container');
+        const container = document.getElementById('global-events');
         if (!container || !this.globalEvents) return;
         
         let eventsHTML = '';
@@ -308,7 +308,7 @@ class DashboardManager {
         }
         
         if (eventsHTML === '') {
-            eventsHTML = '<div class="text-gray-400 text-sm">No active global events</div>';
+            eventsHTML = '<div class="text-gray-400 text-sm text-center py-4">🌟 No active global events</div>';
         }
         
         container.innerHTML = eventsHTML;
