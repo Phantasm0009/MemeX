@@ -56,11 +56,14 @@ apt install git -y
 
 ### Clone Your Repository
 ```bash
+# Create the web directory first
+sudo mkdir -p /var/www
+
 # Navigate to web directory
 cd /var/www
 
 # Clone your repository
-git clone https://github.com/Phantasm0009/MemeX.git italian-meme-exchange
+sudo git clone https://github.com/Phantasm0009/MemeX.git italian-meme-exchange
 
 # Navigate to project
 cd italian-meme-exchange
