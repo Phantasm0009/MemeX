@@ -1,0 +1,100 @@
+# 🌊 DigitalOcean Docker Deployment
+
+# Optimized Docker Compose for DigitalOcean Droplet
+version: '3.8'
+
+services:
+  # Main application (Discord Bot + Dashboard + Backend)
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: italian-meme-exchange
+    restart: unless-stopped
+    ports:
+      - "80:8080"      # Dashboard/API access
+      - "3001:3001"    # Backend API (internal)
+      - "3002:3002"    # Dashboard (internal)
+    environment:
+      - NODE_ENV=production
+      - PORT=8080
+      - TZ=UTC
+    env_file:
+      - .env
+    volumes:
+      - ./data:/app/data                    # Persistent data storage
+      - ./logs:/app/logs                    # Application logs
+      - /etc/localtime:/etc/localtime:ro   # System timezone
+    networks:
+      - app_network
+    depends_on:
+      - redis
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          memory: 800M
+        reservations:
+          memory: 400M
+
+  # Redis for caching (optional performance boost)
+  redis:
+    image: redis:7-alpine
+    container_name: redis-cache
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - app_network
+    command: redis-server --appendonly yes --maxmemory 128mb --maxmemory-policy allkeys-lru
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Nginx reverse proxy (optional but recommended)
+  nginx:
+    image: nginx:alpine
+    container_name: nginx-proxy
+    restart: unless-stopped
+    ports:
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro             # SSL certificates
+    networks:
+      - app_network
+    depends_on:
+      - app
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+# Persistent volumes
+volumes:
+  redis_data:
+    driver: local
+  app_data:
+    driver: local
+
+# Custom network
+networks:
+  app_network:
+    driver: bridge
+
+# Health checks and monitoring
+x-logging: &default-logging
+  driver: "json-file"
+  options:
+    max-size: "10m"
+    max-file: "3"

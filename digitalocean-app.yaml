@@ -1,0 +1,92 @@
+# 🌊 DigitalOcean App Platform Configuration
+
+# Alternative deployment option using DigitalOcean's managed platform
+# Similar to Heroku/Render but on DigitalOcean infrastructure
+
+spec:
+  name: italian-meme-stock-exchange
+  region: nyc
+  
+  # Main service (Discord Bot + Dashboard + Backend combined)
+  services:
+  - name: main-app
+    source_dir: /
+    github:
+      repo: Phantasm0009/MemeX
+      branch: main
+      deploy_on_push: true
+    
+    # Build configuration
+    build_command: npm ci
+    run_command: npm run fly
+    
+    # Environment variables
+    envs:
+    - key: NODE_ENV
+      value: production
+    - key: PORT
+      value: "8080"
+    - key: DASHBOARD_PORT
+      value: "8080"
+    - key: BOT_TOKEN
+      scope: RUN_TIME
+      type: SECRET
+    - key: CLIENT_ID
+      scope: RUN_TIME
+      type: SECRET
+    - key: SUPABASE_URL
+      scope: RUN_TIME
+      type: SECRET
+    - key: SUPABASE_ANON_KEY
+      scope: RUN_TIME
+      type: SECRET
+    - key: TWITTER_BEARER_TOKEN
+      scope: RUN_TIME
+      type: SECRET
+    - key: YOUTUBE_API_KEY
+      scope: RUN_TIME
+      type: SECRET
+    
+    # HTTP configuration
+    http_port: 8080
+    instance_count: 1
+    instance_size_slug: basic-xxs  # $5/month
+    
+    # Health check
+    health_check:
+      http_path: /health
+      initial_delay_seconds: 60
+      period_seconds: 10
+      timeout_seconds: 5
+      success_threshold: 1
+      failure_threshold: 3
+    
+    # Resource limits
+    cpu_kind: shared
+    
+  # Static files (optional optimization)
+  static_sites:
+  - name: dashboard-assets
+    source_dir: /dashboard/public
+    github:
+      repo: Phantasm0009/MemeX
+      branch: main
+      deploy_on_push: true
+    build_command: echo "Static assets"
+    output_dir: /
+    index_document: index.html
+    error_document: index.html
+    
+# Database (optional managed PostgreSQL)
+databases:
+- name: meme-exchange-db
+  engine: PG
+  version: "14"
+  size: db-s-1vcpu-1gb  # $15/month (optional)
+  num_nodes: 1
+  
+# Domain configuration (optional)
+domains:
+- domain: your-domain.com
+  type: PRIMARY
+  zone: your-domain.com

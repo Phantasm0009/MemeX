@@ -9,6 +9,7 @@
     "backend": "node backend/server.js",
     "dashboard": "node dashboard/server.js",
     "main": "node main-service.js",
+    "fly": "node fly-service.js",
     "dev": "concurrently \"npm run backend\" \"npm run dashboard\" \"npm start\"",
     "production": "concurrently \"npm run backend\" \"npm run dashboard\" \"npm start\"",
     "setup": "node setup.js",
