@@ -1,0 +1,30 @@
+{
+  "name": "italian-meme-discord-bot",
+  "version": "1.0.0",
+  "description": "🇮🇹 Discord Bot for Italian Meme Stock Exchange",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node index.js",
+    "deploy-commands": "node deploy-commands.js"
+  },
+  "dependencies": {
+    "discord.js": "^14.14.1",
+    "dotenv": "^16.3.1",
+    "@supabase/supabase-js": "^2.38.4",
+    "node-cron": "^3.0.3",
+    "axios": "^1.6.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "railway": {
+    "build": {
+      "command": "npm ci"
+    },
+    "start": {
+      "command": "npm start"
+    }
+  }
+}

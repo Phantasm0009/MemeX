@@ -1,0 +1,47 @@
+# 🔧 Backend Service - API + TikTok Scraper
+services:
+  - type: web
+    name: italian-meme-backend
+    env: node
+    region: ohio
+    plan: free
+    buildCommand: npm ci
+    startCommand: npm run backend
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: BACKEND_PORT
+        value: 10000
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_ANON_KEY
+        sync: false
+      - key: TWITTER_BEARER_TOKEN
+        sync: false
+      - key: YOUTUBE_API_KEY
+        sync: false
+      - key: REDDIT_CLIENT_ID
+        sync: false
+      - key: REDDIT_CLIENT_SECRET
+        sync: false
+      - key: REDDIT_REFRESH_TOKEN
+        sync: false
+    domains:
+      - italian-meme-backend.onrender.com
+    
+    # Auto-deploy settings
+    autoDeploy: true
+    branch: main
+    
+    # Resource settings
+    disk:
+      name: backend-disk
+      sizeGB: 1
+      mountPath: /opt/render/project/src/data
+    
+    # Health check settings
+    startCommand: npm run backend
+    healthCheckPath: /health

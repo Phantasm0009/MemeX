@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quests - Italian Meme Stock Exchange</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/css/dashboard.css">
+</head>
+<body class="bg-gradient-to-br from-slate-900 via-slate-800 to-indigo-900 text-white min-h-screen">
+    
+    <!-- Navigation -->
+    <nav class="bg-slate-800/90 backdrop-blur-sm border-b border-slate-700 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-6 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-4">
+                    <div class="text-2xl font-bold bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent">
+                        🇮🇹 Italian Meme Stock Exchange
+                    </div>
+                </div>
+                <div class="flex items-center space-x-6">
+                    <a href="/dashboard" class="nav-btn">
+                        <i class="fas fa-chart-line"></i>
+                        Dashboard
+                    </a>
+                    <a href="/leaderboard" class="nav-btn">
+                        <i class="fas fa-trophy"></i>
+                        Leaderboard
+                    </a>
+                    <a href="/events" class="nav-btn">
+                        <i class="fas fa-bolt"></i>
+                        Events
+                    </a>
+                    <a href="/analytics" class="nav-btn">
+                        <i class="fas fa-chart-bar"></i>
+                        Analytics
+                    </a>
+                    <a href="/quests" class="nav-btn active">
+                        <i class="fas fa-tasks"></i>
+                        Quests
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="max-w-6xl mx-auto px-6 py-8">
+        
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <h1 class="text-4xl font-bold mb-4">🎯 Daily Quest System</h1>
+            <p class="text-xl text-slate-300">Today's global quests, rewards, and commands</p>
+            <div id="questDate" class="text-sm text-slate-400 mt-2"></div>
+        </div>
+
+        <!-- Reward Statistics -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <div class="pro-card">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-bold">💰 Coins Distributed</h3>
+                    <div class="status-indicator status-online"></div>
+                </div>
+                <div id="totalRewards" class="text-center py-4 text-slate-400">Loading...</div>
+            </div>
+
+            <div class="pro-card">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-bold">� Active Users</h3>
+                    <div class="status-indicator status-online"></div>
+                </div>
+                <div id="totalUsers" class="text-center py-4 text-slate-400">Loading...</div>
+            </div>
+        </div>
+
+        <!-- Today's Global Quests -->
+        <div class="pro-card mb-8">
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="text-2xl font-bold">📋 Today's Global Quests</h3>
+                <button onclick="refreshData()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors">
+                    <i class="fas fa-sync-alt mr-2"></i>Refresh
+                </button>
+            </div>
+            <div class="text-sm text-slate-400 mb-6">These are today's 3 quests for everyone (reset daily at midnight UTC)</div>
+            
+            <div id="globalQuests" class="text-center py-8 text-slate-400">Loading today's quests...</div>
+        </div>
+
+        <!-- Discord Commands -->
+        <div class="pro-card">
+            <h3 class="text-2xl font-bold mb-6">🎮 Discord Commands</h3>
+            <div id="discordCommands" class="text-center py-4 text-slate-400">Loading commands...</div>
+        </div>
+    </main>
+
+    <script>
+        let questData = null;
+
+        async function loadQuestData() {
+            try {
+                const response = await fetch('/api/dashboard/quests');
+                if (!response.ok) throw new Error('Failed to fetch quest data');
+                questData = await response.json();
+                updateQuestDisplay();
+            } catch (error) {
+                console.error('Failed to load quest data:', error);
+                showError('Failed to load quest data');
+            }
+        }
+
+        function updateQuestDisplay() {
+            if (!questData) return;
+
+            // Update date
+            const today = new Date(questData.date);
+            document.getElementById('questDate').innerHTML = `📅 ${today.toLocaleDateString('en-US', { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            })}`;
+
+            // Total Rewards Distributed
+            document.getElementById('totalRewards').innerHTML = `
+                <div class="text-3xl font-bold text-yellow-400 mb-2">${questData.totalRewardsDistributed.toLocaleString()}</div>
+                <div class="text-sm text-slate-400">Pasta Coins earned from quests</div>
+            `;
+
+            // Total Users
+            document.getElementById('totalUsers').innerHTML = `
+                <div class="text-3xl font-bold text-blue-400 mb-2">${questData.totalUsers.toLocaleString()}</div>
+                <div class="text-sm text-slate-400">Registered traders</div>
+            `;
+
+            // Global Quests
+            let questsHTML = '<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">';
+            questData.globalQuests.forEach((quest, index) => {
+                questsHTML += `
+                    <div class="bg-slate-700/50 p-4 rounded-lg border border-slate-600 hover:border-slate-500 transition-colors">
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="text-2xl">${quest.emoji}</span>
+                            <span class="px-2 py-1 bg-yellow-600 text-yellow-100 rounded text-xs font-bold">
+                                ${quest.reward} coins
+                            </span>
+                        </div>
+                        <h4 class="font-semibold text-white mb-2">${quest.description}</h4>
+                        <div class="text-sm text-slate-400">
+                            <div class="text-center">
+                                <span class="text-green-400 font-semibold">Complete in Discord bot!</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            questsHTML += '</div>';
+            document.getElementById('globalQuests').innerHTML = questsHTML;
+
+            // Discord Commands
+            let commandsHTML = '<div class="grid grid-cols-1 md:grid-cols-2 gap-6">';
+            questData.discordCommands.forEach(cmd => {
+                commandsHTML += `
+                    <div class="bg-slate-700/50 p-6 rounded-lg border border-slate-600">
+                        <div class="text-xl font-bold text-blue-400 mb-3 font-mono">${cmd.command}</div>
+                        <p class="text-slate-300">${cmd.description}</p>
+                    </div>
+                `;
+            });
+            commandsHTML += '</div>';
+            document.getElementById('discordCommands').innerHTML = commandsHTML;
+        }
+
+        function showError(message) {
+            const errorDiv = `<div class="text-center py-4 text-red-400"><i class="fas fa-exclamation-triangle mr-2"></i>${message}</div>`;
+            document.querySelectorAll('[id^="total"], [id^="completion"], [id^="global"], [id^="discord"]').forEach(el => {
+                if (el.id !== 'questDate') {
+                    el.innerHTML = errorDiv;
+                }
+            });
+        }
+
+        function refreshData() {
+            // Show loading state with simple text (no spinning animation)
+            const loadingText = '<div class="text-center py-4 text-slate-400"><i class="fas fa-sync-alt mr-2"></i>Refreshing...</div>';
+            document.querySelectorAll('[id^="total"], [id^="completion"], [id^="global"], [id^="discord"]').forEach(el => {
+                if (el.id !== 'questDate') {
+                    el.innerHTML = loadingText;
+                }
+            });
+            
+            // Reload data
+            setTimeout(loadQuestData, 500);
+        }
+
+        // Auto-refresh every 30 seconds
+        setInterval(loadQuestData, 30000);
+
+        // Initial load
+        document.addEventListener('DOMContentLoaded', loadQuestData);
+    </script>
+</body>
+</html>

@@ -1,0 +1,47 @@
+# 🎯 Main Service - Discord Bot + Dashboard
+services:
+  - type: web
+    name: italian-meme-main-service
+    env: node
+    region: ohio
+    plan: free
+    buildCommand: npm ci
+    startCommand: npm run main
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: DASHBOARD_PORT
+        value: 10000
+      - key: BOT_TOKEN
+        sync: false
+      - key: CLIENT_ID
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_ANON_KEY
+        sync: false
+      - key: BACKEND_URL
+        value: https://italian-meme-backend.onrender.com
+      - key: GUILD_ID
+        sync: false
+      - key: MARKET_CHANNEL_ID
+        sync: false
+    domains:
+      - italian-meme-exchange.onrender.com
+    
+    # Auto-deploy settings
+    autoDeploy: true
+    branch: main
+    
+    # Resource settings
+    disk:
+      name: main-service-disk
+      sizeGB: 1
+      mountPath: /opt/render/project/src/data
+    
+    # Health check settings
+    startCommand: npm run main
+    healthCheckPath: /health

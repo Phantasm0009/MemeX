@@ -1,0 +1,186 @@
+{
+  "users": {
+    "test123": {
+      "id": "test123",
+      "balance": 500,
+      "lastDaily": 0,
+      "lastMessage": 0
+    },
+    "1225485426349969518": {
+      "id": "1225485426349969518",
+      "balance": 12392.580758158043,
+      "lastDaily": 1755443115955,
+      "lastMessage": 1755443020113
+    }
+  },
+  "holdings": {
+    "test123": [
+      {
+        "stock": "RIZZL",
+        "amount": 30
+      }
+    ],
+    "1225485426349969518": [
+      {
+        "stock": "SIGMA",
+        "amount": 25
+      },
+      {
+        "stock": "LABUB",
+        "amount": 100
+      },
+      {
+        "stock": "CROCO",
+        "amount": 50000
+      },
+      {
+        "stock": "FRIED",
+        "amount": 130000
+      },
+      {
+        "stock": "SKIBI",
+        "amount": 25
+      },
+      {
+        "stock": "SUS",
+        "amount": 50
+      }
+    ]
+  },
+  "transactions": [
+    {
+      "userId": "1225485426349969518",
+      "stock": "SIGMA",
+      "amount": 11,
+      "price": 5,
+      "timestamp": 1755190013494
+    },
+    {
+      "userId": "1225485426349969518",
+      "stock": "SIGMA",
+      "amount": -11,
+      "price": {},
+      "timestamp": 1755202872956
+    },
+    {
+      "userId": "1225485426349969518",
+      "stock": "SIGMA",
+      "amount": 25,
+      "price": 33.68695693476218,
+      "timestamp": 1755205285472
+    },
+    {
+      "userId": "1225485426349969518",
+      "stock": "LABUB",
+      "amount": 100,
+      "price": 49.54252295443338,
+      "timestamp": 1755205426340
+    },
+    {
+      "userId": "1225485426349969518",
+      "stock": "CROCO",
+      "amount": 50000,
+      "price": 0.5582816877205287,
+      "timestamp": 1755205488758
+    },
+    {
+      "userId": "1225485426349969518",
+      "stock": "FRIED",
+      "amount": 15000,
+      "price": 0.4196151115768146,
+      "timestamp": 1755416877895
+    },
+    {
+      "userId": "1225485426349969518",
+      "stock": "SKIBI",
+      "amount": 25,
+      "price": 8.87771800399528,
+      "timestamp": 1755417500074
+    },
+    {
+      "userId": "1225485426349969518",
+      "stock": "SUS",
+      "amount": 50,
+      "price": 5.094330199606401,
+      "timestamp": 1755417526143
+    },
+    {
+      "userId": "1225485426349969518",
+      "stock": "FRIED",
+      "amount": 50000,
+      "price": 0.5068882683356092,
+      "timestamp": 1755417606567
+    },
+    {
+      "userId": "1225485426349969518",
+      "stock": "FRIED",
+      "amount": 25000,
+      "price": 0.3524862936383116,
+      "timestamp": 1755417617057
+    },
+    {
+      "userId": "1225485426349969518",
+      "stock": "FRIED",
+      "amount": 40000,
+      "price": 0.3524862936383116,
+      "timestamp": 1755417628181
+    }
+  ],
+  "quests": {
+    "1225485426349969518": {
+      "2025-08-17": [
+        {
+          "userId": "1225485426349969518",
+          "questType": "use_command",
+          "description": "Use any bot command (like /market or /portfolio)",
+          "reward": 120,
+          "completed": false,
+          "questDate": "2025-08-17",
+          "completedAt": null
+        },
+        {
+          "userId": "1225485426349969518",
+          "questType": "buy_stock",
+          "description": "Buy any Italian meme stock with /buy",
+          "reward": 134,
+          "completed": false,
+          "questDate": "2025-08-17",
+          "completedAt": null
+        },
+        {
+          "userId": "1225485426349969518",
+          "questType": "meme_stock",
+          "description": "Check any stock info with /stock",
+          "reward": 92,
+          "completed": false,
+          "questDate": "2025-08-17",
+          "completedAt": null
+        },
+        {
+          "quest_type": "use_command",
+          "description": "Use any bot command (like /market or /portfolio)",
+          "reward": 73,
+          "completed": true,
+          "claimed": false,
+          "completed_at": "2025-08-17T15:01:14.417Z"
+        },
+        {
+          "quest_type": "say_hi",
+          "description": "Say \"hi\", \"hello\", or \"ciao\" in chat",
+          "reward": 92,
+          "completed": true,
+          "claimed": false,
+          "completed_at": "2025-08-17T15:01:17.678Z"
+        },
+        {
+          "quest_type": "send_message",
+          "description": "Send any message in the server",
+          "reward": 62,
+          "completed": true,
+          "claimed": false,
+          "completed_at": "2025-08-17T15:01:17.679Z"
+        }
+      ]
+    }
+  }
+}

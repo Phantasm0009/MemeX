@@ -1,0 +1,128 @@
+{
+  "SKIBI": { 
+    "volatility": "extreme", 
+    "italian": true,
+    "name": "Skibidi Toilet",
+    "italianName": "Gabibbi Toiletto",
+    "specialPower": "pasta_hours",
+    "description": "Gains +30% during pasta-eating hours"
+  },
+  "SUS": { 
+    "volatility": "high", 
+    "italian": true,
+    "name": "Among Us",
+    "italianName": "Tra-I-Nostri", 
+    "specialPower": "imposter_panic",
+    "description": "Imposter reports cause -20% panic dumps"
+  },
+  "SAHUR": { 
+    "volatility": "extreme", 
+    "italian": true,
+    "name": "Tun Tun Sahur",
+    "italianName": "Tamburello Mistico",
+    "specialPower": "pizza_emoji",
+    "description": "+15% when pizza emojis appear"
+  },
+  "LABUB": { 
+    "volatility": "low", 
+    "italian": true,
+    "name": "Labubu",
+    "italianName": "Mostriciattolo",
+    "specialPower": "sunday_immunity",
+    "description": "Immune to market crashes on Sundays"
+  },
+  "OHIO": { 
+    "volatility": "high", 
+    "italian": true,
+    "name": "Ohio Final Boss",
+    "italianName": "Caporetto Finale",
+    "specialPower": "random_steal",
+    "description": "Randomly steals 5% from other stocks"
+  },
+  "RIZZL": { 
+    "volatility": "medium", 
+    "italian": true,
+    "name": "Rizzler",
+    "italianName": "Casanova",
+    "specialPower": "romance_boost",
+    "description": "+25% when romance novels are mentioned"
+  },
+  "GYATT": { 
+    "volatility": "extreme", 
+    "italian": true,
+    "name": "Gyatt",
+    "italianName": "Culone",
+    "specialPower": "beach_hours",
+    "description": "Volatility doubles during beach hours"
+  },
+  "FRIED": { 
+    "volatility": "high", 
+    "italian": true,
+    "name": "Deep Fryer",
+    "italianName": "Friggitrice",
+    "specialPower": "oil_shortage",
+    "description": "+40% during olive oil shortage events"
+  },
+  "SIGMA": { 
+    "volatility": "low", 
+    "italian": true,
+    "name": "Sigma Male",
+    "italianName": "Machio",
+    "specialPower": "bear_flex",
+    "description": "Flexes on bears during market dips"
+  },
+  "TRALA": { 
+    "volatility": "medium", 
+    "italian": true,
+    "name": "Tralalero Tralala",
+    "italianName": "Tralalero Tralala",
+    "specialPower": "sharknado",
+    "description": "3-legged shark in Nike sneakers - +50% during sharknado events",
+    "coreItalian": true
+  },
+  "CROCO": { 
+    "volatility": "extreme", 
+    "italian": true,
+    "name": "Bombardiro Crocodilo",
+    "italianName": "Bombardiro Crocodilo",
+    "specialPower": "random_nuke",
+    "description": "Explosive reptile - Randomly nukes another stock (-100%)",
+    "coreItalian": true
+  },
+  "FANUM": { 
+    "volatility": "medium", 
+    "italian": true,
+    "name": "Fanum Tax",
+    "italianName": "Tassa Nonna",
+    "specialPower": "weekly_tax",
+    "description": "Steals 10% from portfolios weekly"
+  },
+  "CAPPU": { 
+    "volatility": "medium", 
+    "italian": true,
+    "name": "Ballerina Cappuccina",
+    "italianName": "Ballerina Cappuccina",
+    "specialPower": "espresso_shortage",
+    "description": "Coffee-headed dancer - +20% during espresso shortages",
+    "coreItalian": true
+  },
+  "BANANI": { 
+    "volatility": "low", 
+    "italian": true,
+    "name": "Chimpanzini Bananini",
+    "italianName": "Chimpanzini Bananini",
+    "specialPower": "price_floor",
+    "description": "Invincible ape - Cannot drop below $0.20",
+    "coreItalian": true,
+    "minimumPrice": 0.20
+  },
+  "LARILA": { 
+    "volatility": "high", 
+    "italian": true,
+    "name": "Lirili Larila",
+    "italianName": "Lirili Larila",
+    "specialPower": "time_freeze",
+    "description": "Time-controlling cactus-elephant - Freezes other stocks hourly",
+    "coreItalian": true
+  }
+}

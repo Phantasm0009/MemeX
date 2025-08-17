@@ -1,0 +1,58 @@
+{
+  "name": "italian-meme-stock-exchange",
+  "version": "2.0.0",
+  "description": "Discord bot for trading Italian meme stocks with real-world trend data",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node index.js",
+    "backend": "node backend/server.js",
+    "dashboard": "node dashboard/server.js",
+    "main": "node main-service.js",
+    "dev": "concurrently \"npm run backend\" \"npm run dashboard\" \"npm start\"",
+    "production": "concurrently \"npm run backend\" \"npm run dashboard\" \"npm start\"",
+    "setup": "node setup.js",
+    "build": "npm ci --only=production",
+    "test": "echo \"No tests yet\" && exit 0",
+    "health": "node health-check.js",
+    "logs": "pm2 logs",
+    "restart": "pm2 restart all",
+    "stop": "pm2 stop all",
+    "deploy": "pm2 start ecosystem.config.js --env production"
+  },
+  "dependencies": {
+    "@googleapis/youtube": "^4.0.0",
+    "@supabase/supabase-js": "^2.39.0",
+    "axios": "^1.11.0",
+    "cheerio": "^1.1.2",
+    "concurrently": "^8.2.2",
+    "cors": "^2.8.5",
+    "discord.js": "^14.13.0",
+    "dotenv": "^17.2.1",
+    "express": "^4.21.2",
+    "google-trends-api": "^4.9.2",
+    "googleapis": "^156.0.0",
+    "node-cron": "^3.0.3",
+    "node-fetch": "^3.3.2",
+    "puppeteer": "^21.11.0",
+    "snoowrap": "^1.23.0",
+    "socket.io": "^4.7.5",
+    "socket.io-client": "^4.7.5"
+  },
+  "keywords": [
+    "discord",
+    "bot",
+    "stocks",
+    "trading",
+    "memes",
+    "italian",
+    "brainrot"
+  ],
+  "author": "Italian Meme Stock Exchange",
+  "license": "MIT",
+  "devDependencies": {
+    "autoprefixer": "^10.4.21",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^4.1.12"
+  }
+}

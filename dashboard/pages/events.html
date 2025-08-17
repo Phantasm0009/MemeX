@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Events - Italian Meme Stock Exchange</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/css/dashboard.css">
+</head>
+<body class="bg-gradient-to-br from-slate-900 via-slate-800 to-indigo-900 text-white min-h-screen">
+    
+    <!-- Navigation -->
+    <nav class="bg-slate-800/90 backdrop-blur-sm border-b border-slate-700 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-6 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-4">
+                    <h1 class="text-2xl font-bold bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent">
+                        🇮🇹 Italian Meme Stock Exchange
+                    </h1>
+                </div>
+                
+                <div class="flex space-x-2">
+                    <a href="/dashboard" class="nav-btn">
+                        <i class="fas fa-chart-line"></i>
+                        Dashboard
+                    </a>
+                    <a href="/leaderboard" class="nav-btn">
+                        <i class="fas fa-trophy"></i>
+                        Leaderboard
+                    </a>
+                    <a href="/events" class="nav-btn active">
+                        <i class="fas fa-bolt"></i>
+                        Events
+                    </a>
+                    <a href="/analytics" class="nav-btn">
+                        <i class="fas fa-chart-bar"></i>
+                        Analytics
+                    </a>
+                    <a href="/quests" class="nav-btn">
+                        <i class="fas fa-tasks"></i>
+                        Quests
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="max-w-6xl mx-auto px-6 py-8">
+        <div class="grid grid-cols-1 xl:grid-cols-2 gap-8">
+            
+            <!-- Recent Events -->
+            <div class="pro-card p-6">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-2xl font-bold flex items-center">
+                        ⚡ Recent Market Events
+                    </h2>
+                    <button onclick="refreshEvents()" class="text-slate-400 hover:text-white transition-colors">
+                        <i class="fas fa-sync-alt"></i>
+                    </button>
+                </div>
+                
+                <div id="events-list">
+                    <div class="flex items-center justify-center py-12">
+                        <div class="loading-spinner"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Event Statistics -->
+            <div class="space-y-6">
+                <!-- Event Types -->
+                <div class="pro-card p-6">
+                    <h3 class="text-xl font-bold mb-4">📊 Event Types</h3>
+                    <div class="space-y-3">
+                        <div class="flex items-center justify-between p-3 bg-blue-500/10 rounded-lg">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-3 h-3 bg-blue-500 rounded-full"></div>
+                                <span>Market Events</span>
+                            </div>
+                            <span class="text-blue-400 font-semibold">45%</span>
+                        </div>
+                        <div class="flex items-center justify-between p-3 bg-green-500/10 rounded-lg">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-3 h-3 bg-green-500 rounded-full"></div>
+                                <span>Pasta Protocol</span>
+                            </div>
+                            <span class="text-green-400 font-semibold">25%</span>
+                        </div>
+                        <div class="flex items-center justify-between p-3 bg-red-500/10 rounded-lg">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-3 h-3 bg-red-500 rounded-full"></div>
+                                <span>Chaos Events</span>
+                            </div>
+                            <span class="text-red-400 font-semibold">20%</span>
+                        </div>
+                        <div class="flex items-center justify-between p-3 bg-purple-500/10 rounded-lg">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-3 h-3 bg-purple-500 rounded-full"></div>
+                                <span>Special Events</span>
+                            </div>
+                            <span class="text-purple-400 font-semibold">10%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Event Impact -->
+                <div class="pro-card p-6">
+                    <h3 class="text-xl font-bold mb-4">💥 Average Impact</h3>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="text-center p-4 bg-green-500/10 rounded-lg">
+                            <p class="text-2xl font-bold text-green-400">+12.5%</p>
+                            <p class="text-sm text-slate-400">Positive Events</p>
+                        </div>
+                        <div class="text-center p-4 bg-red-500/10 rounded-lg">
+                            <p class="text-2xl font-bold text-red-400">-8.3%</p>
+                            <p class="text-sm text-slate-400">Negative Events</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Event Guide -->
+                <div class="pro-card p-6">
+                    <h3 class="text-xl font-bold mb-4">📖 Event Guide</h3>
+                    <div class="space-y-3 text-sm">
+                        <div class="p-3 bg-slate-700/30 rounded-lg">
+                            <p class="font-semibold text-green-400">🍝 Pasta Protocol</p>
+                            <p class="text-slate-300">Activated by pasta mentions - boosts Italian stocks +25%</p>
+                        </div>
+                        <div class="p-3 bg-slate-700/30 rounded-lg">
+                            <p class="font-semibold text-red-400">💥 Chaos Events</p>
+                            <p class="text-slate-300">Random market manipulation - OHIO steals, CROCO nukes</p>
+                        </div>
+                        <div class="p-3 bg-slate-700/30 rounded-lg">
+                            <p class="font-semibold text-blue-400">🌍 Global Events</p>
+                            <p class="text-slate-300">Market-wide effects - bull runs, crashes, trends</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        async function loadEvents() {
+            const eventsDiv = document.getElementById('events-list');
+            eventsDiv.innerHTML = '<div class="flex items-center justify-center py-12"><div class="loading-spinner"></div></div>';
+            
+            try {
+                const response = await fetch('/api/dashboard/events');
+                if (!response.ok) throw new Error('Failed to fetch events');
+                
+                const events = await response.json();
+                
+                if (events.length === 0) {
+                    eventsDiv.innerHTML = `
+                        <div class="text-center py-12">
+                            <p class="text-2xl text-slate-400 mb-4">No recent events</p>
+                            <p class="text-slate-500">Market events will appear here! ⚡</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                let eventsHTML = '';
+                events.forEach(event => {
+                    const timeAgo = formatTimeAgo(event.timestamp);
+                    const eventColor = getEventColor(event.type);
+                    const eventIcon = getEventIcon(event.type);
+                    
+                    eventsHTML += `
+                        <div class="p-4 border rounded-lg mb-4 hover:bg-slate-700/20 transition-colors" style="border-color: ${eventColor}">
+                            <div class="flex items-start justify-between mb-2">
+                                <div class="flex items-center space-x-3">
+                                    <span class="text-2xl">${eventIcon}</span>
+                                    <div>
+                                        <h4 class="font-semibold text-lg">${event.description}</h4>
+                                        <p class="text-sm text-slate-400">${timeAgo}</p>
+                                    </div>
+                                </div>
+                                <span class="text-sm font-semibold px-2 py-1 rounded" style="background-color: ${eventColor}20; color: ${eventColor}">
+                                    ${event.impact}
+                                </span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <p class="text-sm text-slate-300">
+                                    Affected: ${Array.isArray(event.stocks) ? event.stocks.join(', ') : event.stocks}
+                                </p>
+                                <span class="text-xs text-slate-500 capitalize">${event.type.replace('_', ' ')}</span>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                eventsDiv.innerHTML = eventsHTML;
+                
+            } catch (error) {
+                console.error('Failed to load events:', error);
+                eventsDiv.innerHTML = '<div class="text-center py-12 text-red-400">Failed to load events data.</div>';
+            }
+        }
+
+        function getEventColor(eventType) {
+            const colors = {
+                'market_event': '#3b82f6',
+                'pasta_protocol': '#10b981',
+                'chaos': '#ef4444',
+                'global_event': '#8b5cf6',
+                'special': '#f59e0b'
+            };
+            return colors[eventType] || '#6b7280';
+        }
+
+        function getEventIcon(eventType) {
+            const icons = {
+                'market_event': '📊',
+                'pasta_protocol': '🍝',
+                'chaos': '💥',
+                'global_event': '🌍',
+                'special': '⭐'
+            };
+            return icons[eventType] || '📈';
+        }
+
+        function formatTimeAgo(timestamp) {
+            const now = Date.now();
+            const diff = now - timestamp;
+            const minutes = Math.floor(diff / 60000);
+            
+            if (minutes < 1) return 'Just now';
+            if (minutes < 60) return `${minutes}m ago`;
+            
+            const hours = Math.floor(minutes / 60);
+            if (hours < 24) return `${hours}h ago`;
+            
+            const days = Math.floor(hours / 24);
+            return `${days}d ago`;
+        }
+
+        window.refreshEvents = loadEvents;
+
+        // Load on page load
+        document.addEventListener('DOMContentLoaded', loadEvents);
+        
+        // Auto-refresh every 30 seconds
+        setInterval(loadEvents, 30000);
+    </script>
+</body>
+</html>
