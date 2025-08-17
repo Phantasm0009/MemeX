@@ -44,6 +44,154 @@ const getTrendScore = async (symbol) => {
   return trends[symbol] || (Math.random() * 0.06 - 0.03);
 };
 
+// Stock database with 16 Italian meme stocks
+const stockDatabase = {
+  'SKIBI': { 
+    symbol: 'SKIBI', 
+    italianName: 'Skibidi Toilet', 
+    price: 100, 
+    change: 0, 
+    volume: 1000, 
+    lastUpdate: Date.now(),
+    description: 'The ultimate brainrot investment'
+  },
+  'RIZZL': { 
+    symbol: 'RIZZL', 
+    italianName: 'Rizz Lord', 
+    price: 85, 
+    change: 0, 
+    volume: 800, 
+    lastUpdate: Date.now(),
+    description: 'Charismatic gains for true alphas'
+  },
+  'GYATT': { 
+    symbol: 'GYATT', 
+    italianName: 'Gyatt Damn', 
+    price: 120, 
+    change: 0, 
+    volume: 1200, 
+    lastUpdate: Date.now(),
+    description: 'Explosive growth potential'
+  },
+  'SUS': { 
+    symbol: 'SUS', 
+    italianName: 'Among Us', 
+    price: 95, 
+    change: 0, 
+    volume: 950, 
+    lastUpdate: Date.now(),
+    description: 'Imposters among the gains'
+  },
+  'SAHUR': { 
+    symbol: 'SAHUR', 
+    italianName: 'Tun Tun Sahur', 
+    price: 78, 
+    change: 0, 
+    volume: 600, 
+    lastUpdate: Date.now(),
+    description: 'Dawn trading opportunities'
+  },
+  'LABUB': { 
+    symbol: 'LABUB', 
+    italianName: 'Labubu', 
+    price: 142, 
+    change: 0, 
+    volume: 1100, 
+    lastUpdate: Date.now(),
+    description: 'Cute chaos in the markets'
+  },
+  'OHIO': { 
+    symbol: 'OHIO', 
+    italianName: 'Only in Ohio', 
+    price: 67, 
+    change: 0, 
+    volume: 750, 
+    lastUpdate: Date.now(),
+    description: 'Wild and unpredictable'
+  },
+  'FRIED': { 
+    symbol: 'FRIED', 
+    italianName: 'Brain Fried', 
+    price: 88, 
+    change: 0, 
+    volume: 900, 
+    lastUpdate: Date.now(),
+    description: 'Overloaded with potential'
+  },
+  'SIGMA': { 
+    symbol: 'SIGMA', 
+    italianName: 'Sigma Male', 
+    price: 156, 
+    change: 0, 
+    volume: 1300, 
+    lastUpdate: Date.now(),
+    description: 'Lone wolf trading strategy'
+  },
+  'TRALA': { 
+    symbol: 'TRALA', 
+    italianName: 'Tra La La', 
+    price: 92, 
+    change: 0, 
+    volume: 700, 
+    lastUpdate: Date.now(),
+    description: 'Musical market movements'
+  },
+  'CROCO': { 
+    symbol: 'CROCO', 
+    italianName: 'Crocop', 
+    price: 110, 
+    change: 0, 
+    volume: 850, 
+    lastUpdate: Date.now(),
+    description: 'Snap up the profits'
+  },
+  'BIMBO': { 
+    symbol: 'BIMBO', 
+    italianName: 'Bimbo Core', 
+    price: 74, 
+    change: 0, 
+    volume: 650, 
+    lastUpdate: Date.now(),
+    description: 'Pretty profits guaranteed'
+  },
+  'NONNA': { 
+    symbol: 'NONNA', 
+    italianName: 'Nonna Vibes', 
+    price: 125, 
+    change: 0, 
+    volume: 1000, 
+    lastUpdate: Date.now(),
+    description: 'Traditional Italian gains'
+  },
+  'PASTA': { 
+    symbol: 'PASTA', 
+    italianName: 'Pasta La Vista', 
+    price: 103, 
+    change: 0, 
+    volume: 800, 
+    lastUpdate: Date.now(),
+    description: 'Carb-loaded investments'
+  },
+  'GELAT': { 
+    symbol: 'GELAT', 
+    italianName: 'Gelato Dreams', 
+    price: 89, 
+    change: 0, 
+    volume: 750, 
+    lastUpdate: Date.now(),
+    description: 'Sweet frozen assets'
+  },
+  'MOZZA': { 
+    symbol: 'MOZZA', 
+    italianName: 'Mozzarella Madness', 
+    price: 97, 
+    change: 0, 
+    volume: 900, 
+    lastUpdate: Date.now(),
+    description: 'Stretchy profit margins'
+  }
+};
+
 const updatePrices = async (triggers = {}, enableChaos = true) => {
   const marketPath = path.join(__dirname, 'market.json');
   let market = {};

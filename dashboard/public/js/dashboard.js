@@ -72,94 +72,246 @@ class DashboardManager {
 
     async loadDashboardData() {
         try {
-            const [overviewResponse, marketResponse] = await Promise.all([
-                fetch('/api/dashboard/overview'),
-                fetch('/api/dashboard/market')
+            console.log('🔄 Loading dashboard data from enhanced backend...');
+            
+            // Use enhanced backend endpoints
+            const [marketResponse, stocksResponse] = await Promise.all([
+                fetch('/api/market'),
+                fetch('/api/stocks')
             ]);
             
-            if (overviewResponse.ok && marketResponse.ok) {
-                const overviewData = await overviewResponse.json();
+            if (marketResponse.ok && stocksResponse.ok) {
                 const marketData = await marketResponse.json();
+                const stocksData = await stocksResponse.json();
                 
-                this.updateMarketOverview(overviewData);
-                this.updateStocksGrid(marketData);
-                this.lastUpdate = new Date();
+                console.log('📊 Enhanced market data received:', marketData);
+                console.log('📈 Enhanced stocks data received:', stocksData);
+                
+                // Handle new enhanced API structure
+                if (marketData.market) {
+                    // New enhanced API format
+                    this.marketData = marketData.market;
+                    this.marketStats = marketData.stats;
+                    this.globalEvents = marketData.globalEvents;
+                    this.lastUpdate = new Date(marketData.lastUpdate);
+                } else {
+                    // Fallback to old format
+                    this.marketData = marketData;
+                    this.lastUpdate = new Date();
+                }
+                
+                // Handle stocks metadata
+                if (stocksData.stocks && stocksData.meta) {
+                    this.stocksMetadata = stocksData.meta;
+                    // Merge market data with stocks metadata
+                    Object.keys(this.marketData).forEach(symbol => {
+                        if (stocksData.stocks[symbol]) {
+                            this.marketData[symbol] = {
+                                ...this.marketData[symbol],
+                                ...stocksData.stocks[symbol]
+                            };
+                        }
+                    });
+                }
+                
+                this.updateMarketOverview(this.marketData);
+                this.updateStocksGrid(this.marketData);
+                this.updateGlobalEvents();
                 
                 if (!this.isConnected) {
-                    this.updateConnectionStatus('warning', 'API Only');
+                    this.updateConnectionStatus('warning', 'Enhanced API');
                 }
             } else {
-                throw new Error('Failed to fetch dashboard data');
+                throw new Error('Failed to fetch enhanced backend data');
             }
         } catch (error) {
-            console.error('Failed to load dashboard data:', error);
-            this.showError('Failed to load dashboard data');
+            console.error('❌ Failed to load enhanced dashboard data:', error);
+            this.showError('Failed to load enhanced backend data');
             this.updateConnectionStatus('offline', 'Error');
         }
     }
 
-    updateMarketOverview(data) {
-        this.safeUpdateElement('market-cap', `$${data.marketStats.marketCap}`);
-        this.safeUpdateElement('active-traders', data.userStats.totalUsers);
-        this.safeUpdateElement('total-stocks', data.marketStats.totalStocks);
-        this.safeUpdateElement('gainers-count', data.marketStats.gainers);
-        this.safeUpdateElement('losers-count', data.marketStats.losers);
-        this.safeUpdateElement('neutral-count', data.marketStats.neutral);
-        this.safeUpdateElement('latest-event', data.lastEvent);
+    updateMarketOverview(marketData) {
+        if (!marketData || Object.keys(marketData).length === 0) return;
+        
+        const stocks = Object.values(marketData);
+        const totalStocks = stocks.length;
+        
+        // Calculate enhanced market statistics
+        const totalValue = stocks.reduce((sum, stock) => sum + (stock.price || 0), 0);
+        const avgPrice = totalValue / totalStocks;
+        const totalVolume = stocks.reduce((sum, stock) => sum + (stock.volume || 0), 0);
+        
+        const gainers = stocks.filter(stock => (stock.change || 0) > 0).length;
+        const losers = stocks.filter(stock => (stock.change || 0) < 0).length;
+        const neutral = totalStocks - gainers - losers;
+        
+        // Update DOM elements with enhanced data
+        this.safeUpdateElement('market-cap', `€${totalValue.toFixed(0)}`);
+        this.safeUpdateElement('active-traders', this.marketStats?.activeTraders || 'N/A');
+        this.safeUpdateElement('total-stocks', totalStocks);
+        this.safeUpdateElement('gainers-count', gainers);
+        this.safeUpdateElement('losers-count', losers);
+        this.safeUpdateElement('neutral-count', neutral);
+        
+        // Update additional enhanced statistics if available
+        if (this.marketStats) {
+            this.safeUpdateElement('avg-price', `€${avgPrice.toFixed(2)}`);
+            this.safeUpdateElement('total-volume', totalVolume.toLocaleString());
+            this.safeUpdateElement('market-trend', this.marketStats.trend || 'Mixed');
+            this.safeUpdateElement('volatility', this.marketStats.volatility || 'Medium');
+        }
+        
+        // Update latest event info
+        if (this.globalEvents && this.globalEvents.lastEventTime) {
+            const lastEventDate = new Date(this.globalEvents.lastEventTime);
+            const timeSince = Math.floor((Date.now() - lastEventDate.getTime()) / 60000);
+            this.safeUpdateElement('latest-event', `Global event ${timeSince}m ago`);
+        } else {
+            this.safeUpdateElement('latest-event', 'No recent events');
+        }
     }
 
     updateStocksGrid(marketData) {
         const grid = document.getElementById('stocks-grid');
         if (!grid) return;
         
-        // Use stocksList if available, otherwise fall back to direct array
-        const stocks = marketData.stocksList || marketData;
-        if (!Array.isArray(stocks)) {
-            console.error('Expected stocks array, got:', stocks);
+        // Handle enhanced backend data format (object with symbol keys)
+        let stocks;
+        if (marketData && typeof marketData === 'object' && !Array.isArray(marketData)) {
+            // Convert object to array of stocks with symbols
+            stocks = Object.entries(marketData).map(([symbol, data]) => ({
+                symbol,
+                ...data
+            }));
+        } else if (Array.isArray(marketData)) {
+            // Already an array
+            stocks = marketData;
+        } else if (marketData?.stocksList) {
+            // Fallback to stocksList
+            stocks = marketData.stocksList;
+        } else {
+            console.error('Invalid market data format:', marketData);
             return;
         }
         
-        let stocksHTML = '';
+        grid.innerHTML = '';
         
         stocks.forEach(stock => {
-            const changeColor = this.getPriceChangeColor(stock.change);
-            const changeEmoji = this.getPriceChangeEmoji(stock.change);
-            const volatilityClass = `volatility-${stock.volatility}`;
-            
-            stocksHTML += `
-                <div class="stock-card animate-fade-in-up cursor-pointer hover:bg-slate-700/40 transition-colors" onclick="navigateToStock('${stock.symbol}')">
-                    <div class="flex items-center justify-between">
-                        <div class="flex items-center space-x-3">
-                            <div class="flex flex-col">
-                                <div class="flex items-center space-x-2">
-                                    <span class="text-lg font-bold">${stock.symbol}</span>
-                                    ${stock.italian ? '<span class="text-sm">🇮🇹</span>' : ''}
-                                    ${stock.coreItalian ? '<span class="text-sm">⭐</span>' : ''}
-                                </div>
-                                <p class="text-sm text-slate-400">${stock.italianName || stock.name}</p>
-                            </div>
-                        </div>
-                        <div class="text-right">
-                            <div class="flex items-center justify-end space-x-2 mb-1">
-                                <span class="text-lg font-bold">$${stock.price.toFixed(4)}</span>
-                                <span class="text-lg">${changeEmoji}</span>
-                            </div>
-                            <div class="flex items-center justify-end space-x-2">
-                                <span class="trend-indicator ${changeColor}">
-                                    ${stock.change >= 0 ? '+' : ''}${stock.change.toFixed(2)}%
-                                </span>
-                                <span class="${volatilityClass}">${stock.volatility.toUpperCase()}</span>
-                            </div>
-                        </div>
+            const card = this.createEnhancedStockCard(stock);
+            grid.appendChild(card);
+        });
+    }
+
+    createEnhancedStockCard(stock) {
+        const card = document.createElement('div');
+        const changePercent = stock.change || 0;
+        const priceClass = changePercent > 0 ? 'text-green-400' : changePercent < 0 ? 'text-red-400' : 'text-gray-400';
+        const changeIcon = changePercent > 0 ? '↗' : changePercent < 0 ? '↘' : '→';
+        
+        // Get Italian name from metadata or use symbol
+        const italianName = stock.italianName || this.stocksMetadata?.[stock.symbol]?.italianName || stock.symbol;
+        const description = stock.description || this.stocksMetadata?.[stock.symbol]?.description || 'No description available';
+        
+        // Check if stock is frozen
+        const isFrozen = this.globalEvents?.frozenStocks?.includes(stock.symbol) || stock.frozen;
+        const frozenClass = isFrozen ? 'opacity-60 border-blue-500/50' : '';
+        const frozenIndicator = isFrozen ? '<i class="fas fa-snowflake text-blue-400 ml-2"></i>' : '';
+        
+        card.className = `pro-card stock-card cursor-pointer transition-all duration-300 hover:scale-105 ${frozenClass}`;
+        card.onclick = () => window.navigateToStock(stock.symbol);
+        
+        card.innerHTML = `
+            <div class="flex justify-between items-start mb-4">
+                <div>
+                    <h3 class="text-xl font-bold text-white flex items-center">
+                        ${stock.symbol}
+                        ${frozenIndicator}
+                    </h3>
+                    <p class="text-sm text-gray-400">${italianName}</p>
+                    <p class="text-xs text-gray-500 mt-1">${description}</p>
+                </div>
+                <div class="text-right">
+                    <div class="text-2xl font-bold ${priceClass}">
+                        €${(stock.price || 0).toFixed(2)}
                     </div>
-                    <div class="mt-2 pt-2 border-t border-slate-600/20 text-xs text-slate-500 text-center stock-card-hover-text">
-                        Click to view detailed chart
+                    <div class="text-sm ${priceClass} flex items-center justify-end">
+                        ${changeIcon} ${changePercent.toFixed(2)}%
+                    </div>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                    <span class="text-gray-400">Volume:</span>
+                    <span class="text-white ml-2">${(stock.volume || 0).toLocaleString()}</span>
+                </div>
+                <div>
+                    <span class="text-gray-400">Last Update:</span>
+                    <span class="text-white ml-2">${this.formatTime(stock.lastUpdate)}</span>
+                </div>
+            </div>
+            
+            ${isFrozen ? '<div class="mt-3 text-xs text-blue-300 bg-blue-500/20 rounded px-2 py-1">🧊 Trading Frozen</div>' : ''}
+        `;
+        
+        return card;
+    }
+
+    formatTime(timestamp) {
+        if (!timestamp) return 'Unknown';
+        const date = new Date(timestamp);
+        const now = new Date();
+        const diffMinutes = Math.floor((now - date) / 60000);
+        
+        if (diffMinutes < 1) return 'Just now';
+        if (diffMinutes < 60) return `${diffMinutes}m ago`;
+        if (diffMinutes < 1440) return `${Math.floor(diffMinutes / 60)}h ago`;
+        return date.toLocaleDateString();
+    }
+
+    // Add global events update function
+    updateGlobalEvents() {
+        const container = document.getElementById('global-events-container');
+        if (!container || !this.globalEvents) return;
+        
+        let eventsHTML = '';
+        
+        // Frozen stocks
+        if (this.globalEvents.frozenStocks && this.globalEvents.frozenStocks.length > 0) {
+            eventsHTML += `
+                <div class="bg-blue-500/20 border border-blue-500/30 rounded-lg p-3 mb-2">
+                    <div class="flex items-center gap-2">
+                        <i class="fas fa-snowflake text-blue-400"></i>
+                        <span class="text-blue-300 font-medium">Frozen Stocks</span>
+                    </div>
+                    <div class="mt-1 text-sm text-blue-200">
+                        ${this.globalEvents.frozenStocks.join(', ')} - Trading suspended
                     </div>
                 </div>
             `;
-        });
+        }
         
-        grid.innerHTML = stocksHTML;
+        // Active mergers
+        if (this.globalEvents.activeMerges && this.globalEvents.activeMerges.length > 0) {
+            eventsHTML += `
+                <div class="bg-purple-500/20 border border-purple-500/30 rounded-lg p-3 mb-2">
+                    <div class="flex items-center gap-2">
+                        <i class="fas fa-handshake text-purple-400"></i>
+                        <span class="text-purple-300 font-medium">Active Mergers</span>
+                    </div>
+                    <div class="mt-1 text-sm text-purple-200">
+                        ${this.globalEvents.activeMerges.length} merger(s) in progress
+                    </div>
+                </div>
+            `;
+        }
+        
+        if (eventsHTML === '') {
+            eventsHTML = '<div class="text-gray-400 text-sm">No active global events</div>';
+        }
+        
+        container.innerHTML = eventsHTML;
     }
 
     getPriceChangeColor(change) {
