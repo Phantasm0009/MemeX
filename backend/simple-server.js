@@ -8,6 +8,7 @@ import dotenv from 'dotenv';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { Client, GatewayIntentBits } from 'discord.js';
 
 // Basic imports only - no complex dependencies
 const __filename = fileURLToPath(import.meta.url);
@@ -23,6 +24,51 @@ console.log(`🔍 .env exists: ${fs.existsSync(envPath)}`);
 
 const app = express();
 const PORT = process.env.BACKEND_PORT || 3001;
+
+// Initialize Discord client for username fetching
+let discordClient = null;
+const userCache = new Map(); // Cache for Discord usernames
+
+if (process.env.BOT_TOKEN) {
+  discordClient = new Client({ 
+    intents: [GatewayIntentBits.Guilds] 
+  });
+  
+  discordClient.login(process.env.BOT_TOKEN).then(() => {
+    console.log('✅ Discord client connected for username fetching');
+  }).catch(error => {
+    console.warn('⚠️ Discord client failed to connect:', error.message);
+    discordClient = null;
+  });
+} else {
+  console.warn('⚠️ BOT_TOKEN not found - usernames will show as User#XXXX');
+}
+
+// Helper function to fetch Discord username
+async function getDiscordUsername(userId) {
+  if (!discordClient) {
+    return `User#${userId.slice(-4)}`;
+  }
+  
+  // Check cache first
+  if (userCache.has(userId)) {
+    return userCache.get(userId);
+  }
+  
+  try {
+    const user = await discordClient.users.fetch(userId);
+    const username = user.displayName || user.username || `User#${userId.slice(-4)}`;
+    
+    // Cache the result for 5 minutes
+    userCache.set(userId, username);
+    setTimeout(() => userCache.delete(userId), 5 * 60 * 1000);
+    
+    return username;
+  } catch (error) {
+    console.warn(`Failed to fetch username for ${userId}:`, error.message);
+    return `User#${userId.slice(-4)}`;
+  }
+}
 
 // Middleware
 app.use(cors());
@@ -297,7 +343,7 @@ app.get('/api/leaderboard', async (req, res) => {
     }
     
     // Convert users object to array and calculate total wealth
-    const users = Object.entries(database.users).map(([id, user]) => {
+    const userPromises = Object.entries(database.users).map(async ([id, user]) => {
       const holdings = database.holdings[id] || {};
       let portfolioValue = 0;
       
@@ -312,10 +358,13 @@ app.get('/api/leaderboard', async (req, res) => {
       
       const totalValue = (user.balance || 0) + portfolioValue;
       
+      // Fetch real Discord username
+      const discordUsername = await getDiscordUsername(id);
+      
       return {
         id,
-        username: user.username || `User#${id.slice(-4)}`,
-        displayName: user.username || `User#${id.slice(-4)}`,
+        username: discordUsername,
+        displayName: discordUsername,
         balance: user.balance || 0,
         portfolioValue: Math.round(portfolioValue * 100) / 100,
         totalValue: Math.round(totalValue * 100) / 100,
@@ -323,6 +372,9 @@ app.get('/api/leaderboard', async (req, res) => {
         lastMessage: user.lastMessage || null
       };
     });
+    
+    // Wait for all username fetches to complete
+    const users = await Promise.all(userPromises);
     
     // Sort by total value descending
     const sortedUsers = users
@@ -343,12 +395,93 @@ app.get('/api/leaderboard', async (req, res) => {
       success: true
     });
     
-    console.log(`✅ Returned leaderboard with ${leaderboard.length} users`);
+    console.log(`✅ Returned leaderboard with ${leaderboard.length} users (with real Discord usernames)`);
     
   } catch (error) {
     console.error('Error fetching leaderboard:', error);
     res.status(500).json({ 
       error: 'Failed to fetch leaderboard',
+      details: error.message 
+    });
+  }
+});
+
+// NEW: Analytics API endpoint
+app.get('/api/analytics', async (req, res) => {
+  try {
+    console.log('📊 API request: Fetching analytics data...');
+    
+    const database = loadDatabase();
+    const market = fs.existsSync(marketPath) ? JSON.parse(fs.readFileSync(marketPath)) : {};
+    
+    // Calculate market stats
+    const totalStocks = Object.keys(market).length;
+    const totalMarketCap = Object.values(market).reduce((sum, stock) => sum + (stock.price || 0) * 1000, 0); // Assume 1000 shares per stock
+    const avgStockPrice = totalStocks > 0 ? Object.values(market).reduce((sum, stock) => sum + (stock.price || 0), 0) / totalStocks : 0;
+    
+    // User stats
+    const totalUsers = Object.keys(database.users || {}).length;
+    const totalBalance = Object.values(database.users || {}).reduce((sum, user) => sum + (user.balance || 0), 0);
+    const activeToday = Object.values(database.users || {}).filter(user => {
+      const today = new Date().toDateString();
+      return user.lastMessage && new Date(user.lastMessage).toDateString() === today;
+    }).length;
+    
+    // Trading volume (approximate)
+    const totalTransactions = Object.values(database.holdings || {}).reduce((sum, holdings) => {
+      return sum + Object.values(holdings).reduce((userSum, amount) => userSum + Math.abs(amount), 0);
+    }, 0);
+    
+    // Top performing stocks
+    const stockPerformance = Object.entries(market).map(([symbol, data]) => ({
+      symbol,
+      price: data.price || 0,
+      change: data.change || 0,
+      volume: Math.floor(Math.random() * 1000) + 100 // Simulated volume
+    })).sort((a, b) => b.change - a.change);
+    
+    // Market trends (last 7 days simulation)
+    const marketTrends = Array.from({ length: 7 }, (_, i) => {
+      const date = new Date();
+      date.setDate(date.getDate() - (6 - i));
+      return {
+        date: date.toISOString().split('T')[0],
+        marketCap: totalMarketCap * (0.95 + Math.random() * 0.1),
+        volume: Math.floor(Math.random() * 5000) + 1000,
+        activeUsers: Math.floor(Math.random() * totalUsers * 0.3) + Math.floor(totalUsers * 0.1)
+      };
+    });
+    
+    res.json({
+      marketStats: {
+        totalStocks,
+        totalMarketCap: Math.round(totalMarketCap),
+        averageStockPrice: Math.round(avgStockPrice * 100) / 100,
+        dailyVolume: Math.floor(Math.random() * 10000) + 2000
+      },
+      userStats: {
+        totalUsers,
+        activeToday,
+        totalBalance: Math.round(totalBalance),
+        avgBalance: totalUsers > 0 ? Math.round(totalBalance / totalUsers) : 0
+      },
+      tradingStats: {
+        totalTransactions,
+        dailyTransactions: Math.floor(Math.random() * 100) + 20,
+        topTraders: Math.min(5, totalUsers)
+      },
+      topPerformers: stockPerformance.slice(0, 5),
+      marketTrends,
+      timestamp: new Date().toISOString(),
+      success: true
+    });
+    
+    console.log('✅ Analytics data returned successfully');
+    
+  } catch (error) {
+    console.error('Error fetching analytics:', error);
+    res.status(500).json({ 
+      error: 'Failed to fetch analytics',
       details: error.message 
     });
   }
