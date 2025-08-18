@@ -18,7 +18,7 @@ module.exports = {
     },
     {
       name: 'italian-meme-backend',
-      script: 'enhanced-backend-server.js',
+      script: 'backend/simple-server.js',
       instances: 1,
       autorestart: true,
       watch: false,
