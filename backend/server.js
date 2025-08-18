@@ -55,10 +55,29 @@ initializeMarket();
 
 // API Endpoints
 app.get('/api/health', async (req, res) => {
+  const market = fs.existsSync(marketPath) ? JSON.parse(fs.readFileSync(marketPath)) : {};
+  const stockCount = Object.keys(market).length;
+  
   res.json({
     status: 'healthy',
+    api: 'Italian Meme Stock Exchange Enhanced API',
     timestamp: new Date().toISOString(),
+    port: PORT.toString(),
     uptime: process.uptime(),
+    endpoints: [
+      '/health',
+      '/api/health',
+      '/api/market',
+      '/api/stocks', 
+      '/api/stock/:symbol',
+      '/api/trends/:symbol',
+      '/api/scrape/tiktok/:symbol',
+      '/api/global-events',
+      '/api/quests',
+      '/api/leaderboard',
+      '/api/update-prices'
+    ],
+    stockCount,
     environment: {
       nodeEnv: process.env.NODE_ENV || 'development',
       backendPort: PORT,
