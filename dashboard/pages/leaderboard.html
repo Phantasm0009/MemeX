@@ -6,7 +6,7 @@
             contentDiv.innerHTML = '<div class="flex items-center justify-center py-12"><div class="loading-spinner"></div></div>';
             
             try {
-                const response = await fetch('/api/dashboard/leaderboard');
+                const response = await fetch('http://159.203.134.206:3001/api/leaderboard');
                 if (!response.ok) throw new Error(`API Error: ${response.status}`);
                 
                 const result = await response.json();

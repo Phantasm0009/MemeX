@@ -25,7 +25,7 @@ class StockChartManager {
     async loadStockData() {
         try {
             // Load market data
-            const marketResponse = await fetch('/api/dashboard/market');
+            const marketResponse = await fetch('http://159.203.134.206:3001/api/market');
             
             if (!marketResponse.ok) {
                 throw new Error(`Backend API error: ${marketResponse.status}`);
@@ -33,21 +33,24 @@ class StockChartManager {
             
             const marketData = await marketResponse.json();
             
-            if (!marketData || !marketData.stocks) {
-                throw new Error('Invalid market data format');
+            // Handle the correct API response format
+            const stocks = marketData.market || marketData.stocks || {};
+            
+            if (!stocks || Object.keys(stocks).length === 0) {
+                throw new Error('No market data available');
             }
             
-            if (!marketData.stocks[this.currentStock]) {
+            if (!stocks[this.currentStock]) {
                 // Show available stocks if current stock not found
-                const availableStocks = Object.keys(marketData.stocks);
+                const availableStocks = Object.keys(stocks);
                 if (availableStocks.length > 0) {
                     this.currentStock = availableStocks[0];
-                    this.stockData = marketData.stocks[this.currentStock];
+                    this.stockData = stocks[this.currentStock];
                 } else {
                     throw new Error('No stocks available');
                 }
             } else {
-                this.stockData = marketData.stocks[this.currentStock];
+                this.stockData = stocks[this.currentStock];
             }
             
             this.updateStockHeader();
