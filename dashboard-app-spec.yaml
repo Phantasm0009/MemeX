@@ -1,7 +1,7 @@
 name: italian-meme-dashboard
 services:
 - name: dashboard
-  source_dir: /dashboard
+  source_dir: dashboard
   github:
     repo: Phantasm0009/MemeX
     branch: main
@@ -15,9 +15,12 @@ services:
   - key: NODE_ENV
     value: production
   - key: BACKEND_URL
-    value: YOUR_DROPLET_IP:3001
+    value: "http://YOUR_DROPLET_IP:3001"
     scope: RUN_TIME
   - key: DASHBOARD_PORT
+    value: "3002"
+    scope: RUN_TIME
+  - key: PORT
     value: "3002"
     scope: RUN_TIME
   http_port: 3002

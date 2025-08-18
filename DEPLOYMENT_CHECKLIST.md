@@ -54,8 +54,8 @@
 
 - [ ] **Verify API Working**
   ```bash
-  curl http://YOUR_DROPLET_IP/health
-  curl http://YOUR_DROPLET_IP/api/market
+  curl http://159.203.134.206/health
+  curl http://159.203.134.206/api/market
   ```
 
 - [ ] **Deploy Discord Commands**
