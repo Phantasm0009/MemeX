@@ -75,17 +75,12 @@ class DashboardManager {
             console.log('🔄 Loading dashboard data from enhanced backend...');
             
             // Use enhanced backend endpoints
-            const [marketResponse, stocksResponse] = await Promise.all([
-                fetch('/api/market'),
-                fetch('/api/stocks')
-            ]);
+            const marketResponse = await fetch('/api/market');
             
-            if (marketResponse.ok && stocksResponse.ok) {
+            if (marketResponse.ok) {
                 const marketData = await marketResponse.json();
-                const stocksData = await stocksResponse.json();
                 
                 console.log('📊 Enhanced market data received:', marketData);
-                console.log('📈 Enhanced stocks data received:', stocksData);
                 
                 // Handle new enhanced API structure
                 if (marketData.market) {
@@ -98,20 +93,6 @@ class DashboardManager {
                     // Fallback to old format
                     this.marketData = marketData;
                     this.lastUpdate = new Date();
-                }
-                
-                // Handle stocks metadata
-                if (stocksData.stocks && stocksData.meta) {
-                    this.stocksMetadata = stocksData.meta;
-                    // Merge market data with stocks metadata
-                    Object.keys(this.marketData).forEach(symbol => {
-                        if (stocksData.stocks[symbol]) {
-                            this.marketData[symbol] = {
-                                ...this.marketData[symbol],
-                                ...stocksData.stocks[symbol]
-                            };
-                        }
-                    });
                 }
                 
                 this.updateMarketOverview(this.marketData);

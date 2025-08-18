@@ -15,7 +15,7 @@ services:
   - key: NODE_ENV
     value: production
   - key: BACKEND_URL
-    value: "http://YOUR_DROPLET_IP:3001"
+    value: "http://159.203.134.206:3001"
     scope: RUN_TIME
   - key: DASHBOARD_PORT
     value: "3002"
