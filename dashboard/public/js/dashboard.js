@@ -74,7 +74,7 @@ class DashboardManager {
         try {
             console.log('🔄 Loading dashboard data from enhanced backend...');
             
-            // Use enhanced backend endpoints
+            // Load market data
             const marketResponse = await fetch('/api/market');
             
             if (marketResponse.ok) {
@@ -105,11 +105,84 @@ class DashboardManager {
             } else {
                 throw new Error('Failed to fetch enhanced backend data');
             }
+
+            // Load additional dashboard data
+            await this.loadLeaderboardData();
+            await this.loadAnalyticsData();
+            
         } catch (error) {
             console.error('❌ Failed to load enhanced dashboard data:', error);
             this.showError('Failed to load enhanced backend data');
             this.updateConnectionStatus('offline', 'Error');
         }
+    }
+
+    async loadLeaderboardData() {
+        try {
+            const response = await fetch('/api/dashboard/leaderboard?limit=5');
+            if (response.ok) {
+                const data = await response.json();
+                console.log('🏆 Leaderboard data loaded:', data);
+                this.updateLeaderboardDisplay(data.leaderboard || []);
+            }
+        } catch (error) {
+            console.error('Failed to load leaderboard:', error);
+        }
+    }
+
+    async loadAnalyticsData() {
+        try {
+            const response = await fetch('/api/dashboard/analytics');
+            if (response.ok) {
+                const data = await response.json();
+                console.log('📈 Analytics data loaded:', data);
+                this.updateAnalyticsDisplay(data);
+            }
+        } catch (error) {
+            console.error('Failed to load analytics:', error);
+        }
+    }
+
+    updateLeaderboardDisplay(leaderboard) {
+        const container = document.getElementById('leaderboard-container');
+        if (!container) return;
+
+        if (leaderboard.length === 0) {
+            container.innerHTML = '<p class="text-gray-400 text-center">No leaderboard data available</p>';
+            return;
+        }
+
+        container.innerHTML = leaderboard.map((user, index) => `
+            <div class="flex items-center justify-between p-3 bg-slate-800/50 rounded-lg border border-slate-700">
+                <div class="flex items-center space-x-3">
+                    <span class="flex items-center justify-center w-8 h-8 rounded-full bg-gradient-to-r from-yellow-400 to-orange-500 text-slate-900 font-bold text-sm">
+                        ${user.rank}
+                    </span>
+                    <div>
+                        <p class="font-semibold text-white">${user.username}</p>
+                        <p class="text-xs text-gray-400">€${user.balance.toFixed(0)} balance</p>
+                    </div>
+                </div>
+                <div class="text-right">
+                    <p class="font-bold text-green-400">€${(user.totalValue || user.balance).toFixed(0)}</p>
+                    <p class="text-xs text-gray-400">total value</p>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    updateAnalyticsDisplay(analytics) {
+        if (!analytics) return;
+
+        // Update market stats
+        const { marketStats, userStats, tradingStats } = analytics;
+        
+        this.safeUpdateElement('analytics-market-cap', `€${marketStats?.totalMarketCap?.toLocaleString() || '0'}`);
+        this.safeUpdateElement('analytics-total-users', userStats?.totalUsers || '0');
+        this.safeUpdateElement('analytics-active-today', userStats?.activeToday || '0');
+        this.safeUpdateElement('analytics-daily-volume', `€${marketStats?.dailyVolume?.toLocaleString() || '0'}`);
+        this.safeUpdateElement('analytics-total-transactions', tradingStats?.totalTransactions || '0');
+        this.safeUpdateElement('analytics-avg-balance', `€${userStats?.avgBalance || '0'}`);
     }
 
     updateMarketOverview(marketData) {

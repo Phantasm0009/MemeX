@@ -100,10 +100,37 @@ app.get('/api/dashboard/market', async (req, res) => {
 
 app.get('/api/dashboard/leaderboard', async (req, res) => {
   try {
-    const data = await fetchFromBackend('/api/market');
+    const limit = req.query.limit || 10;
+    const data = await fetchFromBackend(`/api/leaderboard?limit=${limit}`);
     if (data) {
-      // Transform market data for leaderboard (simplified for now)
-      res.json([]);
+      res.json(data);
+    } else {
+      res.status(503).json({ error: 'Backend service unavailable' });
+    }
+  } catch (error) {
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+app.get('/api/dashboard/analytics', async (req, res) => {
+  try {
+    const data = await fetchFromBackend('/api/analytics');
+    if (data) {
+      res.json(data);
+    } else {
+      res.status(503).json({ error: 'Backend service unavailable' });
+    }
+  } catch (error) {
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+app.get('/api/dashboard/quests', async (req, res) => {
+  try {
+    const date = req.query.date || new Date().toISOString().split('T')[0];
+    const data = await fetchFromBackend(`/api/quests?date=${date}`);
+    if (data) {
+      res.json(data);
     } else {
       res.status(503).json({ error: 'Backend service unavailable' });
     }
