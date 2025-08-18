@@ -116,10 +116,10 @@ log_success "Dependencies installed"
 log_info "Creating environment file..."
 cat > .env << EOF
 # Discord Bot Configuration
-BOT_TOKEN=
-CLIENT_ID=1399789085962539056
-GUILD_ID=1347931919936917535
-MARKET_CHANNEL_ID=1347931919936917538
+BOT_TOKEN=your_discord_bot_token_here
+CLIENT_ID=your_discord_client_id_here
+GUILD_ID=your_guild_id_optional
+MARKET_CHANNEL_ID=your_market_channel_id_optional
 
 # Server Configuration
 NODE_ENV=production
