@@ -75,7 +75,7 @@ class DashboardManager {
             console.log('🔄 Loading dashboard data from enhanced backend...');
             
             // Load market data
-            const marketResponse = await fetch('/api/market');
+            const marketResponse = await fetch('/api/dashboard/market');
             
             if (marketResponse.ok) {
                 const marketData = await marketResponse.json();
@@ -119,7 +119,7 @@ class DashboardManager {
 
     async loadLeaderboardData() {
         try {
-            const response = await fetch('http://159.203.134.206:3001/api/leaderboard?limit=5');
+            const response = await fetch('/api/dashboard/leaderboard?limit=5');
             if (response.ok) {
                 const data = await response.json();
                 console.log('🏆 Leaderboard data loaded:', data);
@@ -132,7 +132,7 @@ class DashboardManager {
 
     async loadAnalyticsData() {
         try {
-            const response = await fetch('http://159.203.134.206:3001/api/analytics');
+            const response = await fetch('/api/dashboard/analytics');
             if (response.ok) {
                 const data = await response.json();
                 console.log('📈 Analytics data loaded:', data);

@@ -25,7 +25,7 @@ class StockChartManager {
     async loadStockData() {
         try {
             // Load market data
-            const marketResponse = await fetch('http://159.203.134.206:3001/api/market');
+            const marketResponse = await fetch('/api/dashboard/market');
             
             if (!marketResponse.ok) {
                 throw new Error(`Backend API error: ${marketResponse.status}`);
