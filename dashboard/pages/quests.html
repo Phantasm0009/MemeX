@@ -110,10 +110,14 @@
         }
 
         function updateQuestDisplay() {
-            if (!questData) return;
+            if (!questData) {
+                showError('No quest data available');
+                return;
+            }
 
             // Update date
-            const today = new Date(questData.date);
+            const questDate = questData.date || Date.now();
+            const today = new Date(questDate);
             document.getElementById('questDate').innerHTML = `📅 ${today.toLocaleDateString('en-US', { 
                 weekday: 'long', 
                 year: 'numeric', 
@@ -121,21 +125,24 @@
                 day: 'numeric' 
             })}`;
 
-            // Total Rewards Distributed
+            // Total Rewards Distributed - with safety check
+            const totalRewards = questData.totalRewardsDistributed || 0;
             document.getElementById('totalRewards').innerHTML = `
-                <div class="text-3xl font-bold text-yellow-400 mb-2">${questData.totalRewardsDistributed.toLocaleString()}</div>
+                <div class="text-3xl font-bold text-yellow-400 mb-2">${totalRewards.toLocaleString()}</div>
                 <div class="text-sm text-slate-400">Pasta Coins earned from quests</div>
             `;
 
-            // Total Users
+            // Total Users - with safety check
+            const totalUsers = questData.totalUsers || 0;
             document.getElementById('totalUsers').innerHTML = `
-                <div class="text-3xl font-bold text-blue-400 mb-2">${questData.totalUsers.toLocaleString()}</div>
+                <div class="text-3xl font-bold text-blue-400 mb-2">${totalUsers.toLocaleString()}</div>
                 <div class="text-sm text-slate-400">Registered traders</div>
             `;
 
-            // Global Quests
+            // Global Quests - with safety check
+            const globalQuests = questData.globalQuests || [];
             let questsHTML = '<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">';
-            questData.globalQuests.forEach((quest, index) => {
+            globalQuests.forEach((quest, index) => {
                 questsHTML += `
                     <div class="bg-slate-700/50 p-4 rounded-lg border border-slate-600 hover:border-slate-500 transition-colors">
                         <div class="flex items-center justify-between mb-3">

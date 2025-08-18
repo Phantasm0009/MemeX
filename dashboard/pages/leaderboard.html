@@ -1,8 +1,35 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">        async function loadLeaderboard() {
+            const contentDiv = document.getElementById('leaderboard-content');
+            contentDiv.innerHTML = '<div class="flex items-center justify-center py-12"><div class="loading-spinner"></div></div>';
+            
+            try {
+                const response = await fetch('/api/dashboard/leaderboard');
+                if (!response.ok) throw new Error(`API Error: ${response.status}`);
+                
+                const result = await response.json();
+                
+                // Handle different response formats
+                let data;
+                if (Array.isArray(result)) {
+                    data = result;
+                } else if (result.data && Array.isArray(result.data)) {
+                    data = result.data;
+                } else if (result.leaderboard && Array.isArray(result.leaderboard)) {
+                    data = result.leaderboard;
+                } else {
+                    console.error('Invalid leaderboard data format:', result);
+                    throw new Error('Invalid data format received');
+                }
+                
+                if (data.length === 0) {
+                    contentDiv.innerHTML = `
+                        <div class="text-center py-12">
+                            <p class="text-2xl text-slate-400 mb-4">No traders yet!</p>
+                            <p class="text-slate-500">Start trading to appear on the leaderboard! 🍝</p>
+                        </div>`;="viewport" content="width=device-width, initial-scale=1.0">
     <title>Leaderboard - Italian Meme Stock Exchange</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">

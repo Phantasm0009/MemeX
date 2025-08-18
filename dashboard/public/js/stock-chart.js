@@ -26,19 +26,36 @@ class StockChartManager {
         try {
             // Load market data
             const marketResponse = await fetch('/api/dashboard/market');
-            const marketData = await marketResponse.json();
             
-            if (!marketData.stocks || !marketData.stocks[this.currentStock]) {
-                throw new Error('Stock not found');
+            if (!marketResponse.ok) {
+                throw new Error(`Backend API error: ${marketResponse.status}`);
             }
             
-            this.stockData = marketData.stocks[this.currentStock];
+            const marketData = await marketResponse.json();
+            
+            if (!marketData || !marketData.stocks) {
+                throw new Error('Invalid market data format');
+            }
+            
+            if (!marketData.stocks[this.currentStock]) {
+                // Show available stocks if current stock not found
+                const availableStocks = Object.keys(marketData.stocks);
+                if (availableStocks.length > 0) {
+                    this.currentStock = availableStocks[0];
+                    this.stockData = marketData.stocks[this.currentStock];
+                } else {
+                    throw new Error('No stocks available');
+                }
+            } else {
+                this.stockData = marketData.stocks[this.currentStock];
+            }
+            
             this.updateStockHeader();
             this.generatePriceHistory();
             
         } catch (error) {
             console.error('Error loading stock data:', error);
-            this.showError('Failed to load stock data');
+            this.showError(`Failed to load stock data: ${error.message}`);
         }
     }
 

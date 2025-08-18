@@ -215,24 +215,49 @@
             
             try {
                 const response = await fetch('/api/dashboard/analytics');
-                if (!response.ok) throw new Error('Failed to fetch analytics');
+                if (!response.ok) throw new Error(`API Error: ${response.status}`);
                 
                 const data = await response.json();
-                displayVolatilityBreakdown(data.volatilityBreakdown);
+                
+                // Handle different response formats
+                const volatilityData = data.volatilityBreakdown || data.volatility || {};
+                displayVolatilityBreakdown(volatilityData);
                 
             } catch (error) {
                 console.error('Failed to load analytics:', error);
-                volatilityDiv.innerHTML = '<div class="text-center py-12 text-red-400">Failed to load analytics data.</div>';
+                volatilityDiv.innerHTML = `<div class="text-center py-12 text-red-400">
+                    <p>Failed to load analytics data</p>
+                    <p class="text-sm text-slate-500 mt-2">${error.message}</p>
+                </div>`;
             }
         }
 
         function displayVolatilityBreakdown(breakdown) {
             const volatilityDiv = document.getElementById('volatility-breakdown');
             
-            const total = breakdown.extreme + breakdown.high + breakdown.medium + breakdown.low;
+            // Handle missing or invalid breakdown data
+            if (!breakdown || typeof breakdown !== 'object') {
+                volatilityDiv.innerHTML = `
+                    <div class="text-center py-8 text-slate-400">
+                        <p>Volatility data unavailable</p>
+                        <p class="text-sm text-slate-500 mt-2">Backend may still be starting up...</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            // Provide default values for missing properties
+            const safeBreakdown = {
+                extreme: breakdown.extreme || 0,
+                high: breakdown.high || 0,
+                medium: breakdown.medium || 0,
+                low: breakdown.low || 0
+            };
+            
+            const total = safeBreakdown.extreme + safeBreakdown.high + safeBreakdown.medium + safeBreakdown.low;
             
             let html = '';
-            Object.entries(breakdown).forEach(([level, count]) => {
+            Object.entries(safeBreakdown).forEach(([level, count]) => {
                 const percentage = total > 0 ? ((count / total) * 100).toFixed(1) : 0;
                 const color = {
                     'extreme': 'bg-red-500',
