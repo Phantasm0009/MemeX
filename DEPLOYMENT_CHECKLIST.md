@@ -41,6 +41,12 @@
   # Add your actual BOT_TOKEN and CLIENT_ID
   ```
 
+- [ ] **Fix PM2 Configuration (if needed)**
+  ```bash
+  # If you get ES module errors, run this fix:
+  curl -sSL https://raw.githubusercontent.com/Phantasm0009/MemeX/main/quick-fix-pm2.sh | bash
+  ```
+
 - [ ] **Start Services**
   ```bash
   ./start.sh

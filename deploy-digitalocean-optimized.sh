@@ -116,7 +116,7 @@ log_success "Dependencies installed"
 log_info "Creating environment file..."
 cat > .env << EOF
 # Discord Bot Configuration
-BOT_TOKEN=MTM5OTc4OTA4NTk2MjUzOTA1Ng.GqihkH.I-r1B5OcDOwWVaqPgExjFfh19eGlVeMlb5zF38
+BOT_TOKEN=
 CLIENT_ID=1399789085962539056
 GUILD_ID=1347931919936917535
 MARKET_CHANNEL_ID=1347931919936917538
@@ -146,7 +146,7 @@ log_success "Environment file created"
 
 # Create optimized PM2 ecosystem file for backend + bot only
 log_info "Creating PM2 ecosystem configuration..."
-cat > ecosystem.config.js << 'EOF'
+cat > ecosystem.config.cjs << 'EOF'
 module.exports = {
   apps: [
     {
@@ -279,7 +279,7 @@ cat > start.sh << 'EOF'
 #!/bin/bash
 echo "🚀 Starting Italian Meme Stock Exchange Services..."
 cd /var/www/italian-meme-exchange
-pm2 start ecosystem.config.js
+pm2 start ecosystem.config.cjs
 pm2 save
 echo "✅ Services started! Check status with: pm2 status"
 EOF
@@ -302,7 +302,7 @@ cd /var/www/italian-meme-exchange
 pm2 stop all
 git pull origin main
 npm install --production
-pm2 start ecosystem.config.js
+pm2 start ecosystem.config.cjs
 pm2 save
 echo "✅ Update complete!"
 EOF
