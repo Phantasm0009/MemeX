@@ -1,0 +1,28 @@
+name: italian-meme-dashboard
+services:
+- name: dashboard
+  source_dir: /dashboard
+  github:
+    repo: Phantasm0009/MemeX
+    branch: main
+    deploy_on_push: true
+  run_command: node server.js
+  build_command: npm install --production
+  environment_slug: node-js
+  instance_count: 1
+  instance_size_slug: basic-xxs
+  envs:
+  - key: NODE_ENV
+    value: production
+  - key: BACKEND_URL
+    value: YOUR_DROPLET_IP:3001
+    scope: RUN_TIME
+  - key: DASHBOARD_PORT
+    value: "3002"
+    scope: RUN_TIME
+  http_port: 3002
+  routes:
+  - path: /
+region: nyc1
+features:
+- buildpack-stack: ubuntu-22

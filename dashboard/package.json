@@ -1,0 +1,28 @@
+{
+  "name": "italian-meme-dashboard",
+  "version": "1.0.0",
+  "description": "Dashboard for Italian Meme Stock Exchange",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js",
+    "build": "npm install --production"
+  },
+  "dependencies": {
+    "express": "^4.21.2",
+    "cors": "^2.8.5",
+    "socket.io": "^4.7.5",
+    "dotenv": "^17.2.1",
+    "axios": "^1.11.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": [
+    "dashboard",
+    "meme-stocks",
+    "italian",
+    "trading"
+  ]
+}

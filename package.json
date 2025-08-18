@@ -15,9 +15,13 @@
     "setup": "node setup.js",
     "build": "npm ci --only=production",
     "test": "echo \"No tests yet\" && exit 0",
+    "test-deployment": "node test-deployment.js",
     "health": "node health-check.js",
     "logs": "pm2 logs",
     "restart": "pm2 restart all",
+    "deploy-commands": "node deploy-commands.js",
+    "clear-commands": "node deploy-commands.js --clear",
+    "refresh-commands": "node deploy-commands.js --refresh",
     "stop": "pm2 stop all",
     "deploy": "pm2 start ecosystem.config.js --env production"
   },

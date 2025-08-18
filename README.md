@@ -2,6 +2,24 @@
 
 A Discord bot for trading 15 authentic Italian brainrot meme stocks with dynamic pricing based on real-world trends!
 
+## 🌊 Quick Deploy to DigitalOcean
+
+**Total Cost**: $11/month ($6 Droplet + $5 App Platform)  
+**Free with $200 credits**: 18+ months! 🎉
+
+### One-Command Deployment
+```bash
+# 1. Create DigitalOcean Droplet (Ubuntu 22.04, $6/month)
+# 2. SSH into droplet and run:
+curl -sSL https://raw.githubusercontent.com/Phantasm0009/MemeX/main/deploy-digitalocean-optimized.sh | sudo bash
+
+# 3. Configure environment variables
+# 4. Deploy dashboard on App Platform
+```
+
+**📋 Step-by-step**: [DEPLOYMENT_CHECKLIST.md](./DEPLOYMENT_CHECKLIST.md)  
+**📖 Full guide**: [DEPLOYMENT_GUIDE.md](./DEPLOYMENT_GUIDE.md)
+
 ## 🚀 Features
 
 ### 15 Italian Meme Stocks

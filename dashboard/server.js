@@ -6,6 +6,7 @@ import dotenv from 'dotenv';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import axios from 'axios';
 
 dotenv.config();
 
@@ -21,32 +22,49 @@ const io = new Server(server, {
   }
 });
 
-const PORT = process.env.DASHBOARD_PORT || 3002;
+const PORT = process.env.DASHBOARD_PORT || process.env.PORT || 3002;
+const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:3001';
+
+console.log('🚀 Starting Italian Meme Dashboard');
+console.log(`📊 Dashboard Port: ${PORT}`);
+console.log(`🔗 Backend URL: ${BACKEND_URL}`);
 
 // Middleware
 app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Data paths
-const marketPath = path.join(__dirname, '../market.json');
-const metaPath = path.join(__dirname, '../meta.json');
-const dbPath = path.join(__dirname, '../database.json');
+// API client for backend
+async function fetchFromBackend(endpoint) {
+  try {
+    const response = await axios.get(`${BACKEND_URL}${endpoint}`, {
+      timeout: 5000,
+      headers: {
+        'Accept': 'application/json',
+        'User-Agent': 'Italian-Meme-Dashboard/1.0'
+      }
+    });
+    return response.data;
+  } catch (error) {
+    console.error(`❌ Backend API Error (${endpoint}):`, error.message);
+    return null;
+  }
+}
 
-// Helper functions
+// Fallback data functions (for development or when backend is unavailable)
 function loadMarketData() {
-  if (!fs.existsSync(marketPath)) return {};
-  return JSON.parse(fs.readFileSync(marketPath));
+  if (!fs.existsSync(path.join(__dirname, '../market.json'))) return {};
+  return JSON.parse(fs.readFileSync(path.join(__dirname, '../market.json')));
 }
 
 function loadMetaData() {
-  if (!fs.existsSync(metaPath)) return {};
-  return JSON.parse(fs.readFileSync(metaPath));
+  if (!fs.existsSync(path.join(__dirname, '../meta.json'))) return {};
+  return JSON.parse(fs.readFileSync(path.join(__dirname, '../meta.json')));
 }
 
 function loadDatabase() {
-  if (!fs.existsSync(dbPath)) return { users: {}, holdings: {}, transactions: [] };
-  return JSON.parse(fs.readFileSync(dbPath));
+  if (!fs.existsSync(path.join(__dirname, '../database.json'))) return { users: {}, holdings: {}, transactions: [] };
+  return JSON.parse(fs.readFileSync(path.join(__dirname, '../database.json')));
 }
 
 // API endpoints
@@ -313,7 +331,7 @@ app.get('/api/dashboard/quests', (req, res) => {
 });
 
 // Enhanced Backend API Proxy Routes
-const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:3001';
+// Using BACKEND_URL already defined above
 
 // Proxy route for enhanced backend market data
 app.get('/api/market', async (req, res) => {
