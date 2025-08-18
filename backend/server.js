@@ -24,6 +24,7 @@ import { updatePrices, initializeMarket, getMarketStats } from '../utils/priceUp
 import { getEventBonuses, getRandomChaosEvent } from '../utils/triggers.js';
 import { enhancedGlobalEvents } from '../utils/enhancedGlobalEvents.js';
 import { lightweightTikTokScraper } from '../utils/lightweightTikTokScraper.js';
+import { getGlobalDailyQuests, getAllUsers, getHoldings, getAllStocks } from '../utils/supabaseDb.js';
 
 // Initialize Supabase check
 const SUPABASE_URL = process.env.SUPABASE_URL || '';
@@ -265,6 +266,130 @@ app.get('/api/global-events', (req, res) => {
   }
 });
 
+// Quests API endpoint - Get today's global quests
+app.get('/api/quests', async (req, res) => {
+  try {
+    console.log('🎯 API request: Fetching global daily quests...');
+    
+    const date = req.query.date || new Date().toISOString().split('T')[0];
+    const quests = await getGlobalDailyQuests(date);
+    
+    res.json({
+      date,
+      quests,
+      timestamp: new Date().toISOString(),
+      success: true
+    });
+  } catch (error) {
+    console.error('Error fetching quests:', error);
+    res.status(500).json({ error: 'Failed to fetch quests' });
+  }
+});
+
+// Leaderboard API endpoint - Get top users with Discord usernames and balances
+app.get('/api/leaderboard', async (req, res) => {
+  try {
+    console.log('🏆 API request: Fetching leaderboard...');
+    
+    const limit = parseInt(req.query.limit) || 10;
+    const includeHoldings = req.query.includeHoldings === 'true';
+    
+    // Get all users from database
+    const users = await getAllUsers();
+    
+    if (!users || users.length === 0) {
+      return res.json({
+        leaderboard: [],
+        totalUsers: 0,
+        timestamp: new Date().toISOString(),
+        success: true
+      });
+    }
+    
+    // Load current market data for portfolio calculations
+    let market = {};
+    if (includeHoldings && fs.existsSync(marketPath)) {
+      market = JSON.parse(fs.readFileSync(marketPath));
+    }
+    
+    // Calculate total wealth for each user (balance + portfolio value)
+    const enrichedUsers = await Promise.all(users.map(async (user) => {
+      try {
+        let totalValue = user.balance || 0;
+        let portfolioValue = 0;
+        let holdings = [];
+        
+        if (includeHoldings) {
+          holdings = await getHoldings(user.id);
+          
+          if (holdings && holdings.length > 0) {
+            portfolioValue = holdings.reduce((sum, holding) => {
+              const currentPrice = market[holding.stock]?.price || 0;
+              return sum + (holding.amount * currentPrice);
+            }, 0);
+          }
+        }
+        
+        totalValue += portfolioValue;
+        
+        return {
+          id: user.id,
+          username: user.username || `User#${user.id.slice(-4)}`, // Discord username or fallback
+          discriminator: user.discriminator || null,
+          displayName: user.username ? 
+            (user.discriminator ? `${user.username}#${user.discriminator}` : user.username) : 
+            `User#${user.id.slice(-4)}`,
+          balance: user.balance || 0,
+          portfolioValue: Math.round(portfolioValue * 100) / 100,
+          totalValue: Math.round(totalValue * 100) / 100,
+          lastDaily: user.lastDaily || null,
+          lastMessage: user.lastMessage || null,
+          holdings: includeHoldings ? holdings : undefined,
+          joinedAt: user.createdAt || user.joined_at || null
+        };
+      } catch (error) {
+        console.error(`Error processing user ${user.id}:`, error);
+        return {
+          id: user.id,
+          username: `User#${user.id.slice(-4)}`,
+          displayName: `User#${user.id.slice(-4)}`,
+          balance: user.balance || 0,
+          portfolioValue: 0,
+          totalValue: user.balance || 0,
+          error: 'Failed to load user data'
+        };
+      }
+    }));
+    
+    // Sort by total value (balance + portfolio) descending
+    const sortedUsers = enrichedUsers
+      .sort((a, b) => b.totalValue - a.totalValue)
+      .slice(0, Math.min(limit, 50)); // Cap at 50 users max
+    
+    // Add ranking
+    const leaderboard = sortedUsers.map((user, index) => ({
+      rank: index + 1,
+      ...user
+    }));
+    
+    res.json({
+      leaderboard,
+      totalUsers: users.length,
+      limit,
+      includeHoldings,
+      timestamp: new Date().toISOString(),
+      success: true
+    });
+    
+  } catch (error) {
+    console.error('Error fetching leaderboard:', error);
+    res.status(500).json({ 
+      error: 'Failed to fetch leaderboard',
+      details: error.message 
+    });
+  }
+});
+
 // TikTok-only price update function for high-frequency updates
 async function performTikTokOnlyUpdate() {
   console.log('\n🎵 === Starting TikTok-Only Update ===');
@@ -383,9 +508,14 @@ app.use((error, req, res, next) => {
 // Start server
 app.listen(PORT, () => {
   console.log(`🚀 Enhanced Italian Meme Stock Exchange Backend running on port ${PORT}`);
-  console.log(`📈 Market updates every 30 seconds with enhanced global events`);
+  console.log(`📈 Market updates every 15 minutes with enhanced global events`);
+  console.log(`🎵 TikTok updates every 5 minutes for high-frequency tracking`);
   console.log(`📊 API available at http://localhost:${PORT}/api`);
   console.log(`💡 Health check: http://localhost:${PORT}/api/health`);
+  console.log(`🏪 Market data: http://localhost:${PORT}/api/market`);
+  console.log(`🎯 Daily quests: http://localhost:${PORT}/api/quests`);
+  console.log(`🏆 Leaderboard: http://localhost:${PORT}/api/leaderboard`);
+  console.log(`🌍 Global events: http://localhost:${PORT}/api/global-events`);
   console.log(`🔧 Environment loaded from: ${envPath}`);
   
   // Show loaded environment variables (without exposing secrets)
