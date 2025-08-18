@@ -125,6 +125,40 @@ function saveDatabase(data) {
   }
 }
 
+function cleanupMarketData() {
+  try {
+    if (!fs.existsSync(marketPath)) return;
+    
+    const market = JSON.parse(fs.readFileSync(marketPath));
+    let cleaned = false;
+    
+    // Remove invalid entries and fix corrupted data
+    Object.keys(market).forEach(symbol => {
+      if (typeof market[symbol] !== 'object' || market[symbol] === null) {
+        console.log(`🧹 Cleaning up invalid entry for ${symbol}`);
+        delete market[symbol];
+        cleaned = true;
+      } else if (typeof market[symbol].price !== 'number') {
+        console.log(`🧹 Fixing price for ${symbol}`);
+        market[symbol] = {
+          price: 10 + Math.random() * 40, // Default price between 10-50
+          change: 0,
+          lastUpdate: Date.now(),
+          volume: Math.floor(Math.random() * 1000) + 100
+        };
+        cleaned = true;
+      }
+    });
+    
+    if (cleaned) {
+      fs.writeFileSync(marketPath, JSON.stringify(market, null, 2));
+      console.log('✅ Market data cleaned up successfully');
+    }
+  } catch (error) {
+    console.error('Error cleaning market data:', error);
+  }
+}
+
 // Generate simple daily quests
 function generateDailyQuests(date = null) {
   const questDate = date || new Date().toISOString().split('T')[0];
@@ -492,14 +526,22 @@ app.post('/api/update-prices', (req, res) => {
     console.log('🔄 API request: Manual price update...');
     
     const market = JSON.parse(fs.readFileSync(marketPath));
+    let validStocks = 0;
     
     // Simple price update - random changes
     Object.keys(market).forEach(symbol => {
+      // Skip invalid entries (strings or non-objects)
+      if (typeof market[symbol] !== 'object' || market[symbol] === null || typeof market[symbol].price !== 'number') {
+        console.warn(`⚠️ Skipping invalid market entry for ${symbol}:`, market[symbol]);
+        return;
+      }
+
       const change = (Math.random() - 0.5) * 0.1; // ±5% change
       const newPrice = market[symbol].price * (1 + change);
       market[symbol].price = Math.max(0.1, Math.round(newPrice * 100) / 100);
       market[symbol].change = change * 100;
       market[symbol].lastUpdate = Date.now();
+      validStocks++;
     });
     
     fs.writeFileSync(marketPath, JSON.stringify(market, null, 2));
@@ -507,7 +549,7 @@ app.post('/api/update-prices', (req, res) => {
     res.json({
       success: true,
       message: 'Prices updated successfully',
-      updatedStocks: Object.keys(market).length,
+      updatedStocks: validStocks,
       timestamp: new Date().toISOString()
     });
     
@@ -521,6 +563,9 @@ app.post('/api/update-prices', (req, res) => {
 // Initialize files
 initializeFiles();
 
+// Clean up any corrupted market data
+cleanupMarketData();
+
 // Simple price update scheduler (every 15 minutes)
 cron.schedule('*/15 * * * *', () => {
   console.log('⏰ Scheduled price update triggered');
@@ -528,6 +573,12 @@ cron.schedule('*/15 * * * *', () => {
     const market = JSON.parse(fs.readFileSync(marketPath));
     
     Object.keys(market).forEach(symbol => {
+      // Skip invalid entries (strings or non-objects)
+      if (typeof market[symbol] !== 'object' || market[symbol] === null || typeof market[symbol].price !== 'number') {
+        console.warn(`⚠️ Skipping invalid market entry for ${symbol}:`, market[symbol]);
+        return;
+      }
+
       const change = (Math.random() - 0.5) * 0.08; // ±4% change
       const newPrice = market[symbol].price * (1 + change);
       market[symbol].price = Math.max(0.1, Math.round(newPrice * 100) / 100);
