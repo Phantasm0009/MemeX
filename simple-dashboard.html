@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Italian Meme Stock Exchange - Simple Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .loading { animation: spin 1s linear infinite; }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-slate-900 via-slate-800 to-indigo-900 text-white min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <h1 class="text-4xl font-bold text-center mb-8">🇮🇹 Italian Meme Stock Exchange</h1>
+        
+        <!-- Backend Status -->
+        <div class="bg-slate-800 rounded-lg p-6 mb-8">
+            <h2 class="text-2xl font-bold mb-4">📡 Backend Status</h2>
+            <div id="backend-status" class="text-lg">Checking...</div>
+        </div>
+
+        <!-- Market Data -->
+        <div class="bg-slate-800 rounded-lg p-6 mb-8">
+            <h2 class="text-2xl font-bold mb-4">📈 Market Overview</h2>
+            <div id="market-data" class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
+                <div class="text-center">Loading market data...</div>
+            </div>
+        </div>
+
+        <!-- Leaderboard -->
+        <div class="bg-slate-800 rounded-lg p-6 mb-8">
+            <h2 class="text-2xl font-bold mb-4">🏆 Top Traders</h2>
+            <div id="leaderboard-data">Loading leaderboard...</div>
+        </div>
+
+        <!-- Analytics -->
+        <div class="bg-slate-800 rounded-lg p-6 mb-8">
+            <h2 class="text-2xl font-bold mb-4">📊 Analytics</h2>
+            <div id="analytics-data" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div class="text-center">Loading analytics...</div>
+            </div>
+        </div>
+
+        <!-- Daily Quests -->
+        <div class="bg-slate-800 rounded-lg p-6">
+            <h2 class="text-2xl font-bold mb-4">🎯 Daily Quests</h2>
+            <div id="quests-data">Loading quests...</div>
+        </div>
+    </div>
+
+    <script>
+        const BACKEND_URL = 'http://159.203.134.206:3001';
+
+        async function checkBackendStatus() {
+            try {
+                const response = await fetch(`${BACKEND_URL}/api/health`);
+                const data = await response.json();
+                document.getElementById('backend-status').innerHTML = `
+                    <div class="text-green-400">✅ Backend Online</div>
+                    <div class="text-sm text-slate-400">Uptime: ${Math.floor(data.uptime)}s | Port: ${data.port}</div>
+                `;
+            } catch (error) {
+                document.getElementById('backend-status').innerHTML = `
+                    <div class="text-red-400">❌ Backend Offline</div>
+                    <div class="text-sm text-slate-400">Error: ${error.message}</div>
+                `;
+            }
+        }
+
+        async function loadMarketData() {
+            try {
+                const response = await fetch(`${BACKEND_URL}/api/market`);
+                const data = await response.json();
+                const market = data.market || {};
+                
+                let html = '';
+                Object.entries(market).slice(0, 10).forEach(([symbol, stock]) => {
+                    const change = stock.lastChange || 0;
+                    const price = stock.price || 0;
+                    const changeColor = change >= 0 ? 'text-green-400' : 'text-red-400';
+                    
+                    html += `
+                        <div class="bg-slate-700 rounded-lg p-4 text-center">
+                            <div class="font-bold text-lg">${symbol}</div>
+                            <div class="text-2xl font-bold">$${price.toFixed(2)}</div>
+                            <div class="${changeColor}">${change >= 0 ? '+' : ''}${change.toFixed(2)}%</div>
+                        </div>
+                    `;
+                });
+                
+                document.getElementById('market-data').innerHTML = html;
+            } catch (error) {
+                document.getElementById('market-data').innerHTML = `<div class="text-red-400">Failed to load market data: ${error.message}</div>`;
+            }
+        }
+
+        async function loadLeaderboard() {
+            try {
+                const response = await fetch(`${BACKEND_URL}/api/leaderboard?limit=5`);
+                const data = await response.json();
+                const leaderboard = data.leaderboard || [];
+                
+                let html = '';
+                leaderboard.forEach((trader, index) => {
+                    const rank = index + 1;
+                    const rankEmoji = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : `${rank}`;
+                    
+                    html += `
+                        <div class="flex justify-between items-center py-3 border-b border-slate-600">
+                            <div class="flex items-center space-x-3">
+                                <div class="text-2xl">${rankEmoji}</div>
+                                <div>
+                                    <div class="font-semibold">${trader.username || trader.displayName}</div>
+                                    <div class="text-sm text-slate-400">Balance: $${(trader.balance || 0).toFixed(2)}</div>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <div class="font-bold">$${(trader.totalValue || trader.balance || 0).toFixed(2)}</div>
+                                <div class="text-sm text-slate-400">Total Value</div>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                document.getElementById('leaderboard-data').innerHTML = html || '<div class="text-slate-400">No traders yet</div>';
+            } catch (error) {
+                document.getElementById('leaderboard-data').innerHTML = `<div class="text-red-400">Failed to load leaderboard: ${error.message}</div>`;
+            }
+        }
+
+        async function loadAnalytics() {
+            try {
+                const response = await fetch(`${BACKEND_URL}/api/analytics`);
+                const data = await response.json();
+                
+                const html = `
+                    <div class="bg-slate-700 rounded-lg p-4 text-center">
+                        <div class="text-3xl font-bold text-blue-400">${data.marketStats?.totalStocks || 0}</div>
+                        <div class="text-sm text-slate-400">Total Stocks</div>
+                    </div>
+                    <div class="bg-slate-700 rounded-lg p-4 text-center">
+                        <div class="text-3xl font-bold text-green-400">$${(data.marketStats?.totalMarketCap || 0).toLocaleString()}</div>
+                        <div class="text-sm text-slate-400">Market Cap</div>
+                    </div>
+                    <div class="bg-slate-700 rounded-lg p-4 text-center">
+                        <div class="text-3xl font-bold text-yellow-400">${data.userStats?.totalUsers || 0}</div>
+                        <div class="text-sm text-slate-400">Total Users</div>
+                    </div>
+                    <div class="bg-slate-700 rounded-lg p-4 text-center">
+                        <div class="text-3xl font-bold text-purple-400">$${(data.marketStats?.dailyVolume || 0).toLocaleString()}</div>
+                        <div class="text-sm text-slate-400">Daily Volume</div>
+                    </div>
+                `;
+                
+                document.getElementById('analytics-data').innerHTML = html;
+            } catch (error) {
+                document.getElementById('analytics-data').innerHTML = `<div class="text-red-400">Failed to load analytics: ${error.message}</div>`;
+            }
+        }
+
+        async function loadQuests() {
+            try {
+                const response = await fetch(`${BACKEND_URL}/api/quests`);
+                const data = await response.json();
+                const quests = data.quests || [];
+                
+                let html = '<div class="grid grid-cols-1 md:grid-cols-2 gap-4">';
+                quests.forEach(quest => {
+                    const progressPercent = quest.target > 0 ? (quest.progress / quest.target) * 100 : 0;
+                    const statusColor = quest.completed ? 'text-green-400' : 'text-yellow-400';
+                    
+                    html += `
+                        <div class="bg-slate-700 rounded-lg p-4">
+                            <div class="flex justify-between items-start mb-2">
+                                <div class="font-semibold">${quest.title}</div>
+                                <div class="${statusColor}">💰 ${quest.reward}</div>
+                            </div>
+                            <div class="text-sm text-slate-400 mb-3">${quest.description}</div>
+                            <div class="bg-slate-600 rounded-full h-2 mb-2">
+                                <div class="bg-blue-500 h-2 rounded-full" style="width: ${progressPercent}%"></div>
+                            </div>
+                            <div class="text-sm">${quest.progress}/${quest.target}</div>
+                        </div>
+                    `;
+                });
+                html += '</div>';
+                
+                document.getElementById('quests-data').innerHTML = html;
+            } catch (error) {
+                document.getElementById('quests-data').innerHTML = `<div class="text-red-400">Failed to load quests: ${error.message}</div>`;
+            }
+        }
+
+        // Load all data
+        async function loadDashboard() {
+            await checkBackendStatus();
+            await loadMarketData();
+            await loadLeaderboard();
+            await loadAnalytics();
+            await loadQuests();
+        }
+
+        // Auto refresh every 30 seconds
+        loadDashboard();
+        setInterval(loadDashboard, 30000);
+    </script>
+</body>
+</html>
