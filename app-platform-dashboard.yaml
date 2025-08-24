@@ -19,7 +19,10 @@ services:
   - key: DASHBOARD_PORT
     value: "3002"
   - key: BACKEND_URL
-    value: "https://memexbot.xyz"
+    value: "https://api.memexbot.xyz"
+  domains:
+  - name: memexbot.xyz
+    type: PRIMARY
   - key: SUPABASE_URL
     scope: RUN_TIME
     type: SECRET
