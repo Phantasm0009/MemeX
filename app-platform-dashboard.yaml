@@ -1,0 +1,34 @@
+name: memex-dashboard
+services:
+- name: dashboard
+  source_dir: dashboard
+  github:
+    repo: Phantasm0009/MemeX
+    branch: main
+    deploy_on_push: true
+  run_command: node server.js
+  build_command: npm install --production
+  environment_slug: node-js
+  instance_count: 1
+  instance_size_slug: basic-xxs
+  envs:
+  - key: NODE_ENV
+    value: production
+  - key: PORT
+    value: "3002"
+  - key: DASHBOARD_PORT
+    value: "3002"
+  - key: BACKEND_URL
+    value: "https://memexbot.xyz"
+  - key: SUPABASE_URL
+    scope: RUN_TIME
+    type: SECRET
+  - key: SUPABASE_ANON_KEY
+    scope: RUN_TIME
+    type: SECRET
+  http_port: 3002
+  routes:
+  - path: /
+region: nyc1
+features:
+- buildpack-stack: ubuntu-22
