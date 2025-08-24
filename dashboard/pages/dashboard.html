@@ -3,182 +3,1391 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - Italian Meme Stock Exchange</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>🚀 The Meme Stock Exchange — Trade 🚀, Lose 💀, Win 💎</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="/css/dashboard.css">
+    <style>
+        /* Import fonts */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+
+        /* Dark trading terminal theme */
+        :root {
+            --bg-primary: #0a0a0a;
+            --bg-secondary: #1a1a1a;
+            --bg-tertiary: #2a2a2a;
+            --bg-card: #1e1e1e;
+            --text-primary: #ffffff;
+            --text-secondary: #b3b3b3;
+            --text-muted: #666666;
+            --color-bull: #00ff88;
+            --color-bear: #ff4757;
+            --color-neutral: #ffa726;
+            --color-accent: #8b5cf6;
+            --color-blue: #06b6d4;
+            --border-color: #333333;
+            --glow-purple: rgba(139, 92, 246, 0.3);
+            --glow-green: rgba(0, 255, 136, 0.3);
+            --glow-red: rgba(255, 71, 87, 0.3);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* Hero/Header Bar */
+        .hero-header {
+            background: linear-gradient(135deg, var(--bg-secondary), var(--bg-tertiary));
+            border-bottom: 2px solid var(--color-accent);
+            padding: 1.5rem 2rem;
+            box-shadow: 0 4px 20px rgba(139, 92, 246, 0.2);
+        }
+
+        .hero-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .hero-left {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .logo-icon {
+            font-size: 2.5rem;
+            filter: drop-shadow(0 0 10px var(--glow-purple));
+        }
+
+        .brand-text h1 {
+            font-size: 1.8rem;
+            font-weight: 800;
+            background: linear-gradient(45deg, var(--color-accent), var(--color-blue));
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .tagline {
+            font-size: 1rem;
+            color: var(--text-secondary);
+            margin-top: 0.25rem;
+        }
+
+        .quick-stats {
+            display: flex;
+            gap: 2rem;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .quick-stat {
+            text-align: center;
+        }
+
+        .quick-stat-value {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--color-accent);
+        }
+
+        .quick-stat-label {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        /* Main container */
+        .main-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        /* Market Overview Table */
+        .market-overview {
+            background: var(--bg-card);
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .section-header {
+            background: var(--bg-secondary);
+            padding: 1.5rem 2rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .market-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .market-table th {
+            background: var(--bg-tertiary);
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+            color: var(--text-secondary);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .market-table td {
+            padding: 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .market-table tbody tr {
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .market-table tbody tr:hover {
+            background: rgba(139, 92, 246, 0.1);
+            box-shadow: 0 0 20px var(--glow-purple);
+        }
+
+        .stock-ticker {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .stock-emoji {
+            font-size: 1.5rem;
+        }
+
+        .stock-price {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .stock-change {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 600;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+        }
+
+        .stock-change.positive {
+            color: var(--color-bull);
+            background: rgba(0, 255, 136, 0.1);
+        }
+
+        .stock-change.negative {
+            color: var(--color-bear);
+            background: rgba(255, 71, 87, 0.1);
+        }
+
+        .mini-sparkline {
+            width: 60px;
+            height: 30px;
+            background: linear-gradient(45deg, var(--color-bull), var(--color-accent));
+            border-radius: 4px;
+            opacity: 0.7;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .mini-sparkline::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            animation: shimmer 2s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+
+        .view-details-btn {
+            background: var(--color-accent);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+
+        .view-details-btn:hover {
+            background: var(--color-blue);
+            box-shadow: 0 0 15px var(--glow-purple);
+        }
+
+        /* Stock Detail Panel */
+        .stock-detail-panel {
+            display: none;
+            background: var(--bg-card);
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .stock-detail-header {
+            background: var(--bg-secondary);
+            padding: 1.5rem 2rem;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .stock-detail-info h2 {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--color-accent);
+            margin-bottom: 0.5rem;
+        }
+
+        .stock-detail-price {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .close-btn {
+            background: var(--color-bear);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .stock-detail-content {
+            padding: 2rem;
+        }
+
+        .stock-chart-container {
+            height: 400px;
+            margin-bottom: 2rem;
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            padding: 1rem;
+        }
+
+        .news-feed {
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .news-item {
+            padding: 0.75rem 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 0.95rem;
+        }
+
+        .news-item:last-child {
+            border-bottom: none;
+        }
+
+        .stock-metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        .metric-card {
+            background: var(--bg-secondary);
+            padding: 1rem;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .metric-value {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--color-accent);
+            margin-bottom: 0.5rem;
+        }
+
+        .metric-label {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+
+        /* Two column layout */
+        .two-column-layout {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 2rem;
+        }
+
+        /* Leaderboard */
+        .leaderboard {
+            background: var(--bg-card);
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .leaderboard-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .leaderboard-rank {
+            font-size: 1.5rem;
+            width: 40px;
+            text-align: center;
+        }
+
+        .leaderboard-user {
+            flex: 1;
+            font-weight: 600;
+        }
+
+        .leaderboard-worth {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 600;
+            color: var(--color-bull);
+        }
+
+        .leaderboard-roi {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        /* Analytics section */
+        .analytics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        .analytics-card {
+            background: var(--bg-card);
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            padding: 1.5rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .trading-history-container {
+            max-height: 200px;
+            overflow-y: auto;
+            margin-top: 1rem;
+        }
+
+        .trade-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem;
+            margin-bottom: 0.5rem;
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            border-left: 3px solid var(--color-accent);
+        }
+
+        .trade-info {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .trade-type {
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            min-width: 40px;
+            text-align: center;
+        }
+
+        .trade-type.buy {
+            background: rgba(0, 255, 136, 0.2);
+            color: var(--color-bull);
+        }
+
+        .trade-type.sell {
+            background: rgba(255, 71, 87, 0.2);
+            color: var(--color-bear);
+        }
+
+        .trade-symbol {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 600;
+        }
+
+        .trade-amount {
+            color: var(--text-muted);
+            font-size: 0.875rem;
+        }
+
+        .trade-details {
+            text-align: right;
+        }
+
+        .trade-price {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .trade-time {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .chart-container {
+            height: 250px;
+            margin-top: 1rem;
+        }
+
+        .sentiment-bar {
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-top: 1rem;
+        }
+
+        .sentiment-meter {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-top: 0.5rem;
+        }
+
+        .sentiment-indicator {
+            flex: 1;
+            height: 8px;
+            background: linear-gradient(90deg, var(--color-bear) 0%, var(--color-bull) 100%);
+            border-radius: 4px;
+            position: relative;
+        }
+
+        .sentiment-pointer {
+            position: absolute;
+            top: -4px;
+            width: 16px;
+            height: 16px;
+            background: white;
+            border-radius: 50%;
+            transform: translateX(-50%);
+            left: 73%; /* 73% bullish */
+        }
+
+        /* Footer */
+        .footer {
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border-color);
+            padding: 2rem;
+            text-align: center;
+            margin-top: 3rem;
+        }
+
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .footer-link {
+            background: var(--color-accent);
+            color: white;
+            text-decoration: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+
+        .footer-link:hover {
+            background: var(--color-blue);
+            box-shadow: 0 0 15px var(--glow-purple);
+        }
+
+        .footer-credit {
+            color: var(--text-muted);
+            font-size: 0.875rem;
+        }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .hero-content {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .quick-stats {
+                gap: 1rem;
+            }
+
+            .two-column-layout {
+                grid-template-columns: 1fr;
+            }
+
+            .main-container {
+                padding: 1rem;
+            }
+        }
+    </style>
 </head>
-<body class="bg-gradient-to-br from-slate-900 via-slate-800 to-indigo-900 text-white min-h-screen">
-    
-    <!-- Navigation -->
-    <nav class="bg-slate-800/90 backdrop-blur-sm border-b border-slate-700 sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-6 py-4">
-            <div class="flex items-center justify-between">
-                <div class="flex items-center space-x-4">
-                    <h1 class="text-2xl font-bold bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent">
-                        🇮🇹 Italian Meme Stock Exchange
-                    </h1>
-                    <div id="connection-status" class="flex items-center text-sm">
-                        <div class="w-2 h-2 rounded-full bg-red-500 mr-2 animate-pulse"></div>
-                        <span>Connecting...</span>
+<body>
+    <!-- Hero/Header Bar -->
+    <header class="hero-header">
+        <div class="hero-content">
+            <div class="hero-left">
+                <div class="logo">
+                    <div class="logo-icon">🚀</div>
+                    <div class="brand-text">
+                        <h1>The Meme Stock Exchange</h1>
+                        <div class="tagline">Trade 🚀, Lose 💀, Win 💎</div>
                     </div>
+                </div>
+            </div>
+            <div class="quick-stats">
+                <div class="quick-stat">
+                    <div class="quick-stat-value" id="total-market-cap">$12.3M</div>
+                    <div class="quick-stat-label">Market Cap</div>
+                </div>
+                <div class="quick-stat">
+                    <div class="quick-stat-value" id="total-players">1,234</div>
+                    <div class="quick-stat-label">Players</div>
+                </div>
+                <div class="quick-stat">
+                    <div class="quick-stat-value" id="top-gainer">🚀 +420%</div>
+                    <div class="quick-stat-label">Top Gainer</div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="main-container">
+        <!-- Market Overview -->
+        <section class="market-overview">
+            <div class="section-header">
+                <h2 class="section-title">
+                    <i class="fas fa-chart-line"></i>
+                    MARKET OVERVIEW
+                </h2>
+            </div>
+            <table class="market-table" id="market-table">
+                <thead>
+                    <tr>
+                        <th>Ticker</th>
+                        <th>Name</th>
+                        <th>Price</th>
+                        <th>% Change</th>
+                        <th>Volume</th>
+                        <th>Holders</th>
+                        <th>Chart</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="market-table-body">
+                    <!-- Market data will be populated dynamically from backend API -->
+                </tbody>
+            </table>
+        </section>
+
+        <!-- Stock Detail Panel -->
+        <section class="stock-detail-panel" id="stock-detail-panel">
+            <div class="stock-detail-header">
+                <div class="stock-detail-info">
+                    <h2 id="detail-ticker">🚀 STONK</h2>
+                    <div class="stock-detail-price" id="detail-price">Current Price: $123.45 | Change: +12.3%</div>
+                </div>
+                <button class="close-btn" onclick="hideStockDetails()">✖ Close</button>
+            </div>
+            <div class="stock-detail-content">
+                <div class="stock-chart-container">
+                    <canvas id="stock-detail-chart"></canvas>
                 </div>
                 
-                <div class="flex space-x-2">
-                    <a href="/dashboard" class="nav-btn active">
-                        <i class="fas fa-chart-line"></i>
-                        Dashboard
-                    </a>
-                    <a href="/leaderboard" class="nav-btn">
+                <div class="two-column-layout">
+                    <div class="news-feed">
+                        <h3>📰 News Feed</h3>
+                        <div class="news-item">🚨 STONK just hit a new ATH!</div>
+                        <div class="news-item">Reddit is going crazy for 🚀 STONK</div>
+                        <div class="news-item">"This stock only goes up" — Famous Last Words</div>
+                    </div>
+                    
+                    <div class="stock-metrics">
+                        <div class="metric-card">
+                            <div class="metric-value">432</div>
+                            <div class="metric-label">Holders</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-value">🔥 CHAOTIC</div>
+                            <div class="metric-label">Volatility</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Two Column Layout: Leaderboard + Analytics -->
+        <div class="two-column-layout">
+            <!-- Leaderboard -->
+            <section class="leaderboard">
+                <div class="section-header">
+                    <h2 class="section-title">
                         <i class="fas fa-trophy"></i>
-                        Leaderboard
-                    </a>
-                    <a href="/events" class="nav-btn">
-                        <i class="fas fa-bolt"></i>
-                        Events
-                    </a>
-                    <a href="/analytics" class="nav-btn">
-                        <i class="fas fa-chart-bar"></i>
-                        Analytics
-                    </a>
-                    <a href="/quests" class="nav-btn">
-                        <i class="fas fa-tasks"></i>
-                        Quests
-                    </a>
+                        LEADERBOARD
+                    </h2>
+                </div>
+                <div class="leaderboard-item">
+                    <div class="leaderboard-rank">🥇</div>
+                    <div class="leaderboard-user">User123</div>
+                    <div class="leaderboard-worth">$12,345</div>
+                    <div class="leaderboard-roi">+420%</div>
+                </div>
+                <div class="leaderboard-item">
+                    <div class="leaderboard-rank">🥈</div>
+                    <div class="leaderboard-user">TraderA</div>
+                    <div class="leaderboard-worth">$9,876</div>
+                    <div class="leaderboard-roi">+210%</div>
+                </div>
+                <div class="leaderboard-item">
+                    <div class="leaderboard-rank">🥉</div>
+                    <div class="leaderboard-user">MemeKing</div>
+                    <div class="leaderboard-worth">$7,654</div>
+                    <div class="leaderboard-roi">+133%</div>
+                </div>
+            </section>
+
+            <!-- Analytics -->
+            <section class="analytics-card">
+                <div class="section-header">
+                    <h2 class="section-title">
+                        <i class="fas fa-chart-pie"></i>
+                        ANALYTICS
+                    </h2>
+                </div>
+                <div class="chart-container">
+                    <canvas id="holdings-pie-chart"></canvas>
+                </div>
+                <div class="sentiment-bar">
+                    <h4>Market Sentiment</h4>
+                    <div class="sentiment-meter">
+                        <span>🐻</span>
+                        <div class="sentiment-indicator">
+                            <div class="sentiment-pointer"></div>
+                        </div>
+                        <span>🐂</span>
+                    </div>
+                    <div style="text-align: center; margin-top: 0.5rem; font-family: 'JetBrains Mono', monospace;">
+                        73% Bullish | 27% Bearish
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- Analytics Grid -->
+        <section class="analytics-grid">
+            <div class="analytics-card">
+                <h3>📊 Gainers vs Losers</h3>
+                <div class="chart-container">
+                    <canvas id="gainers-losers-chart"></canvas>
                 </div>
             </div>
-        </div>
-    </nav>
+            
+            <div class="analytics-card">
+                <h3>� Real-Time Trading History</h3>
+                <div class="trading-history-container" id="trading-history">
+                    <div class="trade-item">
+                        <div class="trade-info">
+                            <span class="trade-type">Loading...</span>
+                            <span class="trade-symbol">�</span>
+                            <span class="trade-amount">Real trades loading...</span>
+                        </div>
+                        <div class="trade-details">
+                            <div class="trade-price">$0.00</div>
+                            <div class="trade-time">Now</div>
+                        </div>
+                    </div>
 
-    <!-- Main Content -->
-    <main class="max-w-7xl mx-auto px-6 py-8">
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-links">
+            <a href="https://discord.com/oauth2/authorize?client_id=1399789085962539056&permissions=8&scope=bot%20applications.commands" target="_blank" class="footer-link">🤖 Invite Bot</a>
+            <a href="#" class="footer-link">💬 Join Discord</a>
+        </div>
+        <div class="footer-credit">Built with ❤️ for memes</div>
+    </footer>
+
+    <script>
+        // Stock data will be populated from backend API
+        let stockData = {};
+        let marketData = {};
+        let leaderboardData = [];
         
-        <!-- Overview Cards -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <div class="pro-card p-6">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-slate-400 text-sm font-medium">Market Cap</p>
-                        <p id="market-cap" class="text-3xl font-bold text-green-400">Loading...</p>
-                    </div>
-                    <div class="w-12 h-12 bg-green-500/20 rounded-lg flex items-center justify-center">
-                        <i class="fas fa-chart-line text-green-400 text-xl"></i>
-                    </div>
-                </div>
-            </div>
+        // Emoji mapping for stock symbols
+        const stockEmojis = {
+            'SKIBI': '🚀',
+            'SUS': '🤔', 
+            'SAHUR': '🍝',
+            'LABUB': '🐻',
+            'OHIO': '🌟',
+            'RIZZL': '💫',
+            'GYATT': '⚡',
+            'FRIED': '🍗',
+            'SIGMA': '💪',
+            'TRALA': '🎵',
+            'CROCO': '🐊',
+            'FANUM': '👑',
+            'CAPPU': '☕'
+        };
+
+        // Initialize dashboard
+        async function initDashboard() {
+            try {
+                await loadMarketData();
+                await loadLeaderboardData();
+                await loadTradingHistory();
+                updateQuickStats();
+                populateMarketTable();
+                initializeCharts();
+                
+                // Note: Real-time trading simulation disabled since we use real API data
+                // simulateRealTimeTrading();
+                
+                // Auto-refresh every 30 seconds
+                setInterval(() => {
+                    loadMarketData();
+                    updateQuickStats();
+                    populateMarketTable();
+                    loadTradingHistory(); // Also refresh trading history
+                }, 30000);
+                
+                // Refresh trading history more frequently (every 10 seconds)
+                setInterval(() => {
+                    loadTradingHistory();
+                }, 10000);
+                
+            } catch (error) {
+                console.error('Error initializing dashboard:', error);
+                showError('Failed to load market data');
+            }
+        }
+
+        // Load market data from backend
+        async function loadMarketData() {
+            try {
+                // Use enhanced market API that includes holder statistics
+                const response = await fetch('/api/market/enhanced');
+                if (response.ok) {
+                    const data = await response.json();
+                    marketData = data.market || {};
+                    
+                    // Transform data for frontend
+                    stockData = {};
+                    Object.entries(marketData).forEach(([symbol, data]) => {
+                        stockData[symbol] = {
+                            ticker: `${stockEmojis[symbol] || '📊'}${symbol}`,
+                            name: symbol,
+                            price: data.price || 0,
+                            change: data.change || 0,
+                            volume: formatVolume(data.totalVolume || 0),
+                            holders: data.holders || 0,
+                            marketCap: data.marketCap || 0,
+                            news: generateNews(symbol, data.change)
+                        };
+                    });
+                    
+                    updateMarketTable();
+                    updateQuickStats(data.stats);
+                } else {
+                    throw new Error('Failed to fetch market data');
+                }
+            } catch (error) {
+                console.error('Error loading market data:', error);
+                // Use fallback data
+                useFallbackData();
+            }
+        }
+
+        // Load leaderboard data
+        async function loadLeaderboardData() {
+            try {
+                const response = await fetch('/api/leaderboard');
+                if (response.ok) {
+                    const data = await response.json();
+                    leaderboardData = data.leaderboard || [];
+                } else {
+                    // Use sample leaderboard data
+                    leaderboardData = [
+                        { username: 'MemeKing👑', netWorth: 15420, roi: 420 },
+                        { username: 'DiamondHands💎', netWorth: 12345, roi: 210 },
+                        { username: 'RocketTrader🚀', netWorth: 9876, roi: 133 },
+                        { username: 'ApeStrong🦍', netWorth: 7654, roi: 89 },
+                        { username: 'CryptoGuru✨', netWorth: 6543, roi: 67 }
+                    ];
+                }
+                updateLeaderboard();
+            } catch (error) {
+                console.error('Error loading leaderboard:', error);
+            }
+        }
+
+        // Load and update trading history
+        let tradingHistory = [];
+        
+        async function loadTradingHistory() {
+            const timestamp = new Date().toLocaleTimeString();
+            console.log(`📊 Loading trading history at ${timestamp}`);
             
-            <div class="pro-card p-6">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-slate-400 text-sm font-medium">Active Traders</p>
-                        <p id="active-traders" class="text-3xl font-bold text-blue-400">Loading...</p>
-                    </div>
-                    <div class="w-12 h-12 bg-blue-500/20 rounded-lg flex items-center justify-center">
-                        <i class="fas fa-users text-blue-400 text-xl"></i>
-                    </div>
-                </div>
-            </div>
+            try {
+                const response = await fetch('/api/transactions?limit=20');
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.transactions && data.transactions.length > 0) {
+                        tradingHistory = transformTransactions(data.transactions);
+                        console.log(`✅ Found ${data.transactions.length} transactions`);
+                    } else {
+                        console.warn('No transactions found in API response');
+                        tradingHistory = generateSampleTradingHistory();
+                    }
+                } else {
+                    console.error('API request failed:', response.status, response.statusText);
+                    tradingHistory = generateSampleTradingHistory();
+                }
+                updateTradingHistory();
+            } catch (error) {
+                console.error('Error loading trading history:', error);
+                tradingHistory = generateSampleTradingHistory();
+                updateTradingHistory();
+            }
+        }
+
+        // Transform backend transaction data to frontend format
+        function transformTransactions(transactions) {
+            return transactions.map(transaction => {
+                const symbol = transaction.stock || transaction.symbol || 'UNKNOWN';
+                const emoji = stockEmojis[symbol] || '📊';
+                
+                // Safely convert price to number
+                const price = parseFloat(transaction.price || 0) || 0;
+                const amount = parseInt(transaction.amount || transaction.shares || 0) || 0;
+                
+                return {
+                    type: transaction.type === 'buy' ? 'BUY' : 'SELL',
+                    symbol: symbol,
+                    emoji: emoji,
+                    amount: Math.abs(amount),
+                    price: price.toFixed(2),
+                    timestamp: new Date(transaction.timestamp || transaction.created_at || Date.now()).getTime(),
+                    user: transaction.user_id || 'Anonymous'
+                };
+            }).filter(trade => trade.amount > 0);
+        }
+
+        function generateSampleTradingHistory() {
+            const symbols = ['SKIBI', 'SUS', 'SAHUR', 'LABUB', 'OHIO', 'RIZZL', 'GYATT'];
+            const types = ['BUY', 'SELL'];
+            const history = [];
             
-            <div class="pro-card p-6">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-slate-400 text-sm font-medium">Total Stocks</p>
-                        <p id="total-stocks" class="text-3xl font-bold text-purple-400">15</p>
-                    </div>
-                    <div class="w-12 h-12 bg-purple-500/20 rounded-lg flex items-center justify-center">
-                        <i class="fas fa-coins text-purple-400 text-xl"></i>
-                    </div>
-                </div>
-            </div>
+            for (let i = 0; i < 10; i++) {
+                const symbol = symbols[Math.floor(Math.random() * symbols.length)];
+                const type = types[Math.floor(Math.random() * types.length)];
+                const emoji = stockEmojis[symbol] || '📊';
+                
+                history.push({
+                    type: type,
+                    symbol: symbol,
+                    emoji: emoji,
+                    amount: Math.floor(Math.random() * 500) + 10,
+                    price: (Math.random() * 100 + 1).toFixed(2),
+                    timestamp: Date.now() - (i * 60000 * Math.random() * 30) // Random times in last 30 minutes
+                });
+            }
             
-            <div class="pro-card p-6">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-slate-400 text-sm font-medium">Last Update</p>
-                        <p id="last-update" class="text-lg font-semibold text-slate-300">Loading...</p>
-                    </div>
-                    <div class="w-12 h-12 bg-orange-500/20 rounded-lg flex items-center justify-center">
-                        <i class="fas fa-clock text-orange-400 text-xl"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
+            return history.sort((a, b) => b.timestamp - a.timestamp);
+        }
 
-        <!-- Main Content Grid -->
-        <div class="grid grid-cols-1 xl:grid-cols-3 gap-8">
+        function updateTradingHistory() {
+            const container = document.getElementById('trading-history');
+            if (!container) {
+                console.error('Trading history container not found!');
+                return;
+            }
             
-            <!-- Italian Stocks -->
-            <div class="xl:col-span-2">
-                <div class="pro-card p-6">
-                    <div class="flex items-center justify-between mb-6">
-                        <h2 class="text-2xl font-bold flex items-center">
-                            🇮🇹 Italian Meme Stocks
-                        </h2>
-                        <button onclick="refreshMarketData()" class="text-slate-400 hover:text-white transition-colors">
-                            <i class="fas fa-sync-alt"></i>
-                        </button>
+            container.innerHTML = '';
+            
+            tradingHistory.slice(0, 6).forEach(trade => {
+                const timeAgo = getTimeAgo(trade.timestamp);
+                const tradeItem = document.createElement('div');
+                tradeItem.className = 'trade-item';
+                tradeItem.innerHTML = `
+                    <div class="trade-info">
+                        <span class="trade-type ${trade.type.toLowerCase()}">${trade.type}</span>
+                        <span class="trade-symbol">${trade.emoji}${trade.symbol}</span>
+                        <span class="trade-amount">${trade.amount} shares</span>
                     </div>
-                    <div id="stocks-grid" class="space-y-4">
-                        <div class="flex items-center justify-center py-8">
-                            <div class="loading-spinner"></div>
-                        </div>
+                    <div class="trade-details">
+                        <div class="trade-price">$${trade.price}</div>
+                        <div class="trade-time">${timeAgo}</div>
                     </div>
-                </div>
-            </div>
+                `;
+                container.appendChild(tradeItem);
+            });
+        }
 
-            <!-- Market Activity -->
-            <div class="space-y-6">
-                <!-- Latest Event -->
-                <div class="pro-card p-6">
-                    <h3 class="text-xl font-bold mb-4">📈 Latest Market Event</h3>
-                    <div id="market-event" class="p-4 bg-gradient-to-r from-blue-500/10 to-purple-500/10 border border-blue-500/20 rounded-lg">
-                        <p id="latest-event" class="text-sm">Loading market activity...</p>
-                    </div>
-                </div>
+        function getTimeAgo(timestamp) {
+            const now = Date.now();
+            const diffMs = now - timestamp;
+            const diffMins = Math.floor(diffMs / 60000);
+            const diffHours = Math.floor(diffMins / 60);
+            
+            if (diffMins < 1) return 'Just now';
+            if (diffMins < 60) return `${diffMins} min ago`;
+            if (diffHours < 24) return `${diffHours}h ago`;
+            return `${Math.floor(diffHours / 24)}d ago`;
+        }
 
-                <!-- Market Stats -->
-                <div class="pro-card p-6">
-                    <h3 class="text-xl font-bold mb-4">📊 Market Performance</h3>
-                    <div class="grid grid-cols-3 gap-4 text-center">
-                        <div class="p-3 bg-green-500/10 rounded-lg">
-                            <p class="text-2xl font-bold text-green-400" id="gainers-count">0</p>
-                            <p class="text-xs text-slate-400">Gainers</p>
-                        </div>
-                        <div class="p-3 bg-red-500/10 rounded-lg">
-                            <p class="text-2xl font-bold text-red-400" id="losers-count">0</p>
-                            <p class="text-xs text-slate-400">Losers</p>
-                        </div>
-                        <div class="p-3 bg-slate-500/10 rounded-lg">
-                            <p class="text-2xl font-bold text-slate-400" id="neutral-count">0</p>
-                            <p class="text-xs text-slate-400">Neutral</p>
-                        </div>
-                    </div>
-                </div>
+        // Simulate real-time trading activity
+        function simulateRealTimeTrading() {
+            setInterval(() => {
+                // Add a new random trade every 30-60 seconds
+                if (Math.random() < 0.3) { // 30% chance every interval
+                    const newTrade = generateSampleTradingHistory()[0];
+                    newTrade.timestamp = Date.now();
+                    tradingHistory.unshift(newTrade);
+                    tradingHistory = tradingHistory.slice(0, 20); // Keep only last 20 trades
+                    updateTradingHistory();
+                }
+            }, 10000); // Check every 10 seconds
+        }
 
-                <!-- Real-time Status -->
-                <div class="pro-card p-6">
-                    <h3 class="text-xl font-bold mb-4">🔴 Live Status</h3>
-                    <div class="space-y-3">
-                        <div class="flex items-center justify-between">
-                            <span class="text-sm text-slate-400">Backend Status</span>
-                            <span id="backend-status" class="text-sm font-semibold text-yellow-400">Checking...</span>
-                        </div>
-                        <div class="flex items-center justify-between">
-                            <span class="text-sm text-slate-400">Price Updates</span>
-                            <span class="text-sm font-semibold text-green-400">Every 30s</span>
-                        </div>
-                        <div class="flex items-center justify-between">
-                            <span class="text-sm text-slate-400">Trend Sources</span>
-                            <span class="text-sm font-semibold text-blue-400">5 APIs</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </main>
+        // Update quick stats in header
+        function updateQuickStats() {
+            const totalMarketCap = Object.values(stockData).reduce((sum, stock) => {
+                return sum + (stock.price * 1000000); // Simulate market cap
+            }, 0);
+            
+            const gainers = Object.values(stockData).filter(s => s.change > 0).length;
+            const topGainer = Object.values(stockData).reduce((max, stock) => {
+                return stock.change > max.change ? stock : max;
+            }, { change: -Infinity });
 
-    <script src="/js/dashboard.js"></script>
+            document.getElementById('total-market-cap').textContent = formatCurrency(totalMarketCap);
+            document.getElementById('total-players').textContent = leaderboardData.length > 0 ? leaderboardData.length.toLocaleString() : '1,234';
+            
+            if (topGainer.change > -Infinity) {
+                const emoji = topGainer.ticker.match(/^[\u{1F600}-\u{1F64F}]|^[\u{1F300}-\u{1F5FF}]|^[\u{1F680}-\u{1F6FF}]|^[\u{1F1E0}-\u{1F1FF}]|^[\u{2600}-\u{26FF}]|^[\u{2700}-\u{27BF}]/u);
+                document.getElementById('top-gainer').textContent = `${emoji ? emoji[0] : '🚀'} +${topGainer.change.toFixed(1)}%`;
+            }
+        }
+
+        // Populate market table
+        function populateMarketTable() {
+            const tbody = document.getElementById('market-table-body');
+            tbody.innerHTML = '';
+            
+            Object.entries(stockData).forEach(([symbol, data]) => {
+                const row = document.createElement('tr');
+                row.onclick = () => showStockDetails(symbol);
+                row.innerHTML = `
+                    <td>
+                        <div class="stock-ticker">
+                            <span class="stock-emoji">${data.ticker.match(/^[\u{1F600}-\u{1F64F}]|^[\u{1F300}-\u{1F5FF}]|^[\u{1F680}-\u{1F6FF}]|^[\u{1F1E0}-\u{1F1FF}]|^[\u{2600}-\u{26FF}]|^[\u{2700}-\u{27BF}]/u)?.[0] || '📊'}</span>
+                            ${symbol}
+                        </div>
+                    </td>
+                    <td>${data.name}</td>
+                    <td class="stock-price">$${data.price.toFixed(2)}</td>
+                    <td><span class="stock-change ${data.change >= 0 ? 'positive' : 'negative'}">${data.change >= 0 ? '+' : ''}${data.change.toFixed(1)}%</span></td>
+                    <td>${data.volume}</td>
+                    <td class="holders-count">${data.holders || 0} ${data.holders === 1 ? 'holder' : 'holders'}</td>
+                    <td><div class="mini-sparkline"></div></td>
+                    <td><button class="view-details-btn" onclick="event.stopPropagation(); showStockDetails('${symbol}')">🔍</button></td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // Update market table (wrapper function)
+        function updateMarketTable() {
+            populateMarketTable();
+        }
+
+        // Update leaderboard
+        function updateLeaderboard() {
+            const container = document.querySelector('.leaderboard');
+            const header = container.querySelector('.section-header');
+            
+            // Clear existing items
+            container.innerHTML = '';
+            container.appendChild(header);
+            
+            const medals = ['🥇', '🥈', '🥉'];
+            
+            leaderboardData.slice(0, 10).forEach((user, index) => {
+                // Handle both old and new API field names for backward compatibility
+                const username = user.username || user.displayName || `User#${user.id?.slice(-4) || '0000'}`;
+                const netWorth = user.totalValue || user.netWorth || 0;
+                const roi = user.profitPercentage !== undefined ? user.profitPercentage : (user.roi || 0);
+                
+                const item = document.createElement('div');
+                item.className = 'leaderboard-item';
+                item.innerHTML = `
+                    <div class="leaderboard-rank">${medals[index] || (index + 1)}</div>
+                    <div class="leaderboard-user">${username}</div>
+                    <div class="leaderboard-worth">${formatCurrency(netWorth)}</div>
+                    <div class="leaderboard-roi">${roi >= 0 ? '+' : ''}${roi.toFixed(1)}%</div>
+                `;
+                container.appendChild(item);
+            });
+        }
+
+        // Generate dynamic news based on stock performance
+        function generateNews(symbol, change) {
+            const newsTemplates = {
+                positive: [
+                    `🚨 ${symbol} just hit a new ATH!`,
+                    `Reddit is going crazy for ${symbol}`,
+                    `"${symbol} to the moon!" — Diamond Hands Community`,
+                    `Institutional money flowing into ${symbol}`,
+                    `${symbol} breaks resistance levels`
+                ],
+                negative: [
+                    `${symbol} holders diamond handing the dip`,
+                    `Technical analysis shows support for ${symbol}`,
+                    `"Buy the dip on ${symbol}" — Market Analysts`,
+                    `${symbol} experiencing healthy correction`,
+                    `Long-term outlook remains bullish for ${symbol}`
+                ],
+                neutral: [
+                    `${symbol} trading sideways`,
+                    `Market consolidation for ${symbol}`,
+                    `${symbol} awaiting next catalyst`
+                ]
+            };
+            
+            if (change > 5) return newsTemplates.positive;
+            if (change < -5) return newsTemplates.negative;
+            return newsTemplates.neutral;
+        }
+
+        // Use fallback data if API fails
+        function useFallbackData() {
+            stockData = {
+                'SKIBI': {
+                    ticker: '🚀SKIBI',
+                    name: 'Skibidi',
+                    price: 123.45,
+                    change: 12.3,
+                    volume: '32.1K',
+                    news: [
+                        '🚨 SKIBI just hit a new ATH!',
+                        'Reddit is going crazy for 🚀 SKIBI',
+                        '"This stock only goes up" — Famous Last Words'
+                    ]
+                },
+                'SUS': {
+                    ticker: '�SUS',
+                    name: 'Sus',
+                    price: 4.20,
+                    change: -3.2,
+                    volume: '18.9K',
+                    news: [
+                        '� SUS holders diamond handing',
+                        'WSB still bullish on SUS long term',
+                        'Technical analysis shows support at $4'
+                    ]
+                },
+                'OHIO': {
+                    ticker: '🌟OHIO',
+                    name: 'Ohio',
+                    price: 69.00,
+                    change: 420,
+                    volume: '42.0K',
+                    news: [
+                        '🌟 OHIO ACTIVATED',
+                        'Institutional money flowing into OHIO',
+                        'Price target upgraded to $100'
+                    ]
+                }
+            };
+        }
+
+        // Utility functions
+        function formatCurrency(amount) {
+            if (typeof amount !== 'number' || isNaN(amount)) {
+                return '$0.00';
+            }
+            if (amount >= 1000000) {
+                return `$${(amount / 1000000).toFixed(1)}M`;
+            } else if (amount >= 1000) {
+                return `$${(amount / 1000).toFixed(1)}K`;
+            }
+            return `$${amount.toFixed(2)}`;
+        }
+
+        function formatVolume(volume) {
+            if (volume >= 1000) {
+                return `${(volume / 1000).toFixed(1)}K`;
+            }
+            return volume.toString();
+        }
+
+        function showError(message) {
+            console.error(message);
+            // Could implement toast notification here
+        }
+
+        function showStockDetails(symbol) {
+            const panel = document.getElementById('stock-detail-panel');
+            const data = stockData[symbol];
+            
+            if (data) {
+                document.getElementById('detail-ticker').textContent = data.ticker;
+                document.getElementById('detail-price').textContent = 
+                    `Current Price: $${data.price.toFixed(2)} | Change: ${data.change >= 0 ? '+' : ''}${data.change.toFixed(1)}%`;
+                
+                // Update news feed
+                const newsContainer = panel.querySelector('.news-feed');
+                const news = Array.isArray(data.news) ? data.news : generateNews(symbol, data.change);
+                newsContainer.innerHTML = '<h3>📰 News Feed</h3>' + 
+                    news.slice(0, 3).map(newsItem => `<div class="news-item">${newsItem}</div>`).join('');
+                
+                // Update metrics
+                const metricsContainer = panel.querySelector('.stock-metrics');
+                metricsContainer.innerHTML = `
+                    <div class="metric-card">
+                        <div class="metric-value">${data.holders || 0}</div>
+                        <div class="metric-label">Holders</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value">${Math.abs(data.change) > 10 ? '🔥 CHAOTIC' : Math.abs(data.change) > 5 ? '⚡ HIGH' : '📊 STABLE'}</div>
+                        <div class="metric-label">Volatility</div>
+                    </div>
+                `;
+                
+                panel.style.display = 'block';
+                panel.scrollIntoView({ behavior: 'smooth' });
+                
+                // Initialize chart
+                initStockChart(symbol);
+            }
+        }
+
+        function hideStockDetails() {
+            document.getElementById('stock-detail-panel').style.display = 'none';
+        }
+
+        function initStockChart(symbol) {
+            const ctx = document.getElementById('stock-detail-chart').getContext('2d');
+            
+            // Destroy existing chart if it exists
+            if (window.stockChart) {
+                window.stockChart.destroy();
+            }
+            
+            // Generate sample price data based on current price
+            const data = [];
+            let price = stockData[symbol].price;
+            const volatility = Math.abs(stockData[symbol].change) / 100;
+            
+            for (let i = 0; i < 24; i++) {
+                const change = (Math.random() - 0.5) * price * volatility;
+                price = Math.max(0.01, price + change);
+                data.push(parseFloat(price.toFixed(2)));
+            }
+            
+            window.stockChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: Array.from({length: 24}, (_, i) => `${i}:00`),
+                    datasets: [{
+                        label: stockData[symbol].ticker,
+                        data: data,
+                        borderColor: stockData[symbol].change >= 0 ? '#00ff88' : '#ff4757',
+                        backgroundColor: stockData[symbol].change >= 0 ? 'rgba(0, 255, 136, 0.1)' : 'rgba(255, 71, 87, 0.1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 0,
+                        pointHoverRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            labels: {
+                                color: '#ffffff'
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            ticks: { color: '#b3b3b3' },
+                            grid: { color: '#333333' }
+                        },
+                        y: {
+                            ticks: { 
+                                color: '#b3b3b3',
+                                callback: function(value) {
+                                    return '$' + value.toFixed(2);
+                                }
+                            },
+                            grid: { color: '#333333' }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Initialize pie chart
+        function initPieChart() {
+            const ctx = document.getElementById('holdings-pie-chart').getContext('2d');
+            
+            const symbols = Object.keys(stockData).slice(0, 5);
+            const colors = ['#8b5cf6', '#06b6d4', '#00ff88', '#ffa726', '#ff4757'];
+            
+            new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: symbols.map(s => stockData[s]?.ticker || s),
+                    datasets: [{
+                        data: symbols.map(() => Math.random() * 30 + 10),
+                        backgroundColor: colors
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            labels: {
+                                color: '#ffffff'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Initialize gainers/losers chart
+        function initGainersLosersChart() {
+            const ctx = document.getElementById('gainers-losers-chart').getContext('2d');
+            
+            const gainers = Object.values(stockData).filter(s => s.change > 0).length;
+            const losers = Object.values(stockData).filter(s => s.change < 0).length;
+            
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Gainers', 'Losers'],
+                    datasets: [{
+                        data: [gainers, losers],
+                        backgroundColor: ['#00ff88', '#ff4757']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        x: {
+                            ticks: { color: '#b3b3b3' },
+                            grid: { color: '#333333' }
+                        },
+                        y: {
+                            ticks: { color: '#b3b3b3' },
+                            grid: { color: '#333333' }
+                        }
+                    }
+                }
+            });
+        }
+
+        function initializeCharts() {
+            // Small delay to ensure DOM is ready
+            setTimeout(() => {
+                initPieChart();
+                initGainersLosersChart();
+            }, 100);
+        }
+
+        // Global refresh function for manual trading history refresh
+        function refreshTradingHistory() {
+            console.log('🔄 Manual refresh of trading history requested');
+            const timestamp = new Date().toLocaleTimeString();
+            console.log(`📅 Refresh at: ${timestamp}`);
+            loadTradingHistory();
+        }
+
+        // Initialize dashboard on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            initDashboard();
+        });
+    </script>
 </body>
 </html>

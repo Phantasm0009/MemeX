@@ -20,86 +20,115 @@ export default {
     }
 
     const embed = new EmbedBuilder()
-      .setTitle('🇮🇹 Welcome to the Italian Meme Stock Exchange! 🍝')
-      .setDescription('Trade 15 authentic Italian brainrot stocks with fake currency!')
-      .setColor('#009246') // Italian flag green
-      .setTimestamp();
+      .setTitle('�️ **MemeX Trading Platform** | Italian Meme Stock Exchange')
+      .setDescription('```yaml\n🚀 Professional Trading Terminal\n💎 15 Premium Italian Meme Assets\n⚡ Real-time Market Data\n🎯 Advanced Portfolio Analytics\n```')
+      .setColor('#00d4aa') // Professional trading green
+      .setTimestamp()
+      .setThumbnail('https://cdn.discordapp.com/attachments/1234567890/placeholder-logo.png')
+      .setFooter({ 
+        text: 'MemeX | Professional Meme Trading Since 2024', 
+        iconURL: 'https://cdn.discordapp.com/attachments/1234567890/placeholder-icon.png' 
+      });
 
-    // Commands section
+    // Trading Commands section with professional styling
     embed.addFields({
-      name: '📈 Trading Commands',
-      value: `
-**\`/market\`** - View all stock prices
-**\`/stock [symbol]\`** - Detailed stock info
-**\`/buy [symbol] [amount]\`** - Buy stocks
-**\`/sell [symbol] [amount]\`** - Sell stocks
-**\`/portfolio\`** - View your holdings
-**\`/leaderboard\`** - Richest traders
-**\`/daily\`** - Get daily bonus coins
-      `,
-      inline: false
+      name: '⚡ **Core Trading Functions**',
+      value: `\`\`\`ansi
+\u001b[0;36m📊 /market\u001b[0m     │ Market Overview & Analytics
+\u001b[0;36m🔍 /stock\u001b[0m      │ Deep Asset Analysis
+\u001b[0;32m📈 /buy\u001b[0m        │ Execute Buy Orders
+\u001b[0;31m📉 /sell\u001b[0m       │ Execute Sell Orders
+\u001b[0;35m💼 /portfolio\u001b[0m  │ Portfolio Dashboard
+\u001b[0;33m🏆 /leaderboard\u001b[0m │ Top Trader Rankings
+\`\`\``,
+      inline: true
     });
 
-    // Featured Italian stocks
+    // Account Management section
+    embed.addFields({
+      name: '💰 **Account Management**',
+      value: `\`\`\`ansi
+\u001b[0;33m💵 /daily\u001b[0m      │ Daily Trading Bonus
+\u001b[0;34m📋 /quests\u001b[0m     │ Active Trading Missions
+\u001b[0;36m🎁 /claim\u001b[0m      │ Claim Quest Rewards
+\u001b[0;37m📊 /history\u001b[0m    │ Transaction History
+\`\`\``,
+      inline: true
+    });
+
+    // Featured Premium Assets with professional styling
     const featured = ['SKIBI', 'SIGMA', 'OHIO', 'LABUB', 'CAPPU'];
     const featuredText = featured.map(symbol => {
       const stock = meta[symbol];
-      return `**${symbol}** - ${stock?.italianName || symbol} ${stock?.volatility === 'extreme' ? '🔥' : ''}`;
+      const volatilityBadge = stock?.volatility === 'extreme' ? '🔥 HIGH VOL' : '📊 STABLE';
+      return `\`${symbol.padEnd(6)}\` **${stock?.italianName || symbol}** ${volatilityBadge}`;
     }).join('\n');
 
     embed.addFields({
-      name: '⭐ Featured Italian Brainrot Stocks',
-      value: featuredText,
+      name: '🏅 **Featured Premium Assets**',
+      value: `\`\`\`yaml
+Symbol │ Asset Name & Risk Profile
+───────┼─────────────────────────
+\`\`\`${featuredText}`,
       inline: false
     });
 
-    // How to earn coins
+    // Market Stats and Info
     embed.addFields({
-      name: '💰 Earning Coins',
-      value: `
-• **Chat Activity**: +1 coin per message (once per minute)
-• **Daily Bonus**: Use \`/daily\` for free coins
-• **Trading Profits**: Buy low, sell high!
-      `,
+      name: '📊 **Market Information**',
+      value: `\`\`\`yaml
+Market Cap: $2.5M+ (Simulated)
+Trading Hours: 24/7 Live
+Assets: 15 Premium Meme Stocks
+Currency: MemeCoins (MC)
+Fees: Zero Commission Trading
+\`\`\``,
       inline: true
     });
 
-    // Special mechanics
     embed.addFields({
-      name: '🎲 Special Mechanics',
-      value: `
-• **Volatility Levels**: Low/Medium/High/Extreme
-• **Pasta Hours**: 12-2 PM Italian time bonus
-• **Beach Hours**: 6-8 PM siesta effects
-• **Sunday Immunity**: Italian stocks resist chaos
-• **Chaos Events**: Random market manipulation
-      `,
+      name: '🎯 **Getting Started**',
+      value: `\`\`\`yaml
+1. Check /market for live prices
+2. Use /daily for starting capital
+3. Execute /buy [symbol] [qty]
+4. Monitor /portfolio performance
+5. Compete on /leaderboard
+\`\`\``,
       inline: true
     });
 
-    // Tips
+    // How to earn coins with professional styling
     embed.addFields({
-      name: '💡 Pro Tips',
-      value: `
-🔍 Use \`/stock [symbol]\` for detailed info
-📊 Check volatility before big trades
-🇮🇹 Core Italian stocks have special powers
-⚡ Extreme volatility = high risk/reward
-🛡️ BANANI has minimum price protection
-      `,
-      inline: false
+      name: '💰 **Capital Management**',
+      value: `\`\`\`yaml
+• Chat Activity: +5 MC per message
+• Daily Bonus: /daily command
+• Trading P&L: Buy low, sell high
+• Quest Rewards: Complete missions
+\`\`\``,
+      inline: true
     });
 
-    // All stocks list
-    const allStocks = Object.keys(meta).join(', ');
+    // Advanced Trading Features
     embed.addFields({
-      name: '📋 All Available Stocks',
-      value: allStocks,
-      inline: false
+      name: '⚡ **Advanced Features**',
+      value: `\`\`\`yaml
+• Real-time Market Data
+• Volatility Analytics
+• Portfolio Performance
+• Risk Management Tools
+• Global Event System
+\`\`\``,
+      inline: true
     });
 
-    embed.setFooter({ 
-      text: 'Prices update based on real-world meme trends! 🌍' 
+    // All stocks list in professional format
+    const allStocks = Object.keys(meta).slice(0, 10).join(' • ');
+    embed.addFields({
+      name: '� **Available Assets**',
+      value: `\`\`\`\n${allStocks}${Object.keys(meta).length > 10 ? '\n...and more' : ''}\`\`\`\n*Use \`/market\` for complete listings with live prices*`,
+      inline: false
     });
 
     await interaction.reply({ embeds: [embed] });

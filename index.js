@@ -5,8 +5,9 @@ import path from 'path';
 import dotenv from 'dotenv';
 import cron from 'node-cron';
 import { initDb } from './utils/supabaseDb.js';
-import { getAllStocks, checkBackendHealth } from './utils/marketAPI.js';
+import { getAllStocks, checkBackendHealth, marketAPI, syncDiscordUsers } from './utils/marketAPI.js';
 import { scheduleDailyQuestReset } from './utils/questScheduler.js';
+import { marketScheduler } from './utils/marketScheduler.js';
 
 // Load environment variables
 dotenv.config();
@@ -207,6 +208,54 @@ client.once('ready', async () => {
   
   // Initialize quest scheduler
   scheduleDailyQuestReset();
+  
+  // Initialize market scheduler for daily reports and weekly leaderboards
+  marketScheduler.start();
+  
+  // Sync Discord users with backend cache
+  console.log('🔄 Syncing Discord users with backend...');
+  try {
+    // Collect all unique users across all guilds
+    const allUsers = new Set();
+    for (const guild of client.guilds.cache.values()) {
+      try {
+        await guild.members.fetch(); // Fetch all members
+        for (const member of guild.members.cache.values()) {
+          allUsers.add(member);
+        }
+      } catch (error) {
+        console.log(`⚠️ Could not fetch members for guild ${guild.name}:`, error.message);
+      }
+    }
+    
+    // Sync users to backend in batches
+    const users = Array.from(allUsers);
+    console.log(`📝 Syncing ${users.length} Discord users to backend...`);
+    
+    const batchSize = 50;
+    for (let i = 0; i < users.length; i += batchSize) {
+      const batch = users.slice(i, i + batchSize);
+      const userDataBatch = batch.map(member => ({
+        id: member.user.id,
+        username: member.user.username,
+        globalName: member.user.globalName,
+        displayName: member.displayName,
+        discriminator: member.user.discriminator,
+        tag: member.user.tag
+      }));
+      
+      try {
+        await syncDiscordUsers(userDataBatch);
+        console.log(`✅ Synced batch ${Math.floor(i/batchSize) + 1}/${Math.ceil(users.length/batchSize)}`);
+      } catch (error) {
+        console.log(`⚠️ Failed to sync user batch:`, error.message);
+      }
+    }
+    
+    console.log('✅ Discord user sync completed');
+  } catch (error) {
+    console.log('⚠️ Discord user sync failed:', error.message);
+  }
   
   // Find market channel
   if (MARKET_CHANNEL_ID) {

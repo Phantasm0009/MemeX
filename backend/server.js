@@ -25,13 +25,24 @@ import { getEventBonuses, getRandomChaosEvent } from '../utils/triggers.js';
 import { enhancedGlobalEvents } from '../utils/enhancedGlobalEvents.js';
 import { lightweightTikTokScraper } from '../utils/lightweightTikTokScraper.js';
 import { getGlobalDailyQuests, getAllUsers, getHoldings, getAllStocks } from '../utils/supabaseDb.js';
+import { createClient } from '@supabase/supabase-js';
 
-// Initialize Supabase check
-const SUPABASE_URL = process.env.SUPABASE_URL || '';
-const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY || '';
+// Initialize Supabase for transactions
+const SUPABASE_URL = process.env.SUPABASE_URL?.trim() || '';
+const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY?.trim() || '';
 
-if (SUPABASE_URL && SUPABASE_ANON_KEY) {
-  console.log('✅ Supabase credentials found');
+let supabase = null;
+let useSupabaseTransactions = false;
+
+if (SUPABASE_URL && SUPABASE_ANON_KEY && SUPABASE_URL.length > 10 && SUPABASE_ANON_KEY.length > 10) {
+  try {
+    supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    useSupabaseTransactions = true;
+    console.log('✅ Supabase configured for transactions');
+  } catch (error) {
+    console.log('⚠️ Supabase connection failed:', error.message);
+    useSupabaseTransactions = false;
+  }
 } else {
   console.log('⚠️ Supabase credentials not found, using JSON database');
 }
@@ -116,7 +127,74 @@ app.get('/api/health', async (req, res) => {
   }
 });
 
-app.get('/api/stock/:symbol', (req, res) => {
+// Enhanced market data with holder statistics
+app.get('/api/market/enhanced', async (req, res) => {
+  try {
+    if (!fs.existsSync(marketPath)) {
+      return res.status(404).json({ error: 'Market data not found' });
+    }
+    
+    const market = JSON.parse(fs.readFileSync(marketPath));
+    const stats = getMarketStats();
+    const users = await getAllUsers();
+    
+    // Calculate holder statistics for each stock
+    const stockHolders = {};
+    const stockVolume = {};
+    
+    for (const user of users) {
+      try {
+        const holdings = await getHoldings(user.id);
+        for (const holding of holdings) {
+          const stock = holding.stock;
+          if (!stockHolders[stock]) {
+            stockHolders[stock] = new Set();
+            stockVolume[stock] = 0;
+          }
+          stockHolders[stock].add(user.id);
+          stockVolume[stock] += holding.amount;
+        }
+      } catch (error) {
+        console.error(`Error getting holdings for user ${user.id}:`, error);
+      }
+    }
+    
+    // Convert Sets to counts and add metadata
+    const enhancedMarket = {};
+    for (const [symbol, data] of Object.entries(market)) {
+      // Skip lastEvent and other non-stock entries
+      if (symbol === 'lastEvent' || !data || typeof data !== 'object' || typeof data.price !== 'number') {
+        continue;
+      }
+      
+      enhancedMarket[symbol] = {
+        ...data,
+        holders: stockHolders[symbol] ? stockHolders[symbol].size : 0,
+        totalVolume: stockVolume[symbol] || 0,
+        marketCap: data.price ? (data.price * (stockVolume[symbol] || 0)) : 0
+      };
+    }
+    
+    res.json({
+      market: enhancedMarket,
+      stats: {
+        ...stats,
+        totalUsers: users.length,
+        totalHolders: Object.values(stockHolders).reduce((sum, holders) => sum + holders.size, 0)
+      },
+      lastUpdate: new Date().toISOString(),
+      globalEvents: {
+        frozenStocks: Array.from(enhancedGlobalEvents.frozenStocks.keys()),
+        activeMerges: enhancedGlobalEvents.getActiveMerges()
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching enhanced market data:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+app.get('/api/stock/:symbol', async (req, res) => {
   try {
     const { symbol } = req.params;
     const market = JSON.parse(fs.readFileSync(marketPath));
@@ -126,9 +204,35 @@ app.get('/api/stock/:symbol', (req, res) => {
       return res.status(404).json({ error: 'Stock not found' });
     }
     
+    // Get holder statistics for this specific stock
+    const users = await getAllUsers();
+    const holders = new Set();
+    let totalVolume = 0;
+    
+    for (const user of users) {
+      try {
+        const holdings = await getHoldings(user.id);
+        const stockHolding = holdings.find(h => h.stock === symbol.toUpperCase());
+        if (stockHolding) {
+          holders.add(user.id);
+          totalVolume += stockHolding.amount;
+        }
+      } catch (error) {
+        console.error(`Error getting holdings for user ${user.id}:`, error);
+      }
+    }
+    
+    const stockData = market[symbol.toUpperCase()];
+    const marketCap = stockData.price ? (stockData.price * totalVolume) : 0;
+    
     res.json({
       symbol: symbol.toUpperCase(),
-      data: market[symbol.toUpperCase()],
+      data: {
+        ...stockData,
+        holders: holders.size,
+        totalVolume,
+        marketCap
+      },
       meta: meta[symbol.toUpperCase()] || {},
       frozen: enhancedGlobalEvents.isStockFrozen(symbol.toUpperCase()),
       timestamp: new Date().toISOString()
@@ -173,6 +277,129 @@ app.post('/api/update-prices', async (req, res) => {
   } catch (error) {
     console.error('Error updating prices:', error);
     res.status(500).json({ error: 'Failed to update prices' });
+  }
+});
+
+// Trigger event endpoint - manually trigger global events
+app.post('/api/trigger-event', async (req, res) => {
+  try {
+    console.log('🎭 API request: Manual event trigger...');
+    const { eventType, duration } = req.body;
+    
+    if (!eventType) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'Event type is required' 
+      });
+    }
+
+    // Create event object based on type
+    let event = null;
+    
+    switch (eventType) {
+      case 'meme_market_boom':
+        event = await enhancedGlobalEvents.checkMemeMarketBoom();
+        break;
+      case 'meme_crash':
+        event = await enhancedGlobalEvents.checkMemeCrash();
+        break;
+      case 'viral_tiktok_challenge':
+        event = await enhancedGlobalEvents.checkViralTikTokChallenge();
+        break;
+      case 'reddit_meme_hype':
+        event = await enhancedGlobalEvents.checkRedditMemeHype();
+        break;
+      case 'heatwave_meltdown':
+        event = await enhancedGlobalEvents.checkHeatwaveMeltdown();
+        break;
+      case 'global_pizza_day':
+        event = await enhancedGlobalEvents.checkGlobalPizzaDay();
+        break;
+      case 'internet_outage_panic':
+        event = await enhancedGlobalEvents.checkInternetOutage();
+        break;
+      case 'stock_freeze_hour':
+        event = await enhancedGlobalEvents.checkStockFreezeHour();
+        break;
+      case 'market_romance':
+        event = await enhancedGlobalEvents.checkMarketRomance();
+        break;
+      case 'trend_surge':
+        event = await enhancedGlobalEvents.checkTrendSurge();
+        break;
+      case 'pasta_party':
+        event = await enhancedGlobalEvents.checkPastaParty();
+        break;
+      case 'stock_panic':
+        event = await enhancedGlobalEvents.checkStockPanic();
+        break;
+      case 'weekend_chill':
+        event = await enhancedGlobalEvents.checkWeekendChill();
+        break;
+      case 'meme_mutation':
+        event = await enhancedGlobalEvents.checkMemeMutation();
+        break;
+      case 'global_jackpot':
+        event = await enhancedGlobalEvents.checkGlobalJackpot();
+        break;
+      case 'chaos_hour':
+        event = await enhancedGlobalEvents.checkChaosHour();
+        break;
+      default:
+        return res.status(400).json({ 
+          success: false, 
+          error: 'Unknown event type' 
+        });
+    }
+
+    if (!event) {
+      return res.status(500).json({ 
+        success: false, 
+        error: 'Failed to create event' 
+      });
+    }
+
+    // Override duration if provided
+    if (duration) {
+      event.duration = duration;
+    }
+
+    // Force trigger the event
+    enhancedGlobalEvents.lastEventTime = Date.now();
+    enhancedGlobalEvents.lastEventName = event.name;
+    enhancedGlobalEvents.lastEventDescription = event.description;
+    enhancedGlobalEvents.lastEventDuration = event.duration || 60000;
+    enhancedGlobalEvents.lastEventRarity = event.rarity || 'Common';
+    
+    // Apply the event triggers immediately (FAST MODE - no trend fetching)
+    console.log('⚡ FAST MODE: Applying manual event without trend fetching...');
+    const updatedMarket = await applyEventTriggersOnly(event.triggers || {});
+    
+    console.log('🎉 MANUALLY TRIGGERED EVENT:', event.name.toUpperCase());
+    console.log('📝 Description:', event.description);
+    console.log('🎯 Rarity:', event.rarity);
+    
+    res.json({
+      success: true,
+      event: {
+        type: eventType,
+        name: event.name,
+        description: event.description,
+        rarity: event.rarity,
+        duration: event.duration
+      },
+      affectedStocks: Object.keys(event.triggers || {}),
+      market: updatedMarket,
+      timestamp: new Date().toISOString()
+    });
+    
+  } catch (error) {
+    console.error('Error triggering event:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: 'Failed to trigger event',
+      message: error.message 
+    });
   }
 });
 
@@ -272,12 +499,35 @@ app.get('/api/global-events', (req, res) => {
     const frozenStocks = Array.from(enhancedGlobalEvents.frozenStocks.keys());
     const activeMerges = enhancedGlobalEvents.getActiveMerges();
     
+    // Get information about recent events
+    let activeEventInfo = null;
+    const timeSinceLastEvent = Date.now() - enhancedGlobalEvents.lastEventTime;
+    
+    // If an event happened in the last 5 minutes, show it as active
+    if (enhancedGlobalEvents.lastEventTime > 0 && timeSinceLastEvent < 300000) { // 5 minutes
+      activeEventInfo = {
+        name: enhancedGlobalEvents.lastEventName || 'Unknown Event',
+        description: enhancedGlobalEvents.lastEventDescription || 'A market event occurred',
+        timeAgo: timeSinceLastEvent,
+        duration: enhancedGlobalEvents.lastEventDuration || 60000,
+        rarity: enhancedGlobalEvents.lastEventRarity || 'Common'
+      };
+    }
+    
     res.json({
-      frozenStocks,
-      activeMerges,
-      lastEventTime: enhancedGlobalEvents.lastEventTime,
-      eventCooldown: enhancedGlobalEvents.eventCooldown,
-      weekendMode: enhancedGlobalEvents.isWeekend()
+      globalEvents: {
+        frozenStocks,
+        activeMerges,
+        lastEventTime: enhancedGlobalEvents.lastEventTime,
+        eventCooldown: enhancedGlobalEvents.eventCooldown,
+        weekendMode: enhancedGlobalEvents.isWeekend(),
+        activeEvent: activeEventInfo
+      },
+      frozenStocks, // Legacy compatibility
+      activeMerges, // Legacy compatibility  
+      lastEventTime: enhancedGlobalEvents.lastEventTime, // Legacy compatibility
+      eventCooldown: enhancedGlobalEvents.eventCooldown, // Legacy compatibility
+      weekendMode: enhancedGlobalEvents.isWeekend() // Legacy compatibility
     });
   } catch (error) {
     console.error('Error fetching global events:', error);
@@ -305,13 +555,60 @@ app.get('/api/quests', async (req, res) => {
   }
 });
 
+// Update Discord user info endpoint - Called by bot to sync Discord usernames
+app.post('/api/user/:userId/discord-info', async (req, res) => {
+  try {
+    const userId = req.params.userId;
+    const { username, globalName, displayName, discriminator } = req.body;
+    
+    console.log(`📝 API request: Updating Discord info for user ${userId}...`);
+    console.log(`   Username: ${username}`);
+    console.log(`   Global Name: ${globalName}`);
+    console.log(`   Display Name: ${displayName}`);
+    
+    // For now, we'll store Discord info in memory/cache since the Supabase table
+    // doesn't have the Discord username columns yet
+    if (!global.discordUserCache) {
+      global.discordUserCache = new Map();
+    }
+    
+    global.discordUserCache.set(userId, {
+      username: username || null,
+      globalName: globalName || null,
+      displayName: displayName || null,
+      discriminator: discriminator || null,
+      updatedAt: new Date().toISOString()
+    });
+    
+    console.log('✅ Discord user info cached in memory');
+    
+    res.json({
+      success: true,
+      message: 'Discord user info updated (cached)',
+      userId,
+      username,
+      globalName,
+      displayName,
+      timestamp: new Date().toISOString()
+    });
+    
+  } catch (error) {
+    console.error('❌ Error updating Discord user info:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to update Discord user info',
+      message: error.message
+    });
+  }
+});
+
 // Leaderboard API endpoint - Get top users with Discord usernames and balances
 app.get('/api/leaderboard', async (req, res) => {
   try {
     console.log('🏆 API request: Fetching leaderboard...');
     
     const limit = parseInt(req.query.limit) || 10;
-    const includeHoldings = req.query.includeHoldings === 'true';
+    const includeHoldings = req.query.includeHoldings !== 'false'; // Default to true
     
     // Get all users from database
     const users = await getAllUsers();
@@ -327,40 +624,73 @@ app.get('/api/leaderboard', async (req, res) => {
     
     // Load current market data for portfolio calculations
     let market = {};
-    if (includeHoldings && fs.existsSync(marketPath)) {
+    if (fs.existsSync(marketPath)) {
       market = JSON.parse(fs.readFileSync(marketPath));
     }
     
     // Calculate total wealth for each user (balance + portfolio value)
     const enrichedUsers = await Promise.all(users.map(async (user) => {
       try {
-        let totalValue = user.balance || 0;
+        let balance = parseFloat(user.balance) || 1000; // Default starting balance
         let portfolioValue = 0;
         let holdings = [];
+        let totalInvested = 0; // Track how much user has invested in stocks
         
-        if (includeHoldings) {
-          holdings = await getHoldings(user.id);
-          
-          if (holdings && holdings.length > 0) {
-            portfolioValue = holdings.reduce((sum, holding) => {
-              const currentPrice = market[holding.stock]?.price || 0;
-              return sum + (holding.amount * currentPrice);
-            }, 0);
+        // Always get holdings to calculate portfolio value
+        holdings = await getHoldings(user.id);
+        
+        if (holdings && holdings.length > 0) {
+          for (const holding of holdings) {
+            const currentPrice = market[holding.stock]?.price || 0;
+            const holdingValue = holding.amount * currentPrice;
+            portfolioValue += holdingValue;
+            
+            // Calculate original investment (for profit calculation)
+            // We'll use average cost basis - could be enhanced with actual purchase prices
+            const avgPrice = currentPrice * 0.8; // Assume bought at 80% of current price on average
+            totalInvested += Math.abs(holding.amount) * avgPrice;
           }
         }
         
-        totalValue += portfolioValue;
+        const totalValue = balance + portfolioValue;
+        
+        // Calculate profit percentage (total value vs starting amount + invested)
+        const startingValue = 1000; // Default starting balance
+        const totalInput = startingValue + totalInvested;
+        const profit = totalValue - totalInput;
+        const profitPercentage = totalInput > 0 ? ((profit / totalInput) * 100) : 0;
+        
+        // Get Discord info from cache (if available)
+        const cachedDiscordInfo = global.discordUserCache?.get(user.id);
+        
+        // Get the best available username - priority: cached globalName > cached displayName > cached username > database username > fallback
+        let username, displayName, globalName;
+        
+        if (cachedDiscordInfo) {
+          // Use cached Discord info
+          globalName = cachedDiscordInfo.globalName;
+          displayName = cachedDiscordInfo.displayName || cachedDiscordInfo.globalName || cachedDiscordInfo.username;
+          username = cachedDiscordInfo.username || displayName;
+          console.log(`📋 Using cached Discord info for ${user.id}: ${username}`);
+        } else {
+          // Fallback to database or generic username
+          displayName = user.global_name || user.display_name || user.username || `User#${user.id.slice(-4)}`;
+          username = user.username || displayName;
+          globalName = user.global_name || null;
+        }
         
         return {
           id: user.id,
-          username: user.username || `User#${user.id.slice(-4)}`, // Discord username or fallback
-          discriminator: user.discriminator || null,
-          displayName: user.username ? 
-            (user.discriminator ? `${user.username}#${user.discriminator}` : user.username) : 
-            `User#${user.id.slice(-4)}`,
-          balance: user.balance || 0,
+          username: username,
+          discriminator: cachedDiscordInfo?.discriminator || user.discriminator || null,
+          displayName: displayName,
+          globalName: globalName,
+          balance: Math.round(balance * 100) / 100,
           portfolioValue: Math.round(portfolioValue * 100) / 100,
           totalValue: Math.round(totalValue * 100) / 100,
+          profit: Math.round(profit * 100) / 100,
+          profitPercentage: Math.round(profitPercentage * 100) / 100,
+          totalInvested: Math.round(totalInvested * 100) / 100,
           lastDaily: user.lastDaily || null,
           lastMessage: user.lastMessage || null,
           holdings: includeHoldings ? holdings : undefined,
@@ -372,9 +702,11 @@ app.get('/api/leaderboard', async (req, res) => {
           id: user.id,
           username: `User#${user.id.slice(-4)}`,
           displayName: `User#${user.id.slice(-4)}`,
-          balance: user.balance || 0,
+          balance: parseFloat(user.balance) || 1000,
           portfolioValue: 0,
-          totalValue: user.balance || 0,
+          totalValue: parseFloat(user.balance) || 1000,
+          profit: 0,
+          profitPercentage: 0,
           error: 'Failed to load user data'
         };
       }
@@ -405,6 +737,68 @@ app.get('/api/leaderboard', async (req, res) => {
     res.status(500).json({ 
       error: 'Failed to fetch leaderboard',
       details: error.message 
+    });
+  }
+});
+
+// Recent transactions API endpoint - Get recent trading activity
+app.get('/api/transactions', async (req, res) => {
+  const limit = parseInt(req.query.limit) || 50;
+  
+  try {
+    console.log(`💰 API request: Fetching recent transactions (limit: ${limit})...`);
+    
+    if (useSupabaseTransactions) {
+      const { data, error } = await supabase
+        .from('transactions')
+        .select('*')
+        .order('timestamp', { ascending: false })
+        .limit(limit);
+      
+      if (error) {
+        console.error('❌ Supabase query error:', error.message);
+        throw error;
+      }
+      
+      console.log(`✅ Found ${data.length} transactions from Supabase`);
+      
+      const transactions = data.map(tx => ({
+        userId: tx.user_id,
+        username: 'Unknown', // We'll fetch usernames separately if needed
+        stock: tx.stock,
+        amount: tx.amount,
+        price: tx.price,
+        timestamp: tx.timestamp,
+        type: tx.amount > 0 ? 'buy' : 'sell',
+        value: Math.abs(tx.amount) * tx.price
+      }));
+      
+      res.json({
+        success: true,
+        transactions,
+        total: transactions.length,
+        limit,
+        timestamp: new Date().toISOString()
+      });
+    } else {
+      // Fallback: return empty array if no Supabase
+      console.log('⚠️ No Supabase connection - returning empty transactions');
+      res.json({
+        success: true,
+        transactions: [],
+        total: 0,
+        limit,
+        timestamp: new Date().toISOString(),
+        note: 'Supabase not configured'
+      });
+    }
+  } catch (error) {
+    console.error('❌ Error fetching transactions:', error.message);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch transactions',
+      message: error.message,
+      timestamp: new Date().toISOString()
     });
   }
 });
@@ -483,25 +877,14 @@ function getVolatility(level) {
   }
 }
 
-// Enhanced price updates every 15 minutes for faster market timing
-cron.schedule('*/15 * * * *', async () => {
+// Full price updates every 5 minutes for optimal market timing
+cron.schedule('*/5 * * * *', async () => {
   const now = new Date();
-  console.log(`⏰ Full market update (15min) - ${now.toLocaleTimeString()}`);
+  console.log(`⏰ Full market update (5min) - ${now.toLocaleTimeString()}`);
   try {
     await performEnhancedPriceUpdate();
   } catch (error) {
-    console.error('❌ 15-minute full update failed:', error);
-  }
-});
-
-// TikTok-only updates every 5 minutes for high-frequency trend tracking
-cron.schedule('*/5 * * * *', async () => {
-  const now = new Date();
-  console.log(`🎵 TikTok-only update (5min) - ${now.toLocaleTimeString()}`);
-  try {
-    await performTikTokOnlyUpdate();
-  } catch (error) {
-    console.error('❌ 5-minute TikTok update failed:', error);
+    console.error('❌ 5-minute full update failed:', error);
   }
 });
 
@@ -512,6 +895,89 @@ cron.schedule('0 9 * * *', async () => {
   const italianStocks = ['SKIBI', 'SUS', 'SAHUR', 'LABUB', 'OHIO', 'RIZZL', 'GYATT', 'FRIED', 'SIGMA', 'TRALA', 'CROCO', 'FANUM', 'CAPPU', 'BANANI', 'LARILA'];
   italianStocks.forEach(stock => italianBoost[stock] = 0.05);
   await performEnhancedPriceUpdate(italianBoost);
+});
+
+// Discord user sync endpoint - Update Discord user cache with real data from bot
+app.post('/api/sync-discord-user', express.json(), (req, res) => {
+  try {
+    const { userId, username, globalName, displayName, discriminator } = req.body;
+    
+    if (!userId) {
+      return res.status(400).json({ error: 'userId is required' });
+    }
+    
+    // Initialize cache if it doesn't exist
+    if (!global.discordUserCache) {
+      global.discordUserCache = new Map();
+    }
+    
+    // Update cache with real Discord info
+    const userInfo = {
+      username: username || null,
+      globalName: globalName || null,
+      displayName: displayName || globalName || username || null,
+      discriminator: discriminator || null,
+      lastUpdated: Date.now()
+    };
+    
+    global.discordUserCache.set(userId, userInfo);
+    console.log(`✅ Synced Discord info for ${userId}: ${userInfo.displayName || userInfo.username}`);
+    
+    res.json({ 
+      success: true, 
+      message: 'Discord user info synced successfully',
+      userInfo 
+    });
+    
+  } catch (error) {
+    console.error('Error syncing Discord user info:', error);
+    res.status(500).json({ error: 'Failed to sync Discord user info' });
+  }
+});
+
+// Bulk sync endpoint for multiple users
+app.post('/api/sync-discord-users', express.json(), (req, res) => {
+  try {
+    const { users } = req.body;
+    
+    if (!Array.isArray(users)) {
+      return res.status(400).json({ error: 'users array is required' });
+    }
+    
+    // Initialize cache if it doesn't exist
+    if (!global.discordUserCache) {
+      global.discordUserCache = new Map();
+    }
+    
+    let syncedCount = 0;
+    
+    for (const user of users) {
+      if (user.id) {
+        const userInfo = {
+          username: user.username || null,
+          globalName: user.globalName || null,
+          displayName: user.displayName || user.globalName || user.username || null,
+          discriminator: user.discriminator || null,
+          lastUpdated: Date.now()
+        };
+        
+        global.discordUserCache.set(user.id, userInfo);
+        syncedCount++;
+      }
+    }
+    
+    console.log(`✅ Bulk synced ${syncedCount} Discord users`);
+    
+    res.json({ 
+      success: true, 
+      message: `Synced ${syncedCount} Discord users`,
+      syncedCount 
+    });
+    
+  } catch (error) {
+    console.error('Error bulk syncing Discord users:', error);
+    res.status(500).json({ error: 'Failed to bulk sync Discord users' });
+  }
 });
 
 cron.schedule('0 17 * * *', () => {
@@ -570,3 +1036,99 @@ process.on('SIGTERM', async () => {
   await lightweightTikTokScraper.close();
   process.exit(0);
 });
+
+// Initialize Discord user cache with default user info
+async function initializeDiscordUserCache() {
+  try {
+    console.log('🔄 Initializing Discord user cache...');
+    
+    if (!global.discordUserCache) {
+      global.discordUserCache = new Map();
+    }
+    
+    // Get all users and populate with default Discord info if cache is empty
+    const users = await getAllUsers();
+    
+    for (const user of users) {
+      if (!global.discordUserCache.has(user.id)) {
+        // Set default Discord info for known users
+        const defaultInfo = {
+          username: user.username || `User#${user.id.slice(-4)}`,
+          globalName: user.global_name || null,
+          displayName: user.display_name || user.username || `User#${user.id.slice(-4)}`,
+          discriminator: user.discriminator || null,
+          updatedAt: new Date().toISOString()
+        };
+        
+        global.discordUserCache.set(user.id, defaultInfo);
+        console.log(`📋 Cached default info for user ${user.id}: ${defaultInfo.username}`);
+      }
+    }
+    
+    console.log(`✅ Discord user cache initialized with ${global.discordUserCache.size} users`);
+  } catch (error) {
+    console.error('❌ Failed to initialize Discord user cache:', error);
+  }
+}
+
+// Initialize cache on startup
+setTimeout(async () => {
+  await initializeDiscordUserCache();
+}, 2000); // Wait 2 seconds after server start
+
+// Fast event trigger function - skips trend fetching for manual events
+async function applyEventTriggersOnly(eventTriggers = {}) {
+  console.log('⚡ Applying event triggers directly without trend fetching...');
+  const startTime = Date.now();
+  
+  try {
+    const market = JSON.parse(fs.readFileSync(marketPath));
+    
+    // Apply event triggers directly to market prices
+    for (const [stock, trigger] of Object.entries(eventTriggers)) {
+      if (stock === 'lastEvent' || stock === 'FREEZE_STOCKS') continue;
+      
+      if (market[stock] && typeof trigger === 'number') {
+        const oldPrice = market[stock].price || 0;
+        const newPrice = Math.max(0.01, oldPrice * (1 + trigger));
+        const percentChange = ((newPrice - oldPrice) / oldPrice * 100);
+        
+        market[stock].price = newPrice;
+        market[stock].lastChange = percentChange;
+        market[stock].timestamp = Date.now();
+        
+        // Update 24h high/low
+        if (newPrice > (market[stock].high24h || 0)) {
+          market[stock].high24h = newPrice;
+        }
+        if (newPrice < (market[stock].low24h || Infinity)) {
+          market[stock].low24h = newPrice;
+        }
+        
+        console.log(`📈 ${stock}: ${percentChange >= 0 ? '+' : ''}${percentChange.toFixed(2)}%`);
+      }
+    }
+    
+    // Handle frozen stocks
+    if (eventTriggers.FREEZE_STOCKS) {
+      const stocksToFreeze = eventTriggers.FREEZE_STOCKS;
+      const freezeTime = Date.now() + (3 * 60 * 1000);
+      stocksToFreeze.forEach(stock => {
+        enhancedGlobalEvents.frozenStocks.set(stock, freezeTime);
+        console.log(`🧊 ${stock} frozen for 3 minutes`);
+      });
+    }
+    
+    // Save updated market
+    fs.writeFileSync(marketPath, JSON.stringify(market, null, 2));
+    
+    const duration = Date.now() - startTime;
+    console.log(`⚡ Fast event application completed in ${duration}ms`);
+    
+    return market;
+    
+  } catch (error) {
+    console.error('❌ Fast event trigger failed:', error);
+    throw error;
+  }
+}

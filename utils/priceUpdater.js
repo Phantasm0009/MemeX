@@ -16,38 +16,68 @@ function getRandomInRange(min, max) {
 
 function getVolatility(level) {
   switch (level) {
-    case 'low': return 0.01;      // 1% max change
-    case 'medium': return 0.03;   // 3% max change
-    case 'high': return 0.07;     // 7% max change
-    case 'extreme': return 0.15;  // 15% max change
-    default: return 0.03;
+    case 'low': return 0.08;      // 8% max change (much more exciting!)
+    case 'medium': return 0.15;   // 15% max change (was 3%)
+    case 'high': return 0.25;     // 25% max change (was 7%)
+    case 'extreme': return 0.45;  // 45% max change (was 15%)
+    default: return 0.15;         // Default to medium volatility
   }
 }
 
 export async function updatePrices(triggers = {}, enableChaos = true) {
-  if (!fs.existsSync(marketPath) || !fs.existsSync(metaPath)) {
-    console.log('Market or meta data not found');
-    return null;
-  }
-  
-  const market = JSON.parse(fs.readFileSync(marketPath));
-  const meta = JSON.parse(fs.readFileSync(metaPath));
-  let lastEvent = market.lastEvent || '';
-  
-  // Add random chaos events (15% chance, increased for more action)
-  if (enableChaos && Math.random() < 0.15) {
-    const chaosEvent = getRandomChaosEvent();
-    if (chaosEvent.lastEvent) {
-      Object.assign(triggers, chaosEvent);
-      console.log('Chaos event triggered:', chaosEvent.lastEvent);
+  try {
+    if (!fs.existsSync(marketPath) || !fs.existsSync(metaPath)) {
+      console.log('⚠️ Market or meta data not found, initializing...');
+      initializeMarket();
+      return await updatePrices(triggers, enableChaos);
     }
-  }
-  
-  // Check for time freeze effect
-  const timeFreeze = triggers.TIME_FREEZE;
-  const freezeMultiplier = timeFreeze ? 0.3 : 1.0; // Reduce volatility by 70%
-  
-  // Update each stock price
+    
+    let market, meta;
+    try {
+      market = JSON.parse(fs.readFileSync(marketPath, 'utf8'));
+      meta = JSON.parse(fs.readFileSync(metaPath, 'utf8'));
+    } catch (error) {
+      console.error('❌ Error reading market data:', error);
+      initializeMarket();
+      market = JSON.parse(fs.readFileSync(marketPath, 'utf8'));
+      meta = JSON.parse(fs.readFileSync(metaPath, 'utf8'));
+    }
+    
+    let lastEvent = market.lastEvent || '';
+    
+    // Skip corrupted entries
+    const validStocks = Object.keys(market).filter(stock => {
+      const stockData = market[stock];
+      return stockData && 
+             typeof stockData === 'object' && 
+             typeof stockData.price === 'number' && 
+             stockData.price > 0 &&
+             stock !== 'lastEvent';
+    });
+    
+    if (validStocks.length === 0) {
+      console.log('⚠️ No valid stocks found, reinitializing market...');
+      initializeMarket();
+      return await updatePrices(triggers, enableChaos);
+    }
+    
+    // Add random chaos events (30% chance for much more excitement!)
+    if (enableChaos && Math.random() < 0.30) {
+      const chaosEvent = getRandomChaosEvent();
+      if (chaosEvent.lastEvent) {
+        Object.assign(triggers, chaosEvent);
+        console.log('🎲 Chaos event triggered:', chaosEvent.lastEvent);
+        lastEvent = chaosEvent.lastEvent;
+      }
+    }
+    
+    // Check for time freeze effect
+    const timeFreeze = triggers.TIME_FREEZE;
+    const freezeMultiplier = timeFreeze ? 0.2 : 1.0; // Reduce volatility during freeze
+    
+    console.log(`📈 Updating prices for ${validStocks.length} stocks...`);
+    
+    // Update each valid stock price
   for (const symbol in market) {
     if (symbol === 'lastEvent') continue;
     
@@ -100,9 +130,16 @@ export async function updatePrices(triggers = {}, enableChaos = true) {
     market[symbol].price = newPrice;
     market[symbol].lastChange = ((newPrice - oldPrice) / oldPrice) * 100;
     
-    // Log significant changes
+    // 🔧 Add price history entry for chart functionality
+    try {
+      await addPriceHistory(symbol, newPrice, trendBoost);
+    } catch (historyError) {
+      console.log(`⚠️ Failed to save price history for ${symbol}:`, historyError.message);
+    }
+    
+    // Log significant changes (lowered threshold for more excitement)
     const totalChange = (eventBonus + trendBoost) * 100;
-    if (Math.abs(totalChange) > 3) {
+    if (Math.abs(totalChange) > 1) { // Was 3, now 1 for more logging
       const stockName = stockMeta.name || symbol;
       const italianName = stockMeta.italianName || stockName;
       console.log(`${symbol} (${italianName}): ${totalChange > 0 ? '+' : ''}${totalChange.toFixed(1)}% (Event: ${(eventBonus * 100).toFixed(1)}%, Trend: ${(trendBoost * 100).toFixed(1)}%)`);
@@ -121,9 +158,23 @@ export async function updatePrices(triggers = {}, enableChaos = true) {
   
   // Save updated market data
   fs.writeFileSync(marketPath, JSON.stringify(market, null, 2));
-  console.log('Market prices updated at', new Date().toLocaleTimeString());
+  console.log('📊 Market prices updated at', new Date().toLocaleTimeString());
   
   return market;
+  
+  } catch (error) {
+    console.error('❌ Error updating prices:', error);
+    
+    // If there's an error, try to reinitialize the market
+    try {
+      console.log('🔄 Attempting to reinitialize market due to error...');
+      initializeMarket();
+      return null;
+    } catch (initError) {
+      console.error('❌ Failed to reinitialize market:', initError);
+      return null;
+    }
+  }
 }
 
 // Initialize market with default stocks if not exists

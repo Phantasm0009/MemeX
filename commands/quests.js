@@ -4,7 +4,7 @@ import { getUserQuests, claimQuestReward, getUser } from '../utils/supabaseDb.js
 export default {
   data: new SlashCommandBuilder()
     .setName('quests')
-    .setDescription('📋 View your daily quests and progress'),
+    .setDescription('🎯 Professional trading mission dashboard and progress tracker'),
 
   async execute(interaction) {
     await interaction.deferReply();
@@ -20,24 +20,29 @@ export default {
       
       if (!quests || quests.length === 0) {
         const noQuestsEmbed = new EmbedBuilder()
-          .setColor('#FF6B6B')
-          .setTitle('📋 Daily Quests')
-          .setDescription('🍝 No quests available today! New quests are generated daily.')
-          .setTimestamp()
-          .setFooter({ text: '🇮🇹 Italian Meme Stock Exchange' });
+          .setTitle('🎯 **TRADING MISSIONS**')
+          .setDescription('```yaml\nMission Status: NO ACTIVE MISSIONS\nNext Reset: 00:00 UTC Daily\nAvailability: All Traders\n```')
+          .addFields({
+            name: '💡 **Mission System**',
+            value: 'Daily trading missions provide bonus capital and rewards for active traders. Check back tomorrow.',
+            inline: false
+          })
+          .setColor('#ffa726')
+          .setFooter({ text: 'MemeX Trading Platform • Mission Control' })
+          .setTimestamp();
         
         return await interaction.editReply({ embeds: [noQuestsEmbed] });
       }
 
-      // Create quest embed
+      // Create professional quest embed
       const questEmbed = new EmbedBuilder()
-        .setColor('#4ECDC4')
-        .setTitle('📋 Your Daily Quests')
-        .setDescription('🎯 Complete these challenges to earn Pasta Coins!')
-        .setTimestamp()
-        .setFooter({ text: '🇮🇹 Italian Meme Stock Exchange' });
+        .setTitle('🎯 **DAILY TRADING MISSIONS**')
+        .setDescription('```yaml\nMission Status: ACTIVE\nTotal Missions: ' + quests.length + '\nReset Time: 00:00 UTC\n```')
+        .setColor('#00d4aa')
+        .setFooter({ text: 'MemeX Trading Platform • Mission Dashboard' })
+        .setTimestamp();
 
-      let questFields = [];
+      let questText = '';
       let completedCount = 0;
       let totalRewards = 0;
 
@@ -47,8 +52,8 @@ export default {
           : '⏳';
         
         const status = quest.completed 
-          ? (quest.claimed ? 'Claimed!' : 'Ready to Claim!') 
-          : 'In Progress';
+          ? (quest.claimed ? 'CLAIMED' : 'READY') 
+          : 'ACTIVE';
         
         if (quest.completed) completedCount++;
         if (quest.completed && !quest.claimed) totalRewards += quest.reward;
@@ -58,25 +63,20 @@ export default {
           .replace(/_/g, ' ')
           .replace(/\b\w/g, l => l.toUpperCase());
 
-        questFields.push({
-          name: `${statusIcon} Quest ${index + 1}: ${questTypeDisplay}`,
-          value: `📝 **Task:** ${quest.description || 'No description'}\n💰 **Reward:** ${quest.reward || 0} coins\n📊 **Status:** ${status}${quest.completed_at ? `\n⏰ **Completed:** ${new Date(quest.completed_at).toLocaleTimeString()}` : ''}`,
-          inline: false
-        });
+        questText += `${statusIcon} **${questTypeDisplay}**\n`;
+        questText += `\`\`\`\nObjective: ${quest.description || 'No description'}\nReward: $${(quest.reward || 0).toLocaleString()}\nStatus: ${status}\n\`\`\`\n`;
       });
 
-      questEmbed.addFields(questFields);
-
-      // Add summary field
-      const summaryText = [
-        `🎯 **Completed:** ${completedCount}/${quests.length}`,
-        totalRewards > 0 ? `💰 **Ready to Claim:** ${totalRewards} coins` : '',
-        totalRewards > 0 ? `\n*Use \`/claim\` to collect your rewards!*` : ''
-      ].filter(Boolean).join('\n');
-
       questEmbed.addFields({
-        name: '📊 Progress Summary',
-        value: summaryText,
+        name: '📋 **Mission Objectives**',
+        value: questText || 'No missions available',
+        inline: false
+      });
+
+      // Add professional summary
+      questEmbed.addFields({
+        name: '📈 **Mission Analytics**',
+        value: `\`\`\`yaml\nCompleted: ${completedCount}/${quests.length}\nSuccess Rate: ${((completedCount / quests.length) * 100).toFixed(1)}%\nPending Rewards: $${totalRewards.toLocaleString()}\nNext Action: ${totalRewards > 0 ? 'USE /claim' : 'COMPLETE MISSIONS'}\n\`\`\``,
         inline: false
       });
 

@@ -95,8 +95,39 @@ export async function initDb() {
   }
 }
 
+// Helper function to extract Discord user info from interaction
+export function getDiscordUserInfo(discordUser) {
+  if (!discordUser) return null;
+  
+  return {
+    username: discordUser.username || null,
+    globalName: discordUser.globalName || null,
+    displayName: discordUser.displayName || null,
+    discriminator: discordUser.discriminator || null
+  };
+}
+
+// Helper function to update Discord user info via API (async, non-blocking)
+async function updateDiscordUserInfoAsync(userId, discordUserInfo) {
+  if (!discordUserInfo) return;
+  
+  try {
+    // Dynamic import to avoid circular dependency
+    const { updateDiscordUserInfo } = await import('./marketAPI.js');
+    await updateDiscordUserInfo(userId, discordUserInfo);
+  } catch (error) {
+    // Silently fail - this is just for syncing data
+    console.log(`⚠️ Could not sync Discord user info for ${userId}`);
+  }
+}
+
 // User operations
-export async function getUser(id) {
+export async function getUser(id, discordUser = null) {
+  // Sync Discord user info in the background if provided
+  if (discordUser) {
+    updateDiscordUserInfoAsync(id, discordUser).catch(() => {});
+  }
+  
   if (useSupabase) {
     try {
       const { data, error } = await supabase
@@ -110,11 +141,36 @@ export async function getUser(id) {
       }
       
       if (data) {
+        // Update Discord user info if provided and different
+        if (discordUser) {
+          const needsUpdate = 
+            data.username !== discordUser.username ||
+            data.global_name !== discordUser.globalName ||
+            data.display_name !== discordUser.displayName ||
+            data.discriminator !== discordUser.discriminator;
+          
+          if (needsUpdate) {
+            await supabase
+              .from('users')
+              .update({
+                username: discordUser.username,
+                global_name: discordUser.globalName,
+                display_name: discordUser.displayName,
+                discriminator: discordUser.discriminator
+              })
+              .eq('id', id);
+          }
+        }
+        
         return {
           id: data.id,
           balance: parseFloat(data.balance) || 1000,
           lastDaily: data.last_daily || 0,
-          lastMessage: data.last_message || 0
+          lastMessage: data.last_message || 0,
+          username: data.username || null,
+          global_name: data.global_name || null,
+          display_name: data.display_name || null,
+          discriminator: data.discriminator || null
         };
       }
       
@@ -123,7 +179,11 @@ export async function getUser(id) {
         id,
         balance: 1000,
         last_daily: 0,
-        last_message: 0
+        last_message: 0,
+        username: discordUser?.username || null,
+        global_name: discordUser?.globalName || null,
+        display_name: discordUser?.displayName || null,
+        discriminator: discordUser?.discriminator || null
       };
       
       await supabase.from('users').insert([newUser]);
@@ -132,7 +192,11 @@ export async function getUser(id) {
         id,
         balance: 1000,
         lastDaily: 0,
-        lastMessage: 0
+        lastMessage: 0,
+        username: discordUser?.username || null,
+        global_name: discordUser?.globalName || null,
+        display_name: discordUser?.displayName || null,
+        discriminator: discordUser?.discriminator || null
       };
     } catch (error) {
       console.error('Supabase getUser error:', error.message);
@@ -148,9 +212,38 @@ export async function getUser(id) {
       id,
       balance: 1000,
       lastDaily: 0,
-      lastMessage: 0
+      lastMessage: 0,
+      username: discordUser?.username || null,
+      global_name: discordUser?.globalName || null,
+      display_name: discordUser?.displayName || null,
+      discriminator: discordUser?.discriminator || null
     };
     saveJsonDb(db);
+  }
+  
+  // Update Discord info if provided
+  if (discordUser) {
+    let needsUpdate = false;
+    if (db.users[id].username !== discordUser.username) {
+      db.users[id].username = discordUser.username;
+      needsUpdate = true;
+    }
+    if (db.users[id].global_name !== discordUser.globalName) {
+      db.users[id].global_name = discordUser.globalName;
+      needsUpdate = true;
+    }
+    if (db.users[id].display_name !== discordUser.displayName) {
+      db.users[id].display_name = discordUser.displayName;
+      needsUpdate = true;
+    }
+    if (db.users[id].discriminator !== discordUser.discriminator) {
+      db.users[id].discriminator = discordUser.discriminator;
+      needsUpdate = true;
+    }
+    
+    if (needsUpdate) {
+      saveJsonDb(db);
+    }
   }
   
   // Fix null balance issue
@@ -424,6 +517,50 @@ export async function getTransactions(userId, limit = 50) {
     .slice(0, limit);
 }
 
+// Get all recent transactions for activity feed
+export async function getAllRecentTransactions(limit = 50) {
+  if (useSupabase) {
+    try {
+      const { data, error } = await supabase
+        .from('transactions')
+        .select(`
+          *,
+          users:user_id (username)
+        `)
+        .order('timestamp', { ascending: false })
+        .limit(limit);
+      
+      if (error) throw error;
+      
+      return data.map(tx => ({
+        userId: tx.user_id,
+        username: tx.users?.username || 'Unknown',
+        stock: tx.stock,
+        amount: tx.amount,
+        price: tx.price,
+        timestamp: tx.timestamp,
+        type: tx.amount > 0 ? 'buy' : 'sell',
+        value: Math.abs(tx.amount) * tx.price
+      }));
+    } catch (error) {
+      console.error('Supabase getAllRecentTransactions error:', error.message);
+      useSupabase = false;
+    }
+  }
+  
+  // Fallback to JSON
+  const db = loadJsonDb();
+  return (db.transactions || [])
+    .map(tx => ({
+      ...tx,
+      username: db.users[tx.userId]?.username || 'Unknown',
+      type: tx.amount > 0 ? 'buy' : 'sell',
+      value: Math.abs(tx.amount) * tx.price
+    }))
+    .sort((a, b) => b.timestamp - a.timestamp)
+    .slice(0, limit);
+}
+
 // 🔧 NEW: Price History Function (ADDED)
 export async function getPriceHistory(stockSymbol, limit = 100) {
   if (useSupabase) {
@@ -450,30 +587,54 @@ export async function getPriceHistory(stockSymbol, limit = 100) {
   }
   
   // Fallback to JSON - generate mock price history from current market data
-  const market = getAllStocks();
-  if (!market[stockSymbol]) {
+  try {
+    const fs = await import('fs');
+    const path = await import('path');
+    const { fileURLToPath } = await import('url');
+    
+    const __filename = fileURLToPath(import.meta.url);
+    const __dirname = path.dirname(__filename);
+    const marketPath = path.join(__dirname, '../market.json');
+    
+    if (!fs.existsSync(marketPath)) {
+      return [];
+    }
+    
+    const market = JSON.parse(fs.readFileSync(marketPath, 'utf8'));
+    if (!market[stockSymbol]) {
+      return [];
+    }
+    
+    const currentPrice = market[stockSymbol].price;
+    const history = [];
+    const now = Date.now();
+    
+    // Generate 50 historical data points over the last 7 days for better charts
+    for (let i = 49; i >= 0; i--) {
+      const timestamp = now - (i * 3.36 * 60 * 60 * 1000); // Every 3.36 hours
+      
+      // Create more realistic price progression toward current price
+      const progressFactor = (49 - i) / 49; // 0 to 1
+      const basePrice = currentPrice * (0.7 + (progressFactor * 0.3)); // Start 30% lower
+      
+      // Add realistic random volatility
+      const volatility = 0.15; // 15% max variation per point
+      const priceVariation = (Math.random() - 0.5) * volatility;
+      const price = basePrice * (1 + priceVariation);
+      
+      history.push({
+        stock: stockSymbol,
+        price: Math.max(0.01, price), // Minimum price of $0.01
+        timestamp: timestamp,
+        trendScore: (Math.random() - 0.5) * 0.08 // ±4% trend score
+      });
+    }
+    
+    return history;
+  } catch (error) {
+    console.error('Error generating fallback price history:', error);
     return [];
   }
-  
-  const currentPrice = market[stockSymbol].price;
-  const history = [];
-  const now = Date.now();
-  
-  // Generate 10 historical data points over the last 24 hours
-  for (let i = 9; i >= 0; i--) {
-    const timestamp = now - (i * 2.4 * 60 * 60 * 1000); // Every 2.4 hours
-    const priceVariation = (Math.random() - 0.5) * 0.1; // ±5% variation
-    const price = currentPrice * (1 + priceVariation);
-    
-    history.push({
-      stock: stockSymbol,
-      price: Math.max(0.01, price), // Minimum price of $0.01
-      timestamp: timestamp,
-      trendScore: (Math.random() - 0.5) * 0.04 // ±2% trend score
-    });
-  }
-  
-  return history;
 }
 
 // 🔧 NEW: Add Price History Entry (ADDED)
@@ -517,8 +678,14 @@ export async function getAllUsers() {
       return data.map(user => ({
         id: user.id,
         balance: parseFloat(user.balance) || 1000,
+        username: user.username || null,
+        global_name: user.global_name || null,
+        display_name: user.display_name || null,
+        discriminator: user.discriminator || null,
         lastDaily: user.last_daily || 0,
-        lastMessage: user.last_message || 0
+        lastMessage: user.last_message || 0,
+        createdAt: user.created_at || null,
+        joined_at: user.joined_at || null
       }));
     } catch (error) {
       console.error('Supabase getAllUsers error:', error.message);

@@ -1,4 +1,4 @@
-import { getUser, updateUserBalance, updateUserLastMessage, completeQuest, getUserQuestProgress } from '../utils/supabaseDb.js';
+import { getUser, updateUserBalance, updateUserLastMessage, completeQuest, getUserQuestProgress, getDiscordUserInfo } from '../utils/supabaseDb.js';
 
 const COOLDOWN = 60 * 1000; // 1 minute
 const REWARD = 5;
@@ -7,7 +7,8 @@ export default async function messageCreate(message) {
   if (message.author.bot) return;
   
   const userId = message.author.id;
-  const user = await getUser(userId);
+  const discordUserInfo = getDiscordUserInfo(message.author);
+  const user = await getUser(userId, discordUserInfo);
   const now = Date.now();
   
   // Regular message rewards (existing logic)

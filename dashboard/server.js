@@ -33,6 +33,10 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
+// Serve CSS and JS files from public directory
+app.use('/css', express.static(path.join(__dirname, 'public', 'css')));
+app.use('/js', express.static(path.join(__dirname, 'public', 'js')));
+
 // API client for backend
 async function fetchFromBackend(endpoint) {
   try {
@@ -98,7 +102,37 @@ app.get('/api/dashboard/market', async (req, res) => {
   }
 });
 
-app.get('/api/dashboard/leaderboard', async (req, res) => {
+// Enhanced market endpoint with real holder statistics
+app.get('/api/market/enhanced', async (req, res) => {
+  try {
+    const data = await fetchFromBackend('/api/market/enhanced');
+    if (data) {
+      res.json(data);
+    } else {
+      res.status(503).json({ error: 'Backend service unavailable' });
+    }
+  } catch (error) {
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Individual stock endpoint with enhanced data
+app.get('/api/stock/:symbol', async (req, res) => {
+  try {
+    const symbol = req.params.symbol.toUpperCase();
+    const data = await fetchFromBackend(`/api/stock/${symbol}`);
+    if (data) {
+      res.json(data);
+    } else {
+      res.status(404).json({ error: 'Stock not found' });
+    }
+  } catch (error) {
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Leaderboard endpoint proxy
+app.get('/api/leaderboard', async (req, res) => {
   try {
     const limit = req.query.limit || 10;
     const data = await fetchFromBackend(`/api/leaderboard?limit=${limit}`);
@@ -112,9 +146,11 @@ app.get('/api/dashboard/leaderboard', async (req, res) => {
   }
 });
 
-app.get('/api/dashboard/analytics', async (req, res) => {
+// Transactions endpoint proxy
+app.get('/api/transactions', async (req, res) => {
   try {
-    const data = await fetchFromBackend('/api/analytics');
+    const limit = req.query.limit || 20;
+    const data = await fetchFromBackend(`/api/transactions?limit=${limit}`);
     if (data) {
       res.json(data);
     } else {
@@ -125,68 +161,326 @@ app.get('/api/dashboard/analytics', async (req, res) => {
   }
 });
 
-app.get('/api/dashboard/quests', async (req, res) => {
+// Stock detail endpoint
+app.get('/api/dashboard/stock/:symbol', async (req, res) => {
   try {
-    const date = req.query.date || new Date().toISOString().split('T')[0];
-    const data = await fetchFromBackend(`/api/quests?date=${date}`);
-    if (data) {
-      res.json(data);
-    } else {
-      res.status(503).json({ error: 'Backend service unavailable' });
-    }
-  } catch (error) {
-    res.status(500).json({ error: 'Internal server error' });
-  }
-});
-
-app.get('/api/dashboard/events', async (req, res) => {
-  try {
-    const data = await fetchFromBackend('/api/market');
-    if (data) {
-      // Extract events from market data
-      const events = [{
-        type: 'market_event',
-        description: data.market?.lastEvent || 'Market operating normally',
-        impact: 'Various',
-        timestamp: Date.now(),
-        stocks: ['Multiple']
-      }];
-      res.json(events);
-    } else {
-      res.status(503).json({ error: 'Backend service unavailable' });
-    }
-  } catch (error) {
-    res.status(500).json({ error: 'Internal server error' });
-  }
-});
-
-app.get('/api/dashboard/analytics', async (req, res) => {
-  try {
-    const data = await fetchFromBackend('/api/market');
-    if (data) {
-      // Generate analytics from market data
-      const analytics = {
-        volatilityBreakdown: { extreme: 3, high: 5, medium: 4, low: 3 },
-        marketTrends: ['Bullish Italian Market', 'Pizza Stock Surge']
+    const symbol = req.params.symbol.toUpperCase();
+    
+    // Try to get stock data from backend
+    const marketData = await fetchFromBackend('/api/market');
+    if (marketData && marketData.market && marketData.market[symbol]) {
+      const stock = marketData.market[symbol];
+      
+      // Enhance stock data with additional details
+      const stockDetail = {
+        symbol: symbol,
+        name: stock.italianName || stock.name || symbol,
+        price: stock.price || 0,
+        change: stock.change || 0,
+        changePercent: stock.changePercent || 0,
+        volume: stock.volume || 0,
+        marketCap: stock.marketCap || (stock.price * 1000000),
+        high24h: stock.high24h || stock.price,
+        low24h: stock.low24h || stock.price,
+        open: stock.open || stock.price,
+        previousClose: stock.previousClose || stock.price,
+        weekHigh: stock.weekHigh || stock.price * 1.2,
+        weekLow: stock.weekLow || stock.price * 0.8,
+        avgVolume: stock.avgVolume || stock.volume,
+        volatility: Math.abs(stock.changePercent || 0)
       };
-      res.json(analytics);
+      
+      res.json(stockDetail);
     } else {
-      res.status(503).json({ error: 'Backend service unavailable' });
+      res.status(404).json({ error: 'Stock not found' });
     }
   } catch (error) {
+    console.error('Stock detail error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Leaderboard endpoint (placeholder since we removed the page)
+app.get('/api/dashboard/leaderboard', async (req, res) => {
+  try {
+    // Return empty array since we don't use this endpoint anymore
+    res.json([]);
+  } catch (error) {
+    console.error('Leaderboard error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Analytics endpoint (placeholder since we removed the page)
+app.get('/api/dashboard/analytics', async (req, res) => {
+  try {
+    // Return empty object since we don't use this endpoint anymore
+    res.json({});
+  } catch (error) {
+    console.error('Analytics error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Stock activity endpoint
+app.get('/api/dashboard/stock/:symbol/activity', async (req, res) => {
+  try {
+    const symbol = req.params.symbol.toUpperCase();
+    
+    // Fetch real transaction data from backend
+    const data = await fetchFromBackend('/api/transactions?limit=100');
+    
+    if (data && data.transactions) {
+      // Filter transactions for this specific stock
+      const stockActivities = data.transactions
+        .filter(tx => tx.stock === symbol)
+        .slice(0, 20) // Limit to 20 most recent activities
+        .map(tx => ({
+          type: tx.type,
+          username: tx.username,
+          amount: Math.abs(tx.amount),
+          price: tx.price,
+          timestamp: tx.timestamp,
+          value: tx.value
+        }));
+      
+      res.json(stockActivities);
+    } else {
+      // Fallback to mock data if backend is unavailable
+      const activities = [
+        {
+          type: 'buy',
+          username: 'MemeTrader',
+          amount: 100,
+          price: 45.67,
+          timestamp: Date.now() - 300000,
+          value: 4567
+        },
+        {
+          type: 'sell',
+          username: 'DiamondHands',
+          amount: 50,
+          price: 45.32,
+          timestamp: Date.now() - 600000,
+          value: 2266
+        },
+        {
+          type: 'buy',
+          username: 'StockNinja',
+          amount: 200,
+          price: 44.89,
+          timestamp: Date.now() - 900000,
+          value: 8978
+        }
+      ];
+      
+      res.json(activities);
+    }
+  } catch (error) {
+    console.error('Stock activity error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
 
 app.get('/api/dashboard/quests', async (req, res) => {
   try {
-    // Generate sample quest data since backend doesn't have this endpoint
-    const quests = [
-      { id: 1, title: 'Trade 5 stocks', progress: 0, target: 5, reward: 100, completed: false },
-      { id: 2, title: 'Buy SKIBI stock', progress: 0, target: 1, reward: 50, completed: false }
-    ];
-    res.json(quests);
+    // Try backend first, fallback to generated quests
+    const backendQuests = await fetchFromBackend('/api/quests');
+    
+    if (backendQuests && Array.isArray(backendQuests)) {
+      res.json({
+        date: new Date().toISOString(),
+        totalRewardsDistributed: 12500,
+        totalUsers: 47,
+        completedQuests: 156,
+        globalQuests: backendQuests,
+        discordCommands: [
+          {
+            command: '/quests',
+            description: 'View your current quest progress and available quests'
+          },
+          {
+            command: '/claim',
+            description: 'Claim rewards from completed quests'
+          },
+          {
+            command: '/daily',
+            description: 'Claim your daily bonus (once per 24 hours)'
+          },
+          {
+            command: '/portfolio',
+            description: 'View your current stock holdings and portfolio value'
+          },
+          {
+            command: '/buy <stock> <amount>',
+            description: 'Purchase shares of a specific stock (e.g., /buy SKIBI 5)'
+          },
+          {
+            command: '/sell <stock> <amount>',
+            description: 'Sell shares of a specific stock (e.g., /sell RIZZL 3)'
+          },
+          {
+            command: '/market',
+            description: 'View current stock prices and market overview'
+          },
+          {
+            command: '/leaderboard',
+            description: 'View top traders in the Italian Meme Stock Exchange'
+          }
+        ]
+      });
+    } else {
+      // Generate realistic quest data matching the Discord bot quests
+      const quests = [
+        {
+          id: 1,
+          title: 'Send Message',
+          description: 'Send any message in the server',
+          progress: Math.floor(Math.random() * 2),
+          target: 1,
+          reward: 85,
+          completed: false,
+          type: 'social',
+          emoji: '💬'
+        },
+        {
+          id: 2,
+          title: 'Greet the Community',
+          description: 'Say "hi", "hello", or "ciao" in chat',
+          progress: Math.floor(Math.random() * 2),
+          target: 1,
+          reward: 82,
+          completed: false,
+          type: 'social',
+          emoji: '👋'
+        },
+        {
+          id: 3,
+          title: 'Use Bot Command',
+          description: 'Use any bot command (like /market or /portfolio)',
+          progress: Math.floor(Math.random() * 2),
+          target: 1,
+          reward: 81,
+          completed: false,
+          type: 'interaction',
+          emoji: '🤖'
+        },
+        {
+          id: 4,
+          title: 'Make Your First Trade',
+          description: 'Buy or sell any Italian meme stock using /buy or /sell',
+          progress: 0,
+          target: 1,
+          reward: 150,
+          completed: false,
+          type: 'trading',
+          emoji: '📈'
+        }
+      ];
+      
+      res.json({
+        date: new Date().toISOString(),
+        totalRewardsDistributed: 12500,
+        totalUsers: 47,
+        completedQuests: 156,
+        globalQuests: quests,
+        discordCommands: [
+          {
+            command: '/quests',
+            description: 'View your current quest progress and available quests'
+          },
+          {
+            command: '/claim',
+            description: 'Claim rewards from completed quests'
+          },
+          {
+            command: '/daily',
+            description: 'Claim your daily bonus (once per 24 hours)'
+          },
+          {
+            command: '/portfolio',
+            description: 'View your current stock holdings and portfolio value'
+          },
+          {
+            command: '/buy <stock> <amount>',
+            description: 'Purchase shares of a specific stock (e.g., /buy SKIBI 5)'
+          },
+          {
+            command: '/sell <stock> <amount>',
+            description: 'Sell shares of a specific stock (e.g., /sell RIZZL 3)'
+          },
+          {
+            command: '/market',
+            description: 'View current stock prices and market overview'
+          },
+          {
+            command: '/leaderboard',
+            description: 'View top traders in the Italian Meme Stock Exchange'
+          }
+        ]
+      });
+    }
   } catch (error) {
+    console.error('Quests error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Trading activity endpoint - shows recent bot trading activity
+app.get('/api/dashboard/activity', async (req, res) => {
+  try {
+    // Fetch real transaction data from backend
+    const data = await fetchFromBackend('/api/transactions?limit=30');
+    
+    if (data && data.transactions) {
+      // Format real transaction data for the dashboard
+      const activity = data.transactions.map(tx => ({
+        type: tx.type,
+        username: tx.username,
+        stock: tx.stock,
+        amount: Math.abs(tx.amount),
+        price: tx.price,
+        timestamp: tx.timestamp,
+        value: tx.value
+      }));
+      
+      res.json({ activity: activity.slice(0, 15) });
+    } else {
+      // Fallback activity data if backend is unavailable
+      res.json({
+        activity: [
+          {
+            type: 'buy',
+            username: 'MemeTrader',
+            stock: 'SKIBI',
+            amount: 5,
+            price: 32.45,
+            timestamp: Date.now() - 120000,
+            value: 162.25
+          },
+          {
+            type: 'sell',
+            username: 'StockMaster',
+            stock: 'RIZZL',
+            amount: 3,
+            price: 18.20,
+            timestamp: Date.now() - 180000,
+            value: 54.60
+          },
+          {
+            type: 'buy',
+            username: 'DiamondHands',
+            stock: 'SIGMA',
+            amount: 10,
+            price: 25.80,
+            timestamp: Date.now() - 240000,
+            value: 258.00
+          }
+        ]
+      });
+    }
+  } catch (error) {
+    console.error('Activity error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -232,32 +526,82 @@ app.get('/api/stock/:symbol', async (req, res) => {
   }
 });
 
+// Add missing API proxy endpoints
+app.get('/api/leaderboard', async (req, res) => {
+  try {
+    const data = await fetchFromBackend('/api/leaderboard');
+    if (data) {
+      res.json(data);
+    } else {
+      res.status(503).json({ error: 'Backend service unavailable' });
+    }
+  } catch (error) {
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+app.get('/api/transactions', async (req, res) => {
+  try {
+    const limit = req.query.limit || 50;
+    const data = await fetchFromBackend(`/api/transactions?limit=${limit}`);
+    if (data) {
+      res.json(data);
+    } else {
+      res.status(503).json({ error: 'Backend service unavailable' });
+    }
+  } catch (error) {
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+app.get('/api/quests', async (req, res) => {
+  try {
+    const data = await fetchFromBackend('/api/quests');
+    if (data) {
+      res.json(data);
+    } else {
+      res.status(503).json({ error: 'Backend service unavailable' });
+    }
+  } catch (error) {
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // Page routes
+app.get('/simple', (req, res) => {
+  res.sendFile(path.join(__dirname, 'simple-dashboard.html'));
+});
+
+app.get('/test', (req, res) => {
+  res.sendFile(path.join(__dirname, 'test.html'));
+});
+
 app.get('/', (req, res) => {
-  res.redirect('/dashboard');
+  // Add cache-busting headers to force reload of updated HTML
+  res.set({
+    'Cache-Control': 'no-cache, no-store, must-revalidate',
+    'Pragma': 'no-cache',
+    'Expires': '0'
+  });
+  res.sendFile(path.join(__dirname, 'pages', 'dashboard.html'));
 });
 
 app.get('/dashboard', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
-
-app.get('/leaderboard', (req, res) => {
-  res.sendFile(path.join(__dirname, 'pages', 'leaderboard.html'));
-});
-
-app.get('/events', (req, res) => {
-  res.sendFile(path.join(__dirname, 'pages', 'events.html'));
-});
-
-app.get('/analytics', (req, res) => {
-  res.sendFile(path.join(__dirname, 'pages', 'analytics.html'));
-});
-
-app.get('/quests', (req, res) => {
-  res.sendFile(path.join(__dirname, 'pages', 'quests.html'));
+  // Add cache-busting headers to force reload of updated HTML  
+  res.set({
+    'Cache-Control': 'no-cache, no-store, must-revalidate',
+    'Pragma': 'no-cache',
+    'Expires': '0'
+  });
+  res.sendFile(path.join(__dirname, 'pages', 'dashboard.html'));
 });
 
 app.get('/stock', (req, res) => {
+  res.sendFile(path.join(__dirname, 'pages', 'stock.html'));
+});
+
+// Stock detail page with symbol parameter
+app.get('/stock/:symbol', (req, res) => {
   res.sendFile(path.join(__dirname, 'pages', 'stock.html'));
 });
 
@@ -287,9 +631,5 @@ server.listen(PORT, () => {
   console.log(`📊 Dashboard URLs:`);
   console.log(`   - Root (redirects): http://localhost:${PORT}/`);
   console.log(`   - Main Dashboard: http://localhost:${PORT}/dashboard`);
-  console.log(`   - Stock Charts: http://localhost:${PORT}/stock?symbol=STOCK_SYMBOL`);
-  console.log(`   - Leaderboard: http://localhost:${PORT}/leaderboard`);
-  console.log(`   - Events: http://localhost:${PORT}/events`);
-  console.log(`   - Analytics: http://localhost:${PORT}/analytics`);
-  console.log(`   - Quests: http://localhost:${PORT}/quests`);
+  console.log(`   - Stock Details: http://localhost:${PORT}/stock/:symbol`);
 });

@@ -11,22 +11,29 @@ const metaPath = path.join(__dirname, '../meta.json');
 export default {
   data: new SlashCommandBuilder()
     .setName('stock')
-    .setDescription('Get detailed information about a specific stock')
+    .setDescription('📈 Deep asset analysis and technical indicators')
     .addStringOption(option =>
       option.setName('symbol')
-        .setDescription('Stock symbol (e.g., SKIBI, RIZZL, CROCO)')
+        .setDescription('Asset symbol (e.g., SKIBI, RIZZL, CROCO)')
         .setRequired(true)),
   async execute(interaction) {
     const symbol = interaction.options.getString('symbol').toUpperCase();
     const market = await getAllStocks();
     
     if (!market[symbol]) {
-      const availableStocks = Object.keys(market).filter(key => key !== 'lastEvent').join(', ');
-      const errorMsg = { 
-        content: `Stock ${symbol} not found! Available stocks: ${availableStocks}`, 
-        ephemeral: true 
-      };
-      return interaction.deferred ? interaction.editReply(errorMsg) : interaction.reply(errorMsg);
+      const availableStocks = Object.keys(market).filter(key => key !== 'lastEvent').slice(0, 8).join(' • ');
+      const errorEmbed = new EmbedBuilder()
+        .setTitle('🚫 **ASSET NOT FOUND**')
+        .setDescription('```yaml\nError: Invalid Symbol\nSymbol: ' + symbol + '\nStatus: Not Listed\n```')
+        .addFields({
+          name: '📊 **Available Assets**',
+          value: `\`\`\`\n${availableStocks}\n...and more\`\`\`\n*Use \`/market\` for complete listings*`,
+          inline: false
+        })
+        .setColor('#ff4757')
+        .setFooter({ text: 'MemeX Trading Platform • Symbol Lookup' })
+        .setTimestamp();
+      return interaction.reply({ embeds: [errorEmbed], ephemeral: true });
     }
 
     // Load meta data
@@ -41,88 +48,86 @@ export default {
     const change = stockData.lastChange || 0;
     const changeText = change > 0 ? `+${change.toFixed(2)}%` : `${change.toFixed(2)}%`;
     
-    // Color based on performance
-    let color = '#ffff00'; // yellow for neutral
-    if (change > 5) color = '#00ff00'; // green for big gains
-    else if (change > 0) color = '#90EE90'; // light green for gains
-    else if (change < -5) color = '#ff0000'; // red for big losses
-    else if (change < 0) color = '#ffcccb'; // light red for losses
+    // Professional color scheme
+    let color = '#ffa726'; // amber for neutral
+    if (change > 5) color = '#00d4aa'; // professional green for big gains
+    else if (change > 0) color = '#00d4aa'; // professional green for gains
+    else if (change < -5) color = '#ff4757'; // professional red for big losses
+    else if (change < 0) color = '#ff4757'; // professional red for losses
 
     const embed = new EmbedBuilder()
-      .setTitle(`${symbol} - ${stockMeta.italianName || stockMeta.name || symbol}`)
+      .setTitle(`📊 **ASSET ANALYSIS** | ${symbol}`)
+      .setDescription(`\`\`\`yaml\nAsset: ${stockMeta.italianName || stockMeta.name || symbol}\nSymbol: ${symbol}\nStatus: ACTIVE TRADING\n\`\`\``)
       .setColor(color)
+      .setFooter({ text: 'MemeX Trading Platform • Technical Analysis' })
       .setTimestamp();
 
-    // Price information
+    // Professional price information
     embed.addFields({
-      name: '💰 Current Price',
-      value: `**$${stockData.price.toFixed(4)}**\n${changeText} ${change > 0 ? '📈' : change < 0 ? '📉' : '➡️'}`,
+      name: '💰 **Current Valuation**',
+      value: `\`\`\`\nPrice:      $${stockData.price.toLocaleString()}\nChange:     ${changeText}\nTrend:      ${change > 0 ? 'BULLISH 📈' : change < 0 ? 'BEARISH 📉' : 'NEUTRAL ➡️'}\n\`\`\``,
       inline: true
     });
 
-    // Volatility information
+    // Professional volatility analysis
     const volatility = stockMeta.volatility || 'medium';
     let volEmoji = '🟡';
-    let volDesc = 'Moderate price swings';
+    let volDesc = 'MODERATE RISK';
     
     if (volatility === 'low') {
       volEmoji = '🟢';
-      volDesc = 'Stable, small price movements';
+      volDesc = 'LOW RISK - STABLE';
     } else if (volatility === 'high') {
       volEmoji = '🟠';
-      volDesc = 'Large price swings possible';
+      volDesc = 'HIGH RISK - VOLATILE';
     } else if (volatility === 'extreme') {
       volEmoji = '🔴';
-      volDesc = 'Wild price swings expected!';
+      volDesc = 'EXTREME RISK - CAUTION';
     }
 
     embed.addFields({
-      name: '📊 Volatility',
-      value: `${volEmoji} **${volatility.toUpperCase()}**\n${volDesc}`,
+      name: '⚠️ **Risk Assessment**',
+      value: `\`\`\`yaml\nRisk Level: ${volatility.toUpperCase()}\nClassification: ${volDesc}\nStatus: ACTIVE MONITORING\n\`\`\``,
       inline: true
     });
 
-    // Special power
+    // Professional asset profile
     if (stockMeta.description) {
       embed.addFields({
-        name: '🇮🇹 Italian Twist',
-        value: stockMeta.description,
+        name: '📋 **Asset Intelligence**',
+        value: `\`\`\`yaml\nProfile: ${stockMeta.description}\nCategory: ${stockMeta.coreItalian ? 'PREMIUM ASSET' : 'STANDARD ASSET'}\nOrigin: ${stockMeta.coreItalian ? 'VERIFIED AUTHENTIC' : 'MARKET STANDARD'}\n\`\`\``,
         inline: false
       });
     }
 
-    // Core Italian brainrot stocks
-    if (stockMeta.coreItalian) {
-      embed.addFields({
-        name: '⭐ Core Italian Brainrot',
-        value: 'This is an authentic Italian brainrot creation!',
-        inline: true
-      });
-    }
-
-    // Add trading suggestion
-    let suggestion = 'Monitor for trading opportunities';
+    // Professional trading recommendation
+    let suggestion = 'MONITOR - Await clear signals';
+    let suggestionType = 'NEUTRAL';
     if (change > 5) {
-      suggestion = '🚀 Strong momentum - consider taking profits';
+      suggestion = 'STRONG BULLISH - Consider profit taking';
+      suggestionType = 'BULL ALERT';
     } else if (change < -5) {
-      suggestion = '💡 Potential buying opportunity on the dip';
+      suggestion = 'OVERSOLD - Potential accumulation zone';
+      suggestionType = 'BEAR OPPORTUNITY';
     } else if (volatility === 'extreme') {
-      suggestion = '⚠️ High risk/high reward - trade carefully';
+      suggestion = 'HIGH VOLATILITY - Use strict risk management';
+      suggestionType = 'RISK WARNING';
     } else if (volatility === 'low') {
-      suggestion = '📈 Stable choice for conservative portfolios';
+      suggestion = 'STABLE CHOICE - Conservative allocation suitable';
+      suggestionType = 'CONSERVATIVE';
     }
 
     embed.addFields({
-      name: '💡 Trading Insight',
-      value: suggestion,
+      name: '🎯 **Trading Signal**',
+      value: `\`\`\`yaml\nRecommendation: ${suggestion}\nSignal Type: ${suggestionType}\nConfidence: ${volatility === 'extreme' ? 'MEDIUM' : 'HIGH'}\n\`\`\``,
       inline: false
     });
 
-    // Add minimum price info for BANANI
+    // Professional price protection notice for BANANI
     if (symbol === 'BANANI' && stockMeta.minimumPrice) {
       embed.addFields({
-        name: '🛡️ Price Protection',
-        value: `Cannot drop below $${stockMeta.minimumPrice.toFixed(2)} - Invincible ape power!`,
+        name: '🛡️ **Price Protection**',
+        value: `\`\`\`yaml\nFloor Price: $${stockMeta.minimumPrice.toFixed(2)}\nProtection: ACTIVE\nMechanism: ALGORITHMIC SUPPORT\n\`\`\``,
         inline: true
       });
     }

@@ -1,0 +1,957 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🚀 The Meme Stock Exchange — Trade 🚀, Lose 💀, Win 💎</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* Import fonts */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+
+        /* Dark trading terminal theme */
+        :root {
+            --bg-primary: #0a0a0a;
+            --bg-secondary: #1a1a1a;
+            --bg-tertiary: #2a2a2a;
+            --bg-card: #1e1e1e;
+            --text-primary: #ffffff;
+            --text-secondary: #b3b3b3;
+            --text-muted: #666666;
+            --color-bull: #00ff88;
+            --color-bear: #ff4757;
+            --color-neutral: #ffa726;
+            --color-accent: #8b5cf6;
+            --color-blue: #06b6d4;
+            --border-color: #333333;
+            --glow-purple: rgba(139, 92, 246, 0.3);
+            --glow-green: rgba(0, 255, 136, 0.3);
+            --glow-red: rgba(255, 71, 87, 0.3);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* Hero/Header Bar */
+        .hero-header {
+            background: linear-gradient(135deg, var(--bg-secondary), var(--bg-tertiary));
+            border-bottom: 2px solid var(--color-accent);
+            padding: 1.5rem 2rem;
+            box-shadow: 0 4px 20px rgba(139, 92, 246, 0.2);
+        }
+
+        .hero-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .hero-left {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .logo-icon {
+            font-size: 2.5rem;
+            filter: drop-shadow(0 0 10px var(--glow-purple));
+        }
+
+        .brand-text h1 {
+            font-size: 1.8rem;
+            font-weight: 800;
+            background: linear-gradient(45deg, var(--color-accent), var(--color-blue));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .tagline {
+            font-size: 1rem;
+            color: var(--text-secondary);
+            margin-top: 0.25rem;
+        }
+
+        .quick-stats {
+            display: flex;
+            gap: 2rem;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .quick-stat {
+            text-align: center;
+        }
+
+        .quick-stat-value {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--color-accent);
+        }
+
+        .quick-stat-label {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        /* Main container */
+        .main-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        /* Market Overview Table */
+        .market-overview {
+            background: var(--bg-card);
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .section-header {
+            background: var(--bg-secondary);
+            padding: 1.5rem 2rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .market-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .market-table th {
+            background: var(--bg-tertiary);
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+            color: var(--text-secondary);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .market-table td {
+            padding: 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .market-table tbody tr {
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .market-table tbody tr:hover {
+            background: rgba(139, 92, 246, 0.1);
+            box-shadow: 0 0 20px var(--glow-purple);
+        }
+
+        .stock-ticker {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .stock-emoji {
+            font-size: 1.5rem;
+        }
+
+        .stock-price {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .stock-change {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 600;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+        }
+
+        .stock-change.positive {
+            color: var(--color-bull);
+            background: rgba(0, 255, 136, 0.1);
+        }
+
+        .stock-change.negative {
+            color: var(--color-bear);
+            background: rgba(255, 71, 87, 0.1);
+        }
+
+        .mini-sparkline {
+            width: 60px;
+            height: 30px;
+            background: linear-gradient(45deg, var(--color-bull), var(--color-accent));
+            border-radius: 4px;
+            opacity: 0.7;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .mini-sparkline::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            animation: shimmer 2s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+
+        .view-details-btn {
+            background: var(--color-accent);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+
+        .view-details-btn:hover {
+            background: var(--color-blue);
+            box-shadow: 0 0 15px var(--glow-purple);
+        }
+
+        /* Stock Detail Panel */
+        .stock-detail-panel {
+            display: none;
+            background: var(--bg-card);
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .stock-detail-header {
+            background: var(--bg-secondary);
+            padding: 1.5rem 2rem;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .stock-detail-info h2 {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--color-accent);
+            margin-bottom: 0.5rem;
+        }
+
+        .stock-detail-price {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .close-btn {
+            background: var(--color-bear);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .stock-detail-content {
+            padding: 2rem;
+        }
+
+        .stock-chart-container {
+            height: 400px;
+            margin-bottom: 2rem;
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            padding: 1rem;
+        }
+
+        .news-feed {
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .news-item {
+            padding: 0.75rem 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 0.95rem;
+        }
+
+        .news-item:last-child {
+            border-bottom: none;
+        }
+
+        .stock-metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        .metric-card {
+            background: var(--bg-secondary);
+            padding: 1rem;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .metric-value {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--color-accent);
+            margin-bottom: 0.5rem;
+        }
+
+        .metric-label {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+
+        /* Two column layout */
+        .two-column-layout {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 2rem;
+        }
+
+        /* Leaderboard */
+        .leaderboard {
+            background: var(--bg-card);
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .leaderboard-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .leaderboard-rank {
+            font-size: 1.5rem;
+            width: 40px;
+            text-align: center;
+        }
+
+        .leaderboard-user {
+            flex: 1;
+            font-weight: 600;
+        }
+
+        .leaderboard-worth {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 600;
+            color: var(--color-bull);
+        }
+
+        .leaderboard-roi {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        /* Analytics section */
+        .analytics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        .analytics-card {
+            background: var(--bg-card);
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            padding: 1.5rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .chart-container {
+            height: 250px;
+            margin-top: 1rem;
+        }
+
+        .sentiment-bar {
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-top: 1rem;
+        }
+
+        .sentiment-meter {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-top: 0.5rem;
+        }
+
+        .sentiment-indicator {
+            flex: 1;
+            height: 8px;
+            background: linear-gradient(90deg, var(--color-bear) 0%, var(--color-bull) 100%);
+            border-radius: 4px;
+            position: relative;
+        }
+
+        .sentiment-pointer {
+            position: absolute;
+            top: -4px;
+            width: 16px;
+            height: 16px;
+            background: white;
+            border-radius: 50%;
+            transform: translateX(-50%);
+            left: 73%; /* 73% bullish */
+        }
+
+        /* Footer */
+        .footer {
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border-color);
+            padding: 2rem;
+            text-align: center;
+            margin-top: 3rem;
+        }
+
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .footer-link {
+            background: var(--color-accent);
+            color: white;
+            text-decoration: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+
+        .footer-link:hover {
+            background: var(--color-blue);
+            box-shadow: 0 0 15px var(--glow-purple);
+        }
+
+        .footer-credit {
+            color: var(--text-muted);
+            font-size: 0.875rem;
+        }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .hero-content {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .quick-stats {
+                gap: 1rem;
+            }
+
+            .two-column-layout {
+                grid-template-columns: 1fr;
+            }
+
+            .main-container {
+                padding: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Hero/Header Bar -->
+    <header class="hero-header">
+        <div class="hero-content">
+            <div class="hero-left">
+                <div class="logo">
+                    <div class="logo-icon">🚀</div>
+                    <div class="brand-text">
+                        <h1>The Meme Stock Exchange</h1>
+                        <div class="tagline">Trade 🚀, Lose 💀, Win 💎</div>
+                    </div>
+                </div>
+            </div>
+            <div class="quick-stats">
+                <div class="quick-stat">
+                    <div class="quick-stat-value" id="total-market-cap">$12.3M</div>
+                    <div class="quick-stat-label">Market Cap</div>
+                </div>
+                <div class="quick-stat">
+                    <div class="quick-stat-value" id="total-players">1,234</div>
+                    <div class="quick-stat-label">Players</div>
+                </div>
+                <div class="quick-stat">
+                    <div class="quick-stat-value" id="top-gainer">🚀 +420%</div>
+                    <div class="quick-stat-label">Top Gainer</div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="main-container">
+        <!-- Market Overview -->
+        <section class="market-overview">
+            <div class="section-header">
+                <h2 class="section-title">
+                    <i class="fas fa-chart-line"></i>
+                    MARKET OVERVIEW
+                </h2>
+            </div>
+            <table class="market-table" id="market-table">
+                <thead>
+                    <tr>
+                        <th>Ticker</th>
+                        <th>Name</th>
+                        <th>Price</th>
+                        <th>% Change</th>
+                        <th>Volume</th>
+                        <th>Chart</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="market-table-body">
+                    <!-- Sample data - will be populated by JavaScript -->
+                    <tr onclick="showStockDetails('STONK')">
+                        <td>
+                            <div class="stock-ticker">
+                                <span class="stock-emoji">🚀</span>
+                                STONK
+                            </div>
+                        </td>
+                        <td>Stonk</td>
+                        <td class="stock-price">$123.45</td>
+                        <td><span class="stock-change positive">+12.3%</span></td>
+                        <td>32.1K</td>
+                        <td><div class="mini-sparkline"></div></td>
+                        <td><button class="view-details-btn" onclick="showStockDetails('STONK')">🔍</button></td>
+                    </tr>
+                    <tr onclick="showStockDetails('APE')">
+                        <td>
+                            <div class="stock-ticker">
+                                <span class="stock-emoji">🦍</span>
+                                APE
+                            </div>
+                        </td>
+                        <td>Ape</td>
+                        <td class="stock-price">$4.20</td>
+                        <td><span class="stock-change negative">-3.2%</span></td>
+                        <td>18.9K</td>
+                        <td><div class="mini-sparkline"></div></td>
+                        <td><button class="view-details-btn" onclick="showStockDetails('APE')">🔍</button></td>
+                    </tr>
+                    <tr onclick="showStockDetails('DIAM')">
+                        <td>
+                            <div class="stock-ticker">
+                                <span class="stock-emoji">💎</span>
+                                DIAM
+                            </div>
+                        </td>
+                        <td>Diamond</td>
+                        <td class="stock-price">$69.00</td>
+                        <td><span class="stock-change positive">+420%</span></td>
+                        <td>42.0K</td>
+                        <td><div class="mini-sparkline"></div></td>
+                        <td><button class="view-details-btn" onclick="showStockDetails('DIAM')">🔍</button></td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <!-- Stock Detail Panel -->
+        <section class="stock-detail-panel" id="stock-detail-panel">
+            <div class="stock-detail-header">
+                <div class="stock-detail-info">
+                    <h2 id="detail-ticker">🚀 STONK</h2>
+                    <div class="stock-detail-price" id="detail-price">Current Price: $123.45 | Change: +12.3%</div>
+                </div>
+                <button class="close-btn" onclick="hideStockDetails()">✖ Close</button>
+            </div>
+            <div class="stock-detail-content">
+                <div class="stock-chart-container">
+                    <canvas id="stock-detail-chart"></canvas>
+                </div>
+                
+                <div class="two-column-layout">
+                    <div class="news-feed">
+                        <h3>📰 News Feed</h3>
+                        <div class="news-item">🚨 STONK just hit a new ATH!</div>
+                        <div class="news-item">Reddit is going crazy for 🚀 STONK</div>
+                        <div class="news-item">"This stock only goes up" — Famous Last Words</div>
+                    </div>
+                    
+                    <div class="stock-metrics">
+                        <div class="metric-card">
+                            <div class="metric-value">432</div>
+                            <div class="metric-label">Holders</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-value">🔥 CHAOTIC</div>
+                            <div class="metric-label">Volatility</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Two Column Layout: Leaderboard + Analytics -->
+        <div class="two-column-layout">
+            <!-- Leaderboard -->
+            <section class="leaderboard">
+                <div class="section-header">
+                    <h2 class="section-title">
+                        <i class="fas fa-trophy"></i>
+                        LEADERBOARD
+                    </h2>
+                </div>
+                <div class="leaderboard-item">
+                    <div class="leaderboard-rank">🥇</div>
+                    <div class="leaderboard-user">User123</div>
+                    <div class="leaderboard-worth">$12,345</div>
+                    <div class="leaderboard-roi">+420%</div>
+                </div>
+                <div class="leaderboard-item">
+                    <div class="leaderboard-rank">🥈</div>
+                    <div class="leaderboard-user">TraderA</div>
+                    <div class="leaderboard-worth">$9,876</div>
+                    <div class="leaderboard-roi">+210%</div>
+                </div>
+                <div class="leaderboard-item">
+                    <div class="leaderboard-rank">🥉</div>
+                    <div class="leaderboard-user">MemeKing</div>
+                    <div class="leaderboard-worth">$7,654</div>
+                    <div class="leaderboard-roi">+133%</div>
+                </div>
+            </section>
+
+            <!-- Analytics -->
+            <section class="analytics-card">
+                <div class="section-header">
+                    <h2 class="section-title">
+                        <i class="fas fa-chart-pie"></i>
+                        ANALYTICS
+                    </h2>
+                </div>
+                <div class="chart-container">
+                    <canvas id="holdings-pie-chart"></canvas>
+                </div>
+                <div class="sentiment-bar">
+                    <h4>Market Sentiment</h4>
+                    <div class="sentiment-meter">
+                        <span>🐻</span>
+                        <div class="sentiment-indicator">
+                            <div class="sentiment-pointer"></div>
+                        </div>
+                        <span>🐂</span>
+                    </div>
+                    <div style="text-align: center; margin-top: 0.5rem; font-family: 'JetBrains Mono', monospace;">
+                        73% Bullish | 27% Bearish
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- Analytics Grid -->
+        <section class="analytics-grid">
+            <div class="analytics-card">
+                <h3>📊 Gainers vs Losers</h3>
+                <div class="chart-container">
+                    <canvas id="gainers-losers-chart"></canvas>
+                </div>
+            </div>
+            
+            <div class="analytics-card">
+                <h3>🚀 Quests & Challenges</h3>
+                <div style="padding: 1rem;">
+                    <div style="margin-bottom: 1rem;">
+                        <div style="font-weight: 600; margin-bottom: 0.5rem;">
+                            🎯 Buy 500 shares of 🚀STONK today
+                        </div>
+                        <div style="background: var(--bg-secondary); border-radius: 8px; height: 8px; overflow: hidden;">
+                            <div style="background: var(--color-bull); height: 100%; width: 67%;"></div>
+                        </div>
+                        <div style="font-size: 0.875rem; color: var(--text-muted); margin-top: 0.5rem;">
+                            Progress: 335/500 shares
+                        </div>
+                    </div>
+                    <button style="background: var(--color-accent); color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 8px; font-weight: 600; width: 100%;">
+                        🎁 Claim Rewards
+                    </button>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-links">
+            <a href="#" class="footer-link">🤖 Invite Bot</a>
+            <a href="#" class="footer-link">💬 Join Discord</a>
+        </div>
+        <div class="footer-credit">Built with ❤️ for memes</div>
+    </footer>
+
+    <script>
+        // Sample data and functionality
+        const stockData = {
+            'STONK': {
+                ticker: '🚀STONK',
+                name: 'Stonk',
+                price: 123.45,
+                change: 12.3,
+                volume: '32.1K',
+                news: [
+                    '🚨 STONK just hit a new ATH!',
+                    'Reddit is going crazy for 🚀 STONK',
+                    '"This stock only goes up" — Famous Last Words'
+                ]
+            },
+            'APE': {
+                ticker: '🦍APE',
+                name: 'Ape',
+                price: 4.20,
+                change: -3.2,
+                volume: '18.9K',
+                news: [
+                    '🦍 APE holders diamond handing',
+                    'WSB still bullish on APE long term',
+                    'Technical analysis shows support at $4'
+                ]
+            },
+            'DIAM': {
+                ticker: '💎DIAM',
+                name: 'Diamond',
+                price: 69.00,
+                change: 420,
+                volume: '42.0K',
+                news: [
+                    '💎 DIAMOND HANDS ACTIVATED',
+                    'Institutional money flowing into DIAM',
+                    'Price target upgraded to $100'
+                ]
+            }
+        };
+
+        function showStockDetails(symbol) {
+            const panel = document.getElementById('stock-detail-panel');
+            const data = stockData[symbol];
+            
+            if (data) {
+                document.getElementById('detail-ticker').textContent = data.ticker;
+                document.getElementById('detail-price').textContent = 
+                    `Current Price: $${data.price} | Change: ${data.change >= 0 ? '+' : ''}${data.change}%`;
+                
+                // Update news feed
+                const newsContainer = panel.querySelector('.news-feed');
+                newsContainer.innerHTML = '<h3>📰 News Feed</h3>' + 
+                    data.news.map(news => `<div class="news-item">${news}</div>`).join('');
+                
+                panel.style.display = 'block';
+                
+                // Initialize chart
+                initStockChart(symbol);
+            }
+        }
+
+        function hideStockDetails() {
+            document.getElementById('stock-detail-panel').style.display = 'none';
+        }
+
+        function initStockChart(symbol) {
+            const ctx = document.getElementById('stock-detail-chart').getContext('2d');
+            
+            // Destroy existing chart if it exists
+            if (window.stockChart) {
+                window.stockChart.destroy();
+            }
+            
+            // Generate sample price data
+            const data = [];
+            let price = stockData[symbol].price;
+            for (let i = 0; i < 24; i++) {
+                data.push(price + (Math.random() - 0.5) * price * 0.1);
+            }
+            
+            window.stockChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: Array.from({length: 24}, (_, i) => `${i}:00`),
+                    datasets: [{
+                        label: stockData[symbol].ticker,
+                        data: data,
+                        borderColor: '#8b5cf6',
+                        backgroundColor: 'rgba(139, 92, 246, 0.1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            labels: {
+                                color: '#ffffff'
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            ticks: { color: '#b3b3b3' },
+                            grid: { color: '#333333' }
+                        },
+                        y: {
+                            ticks: { color: '#b3b3b3' },
+                            grid: { color: '#333333' }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Initialize pie chart
+        function initPieChart() {
+            const ctx = document.getElementById('holdings-pie-chart').getContext('2d');
+            
+            new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: ['🚀STONK', '🦍APE', '💎DIAM', 'Others'],
+                    datasets: [{
+                        data: [35, 25, 20, 20],
+                        backgroundColor: ['#8b5cf6', '#06b6d4', '#00ff88', '#ffa726']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            labels: {
+                                color: '#ffffff'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Initialize gainers/losers chart
+        function initGainersLosersChart() {
+            const ctx = document.getElementById('gainers-losers-chart').getContext('2d');
+            
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Gainers', 'Losers'],
+                    datasets: [{
+                        data: [8, 4],
+                        backgroundColor: ['#00ff88', '#ff4757']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        x: {
+                            ticks: { color: '#b3b3b3' },
+                            grid: { color: '#333333' }
+                        },
+                        y: {
+                            ticks: { color: '#b3b3b3' },
+                            grid: { color: '#333333' }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Initialize charts on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            initPieChart();
+            initGainersLosersChart();
+        });
+
+        // Auto-refresh stats (simulation)
+        setInterval(() => {
+            // Update market cap with random variation
+            const marketCap = document.getElementById('total-market-cap');
+            const currentValue = parseFloat(marketCap.textContent.replace('$', '').replace('M', ''));
+            const newValue = (currentValue + (Math.random() - 0.5) * 0.5).toFixed(1);
+            marketCap.textContent = `$${newValue}M`;
+            
+            // Update player count
+            const players = document.getElementById('total-players');
+            const currentPlayers = parseInt(players.textContent.replace(',', ''));
+            const newPlayers = currentPlayers + Math.floor(Math.random() * 10);
+            players.textContent = newPlayers.toLocaleString();
+        }, 5000);
+    </script>
+</body>
+</html>

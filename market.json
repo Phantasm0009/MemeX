@@ -1,76 +1,152 @@
 {
   "SKIBI": {
-    "price": 14.343776127543048,
-    "lastChange": 0.6396195308499008,
-    "lastTikTokUpdate": 1755449702107
+    "price": 0.06797657505358308,
+    "lastChange": 35.920767817566315,
+    "lastTikTokUpdate": 1755819003339,
+    "change": 2.5464030112310603,
+    "lastUpdate": 1755963900204,
+    "timestamp": 1755973121498,
+    "high24h": 37.275525,
+    "low24h": 1.1246468183446545
   },
   "SUS": {
-    "price": 23.322833052066574,
-    "lastChange": 0.596797502909192,
-    "lastTikTokUpdate": 1755449703682
+    "price": 941.2625312929739,
+    "lastChange": -6.461553395202236,
+    "lastTikTokUpdate": 1755819004608,
+    "change": -0.3151815490809433,
+    "lastUpdate": 1755963900204,
+    "timestamp": 1755973121499,
+    "high24h": 191.58657159391947,
+    "low24h": 25.85
   },
   "SAHUR": {
-    "price": 109.34688384056999,
-    "lastChange": 0.2570454648456394,
-    "lastTikTokUpdate": 1755449704771
+    "price": 7.885256151639833,
+    "lastChange": 28.907600147625796,
+    "lastTikTokUpdate": 1755818705027,
+    "change": -0.9756262141479758,
+    "lastUpdate": 1755963900204,
+    "timestamp": 1755973121499,
+    "high24h": 111.1383,
+    "low24h": 8.717002448935705
   },
   "LABUB": {
-    "price": 383.0221313827287,
-    "lastChange": 0.5751478275482762,
-    "lastTikTokUpdate": 1755449705937
+    "price": 2117668.8991897185,
+    "lastChange": 11.138006804498007,
+    "lastTikTokUpdate": 1755819006904,
+    "change": -2.0559662167188897,
+    "lastUpdate": 1755963900204,
+    "timestamp": 1755973121499,
+    "high24h": 88179.53300350123,
+    "low24h": 541.075
   },
   "OHIO": {
-    "price": 27.7198221159546,
-    "lastChange": 1.2687418853177983,
-    "lastTikTokUpdate": 1755449706885
+    "price": 15785.30953219443,
+    "lastChange": 23.449906291396964,
+    "lastTikTokUpdate": 1755818707049,
+    "change": -2.052198049984872,
+    "lastUpdate": 1755963900204,
+    "timestamp": 1755973121499,
+    "high24h": 12239.31756190788,
+    "low24h": 43.4
   },
   "RIZZL": {
-    "price": 11.918572586019822,
-    "lastChange": 1.0720871445225557,
-    "lastTikTokUpdate": 1755449708186
+    "price": 1040.5783977334927,
+    "lastChange": 8.972260347187722,
+    "lastTikTokUpdate": 1755819009126,
+    "change": 1.7136294496003617,
+    "lastUpdate": 1755963900204,
+    "timestamp": 1755973121499,
+    "high24h": 628.9585350333564,
+    "low24h": 17.511000000000003
   },
   "GYATT": {
-    "price": 2.98476376471299,
-    "lastChange": 43.998231235179645,
-    "lastTikTokUpdate": 1755449409234
+    "price": 0.016625509631634564,
+    "lastChange": 66.25509631634564,
+    "lastTikTokUpdate": 1755819010268,
+    "change": -0.24892145193052073,
+    "lastUpdate": 1755963900204,
+    "timestamp": 1755973121499,
+    "high24h": 7.000624999999999,
+    "low24h": 0.020529144477694206
   },
   "FRIED": {
-    "price": 0.9641385034477746,
-    "lastChange": 0.32322626660674303,
-    "lastTikTokUpdate": 1755449710204
+    "price": 0.3484455251184644,
+    "lastChange": 14.48740167329053,
+    "lastTikTokUpdate": 1755819011251,
+    "change": -2.2243891132610507,
+    "lastUpdate": 1755963900204,
+    "timestamp": 1755973121500,
+    "high24h": 1.9561499999999998,
+    "low24h": 0.2590087626515751
   },
   "SIGMA": {
-    "price": 213.32830156486256,
-    "lastChange": 0.2810129869796628,
-    "lastTikTokUpdate": 1755449711468
+    "price": 183743.21316710688,
+    "lastChange": 17.587817277010625,
+    "lastTikTokUpdate": 1755819013649,
+    "change": -1.8138351247739377,
+    "lastUpdate": 1755963900204,
+    "timestamp": 1755973121500,
+    "high24h": 25230.05433028506,
+    "low24h": 272.85
   },
   "TRALA": {
-    "price": 29.106145450892612,
-    "lastChange": 0.6141880206049294,
-    "lastTikTokUpdate": 1755449712760
+    "price": 11094.3349443317,
+    "lastChange": -5.799081494341031,
+    "lastTikTokUpdate": 1755449712760,
+    "change": -1.1234120087191783,
+    "lastUpdate": 1755963900204,
+    "timestamp": 1755973121500,
+    "high24h": 1956.229480567255,
+    "low24h": 47.918
   },
   "CROCO": {
-    "price": 3.3448441620045792,
-    "lastChange": 0.6720010689991449,
-    "lastTikTokUpdate": 1755449713742
+    "price": 10.130365598328465,
+    "lastChange": -31.643725539034428,
+    "lastTikTokUpdate": 1755819015946,
+    "change": 1.4335782086674147,
+    "lastUpdate": 1755963900204,
+    "timestamp": 1755973121500,
+    "high24h": 27.42850251275979,
+    "low24h": 4.362500000000001
   },
   "FANUM": {
-    "price": 13.357631315879999,
-    "lastChange": 0.35499797014689105,
-    "lastTikTokUpdate": 1755449714832
+    "price": 6962.411591282209,
+    "lastChange": -6.292380080042396,
+    "lastTikTokUpdate": 1755819017041,
+    "change": 0.0715660586848248,
+    "lastUpdate": 1755963900204,
+    "timestamp": 1755973121500,
+    "high24h": 872.9518787431945,
+    "low24h": 21.1375
   },
   "CAPPU": {
-    "price": 64.64656696790621,
-    "lastChange": 0.38641626956862635,
-    "lastTikTokUpdate": 1755449716037
+    "price": 344484.0235849222,
+    "lastChange": 7.144018638895062,
+    "lastTikTokUpdate": 1755819018014,
+    "change": 0.6269519165280748,
+    "lastUpdate": 1755963900204,
+    "timestamp": 1755973121500,
+    "high24h": 61820.448323401564,
+    "low24h": 86.671
   },
   "BANANI": {
-    "price": 17.223976053845597,
-    "lastChange": 15.031874226006014
+    "price": 12440.228016664067,
+    "lastChange": 16.91714615092412,
+    "change": -0.011600099892675075,
+    "lastUpdate": 1755963900204,
+    "timestamp": 1755973121500,
+    "high24h": 1466.025666629786,
+    "low24h": 23.4625
   },
   "LARILA": {
-    "price": 145.22565687489816,
-    "lastChange": 0.38224665117598455,
-    "lastTikTokUpdate": 1755449718021
-  }
+    "price": 17679.514391040655,
+    "lastChange": -5.295206943549704,
+    "lastTikTokUpdate": 1755819019991,
+    "change": -0.5607228069275507,
+    "lastUpdate": 1755963900204,
+    "timestamp": 1755973121501,
+    "high24h": 15401.863741151261,
+    "low24h": 246.961
+  },
+  "lastEvent": "📉 Market crash! Most stocks -12% (LABUB protected, BANANI resilient)"
 }

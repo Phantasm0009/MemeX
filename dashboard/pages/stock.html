@@ -3,192 +3,462 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Stock Chart - Italian Meme Stock Exchange</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Stock Details - Italian Meme Stock Exchange</title>
+    <link rel="stylesheet" href="/css/trading-dashboard.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/date-fns@2.29.3/index.min.js"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="/css/dashboard.css">
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <script src="/js/trading-dashboard.js" defer></script>
 </head>
-<body class="bg-gradient-to-br from-slate-900 via-slate-800 to-indigo-900 text-white min-h-screen">
-    
-    <!-- Navigation -->
-    <nav class="bg-slate-800/90 backdrop-blur-sm border-b border-slate-700 sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-6 py-4">
-            <div class="flex items-center justify-between">
-                <div class="flex items-center space-x-8">
-                    <div class="flex items-center space-x-3">
-                        <div class="w-8 h-8 bg-gradient-to-r from-green-400 to-blue-500 rounded-lg flex items-center justify-center">
-                            <i class="fas fa-chart-line text-white text-sm"></i>
-                        </div>
-                        <h1 class="text-xl font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
-                            Italian Meme Stock Exchange
-                        </h1>
-                    </div>
-                    
-                    <div class="hidden md:flex space-x-1">
-                        <a href="/dashboard" class="nav-btn">
-                            <i class="fas fa-chart-pie mr-2"></i>Dashboard
-                        </a>
-                        <a href="/leaderboard" class="nav-btn">
-                            <i class="fas fa-trophy mr-2"></i>Leaderboard
-                        </a>
-                        <a href="/quests" class="nav-btn">
-                            <i class="fas fa-tasks mr-2"></i>Quests
-                        </a>
-                        <a href="/events" class="nav-btn">
-                            <i class="fas fa-bolt mr-2"></i>Events
-                        </a>
-                    </div>
-                </div>
-                
-                <div class="flex items-center space-x-4">
-                    <div id="connection-status" class="flex items-center space-x-2">
-                        <div class="status-indicator status-online"></div>
-                        <span class="text-sm text-gray-300">Connected</span>
-                    </div>
-                    <button onclick="refreshStockData()" class="nav-btn">
-                        <i class="fas fa-sync-alt mr-2"></i>Refresh
-                    </button>
-                </div>
-            </div>
-        </div>
-    </nav>
-
-    <!-- Main Content -->
-    <main class="max-w-7xl mx-auto px-6 py-8">
-        
-        <!-- Back Button -->
-        <div class="mb-6">
-            <a href="/dashboard" class="inline-flex items-center text-blue-400 hover:text-blue-300 transition-colors">
-                <i class="fas fa-arrow-left mr-2"></i>
-                Back to Dashboard
-            </a>
-        </div>
-
-        <!-- Stock Header -->
-        <div class="mb-8">
-            <div class="pro-card p-6">
-                <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-6">
-                    <div class="mb-4 lg:mb-0">
-                        <div class="flex items-center space-x-4 mb-2">
-                            <h1 id="stock-symbol" class="text-3xl font-bold text-white">LOADING...</h1>
-                            <span id="stock-flag" class="text-2xl"></span>
-                        </div>
-                        <h2 id="stock-name" class="text-xl text-gray-300 mb-2">Loading stock...</h2>
-                        <p id="stock-description" class="text-gray-400"></p>
-                    </div>
-                    
-                    <div class="text-right">
-                        <div id="stock-price" class="text-4xl font-bold text-white mb-2">$0.00</div>
-                        <div id="stock-change" class="text-lg font-semibold">+0.00%</div>
-                        <div id="stock-volume" class="text-sm text-gray-400 mt-1">Volume: N/A</div>
-                    </div>
-                </div>
-                
-                <!-- Quick Stats -->
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <div class="text-center p-3 bg-slate-700/30 rounded-lg">
-                        <div class="text-sm text-gray-400">24h High</div>
-                        <div id="stock-high" class="text-lg font-semibold text-green-400">$0.00</div>
-                    </div>
-                    <div class="text-center p-3 bg-slate-700/30 rounded-lg">
-                        <div class="text-sm text-gray-400">24h Low</div>
-                        <div id="stock-low" class="text-lg font-semibold text-red-400">$0.00</div>
-                    </div>
-                    <div class="text-center p-3 bg-slate-700/30 rounded-lg">
-                        <div class="text-sm text-gray-400">Volatility</div>
-                        <div id="stock-volatility" class="text-lg font-semibold text-yellow-400">Medium</div>
-                    </div>
-                    <div class="text-center p-3 bg-slate-700/30 rounded-lg">
-                        <div class="text-sm text-gray-400">Market Cap</div>
-                        <div id="stock-market-cap" class="text-lg font-semibold text-blue-400">$0.00</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Chart Section -->
-        <div class="grid grid-cols-1 xl:grid-cols-3 gap-8 mb-8">
-            <div class="xl:col-span-2">
-                <div class="pro-card p-6">
-                    <div class="flex items-center justify-between mb-6">
-                        <h3 class="text-xl font-bold text-white">Price Chart</h3>
-                        <div class="flex space-x-2">
-                            <button onclick="changeTimeframe('1h')" class="px-3 py-1 text-sm bg-slate-700 hover:bg-slate-600 rounded transition-colors timeframe-btn" data-timeframe="1h">1H</button>
-                            <button onclick="changeTimeframe('24h')" class="px-3 py-1 text-sm bg-blue-600 hover:bg-blue-500 rounded transition-colors timeframe-btn active" data-timeframe="24h">24H</button>
-                            <button onclick="changeTimeframe('7d')" class="px-3 py-1 text-sm bg-slate-700 hover:bg-slate-600 rounded transition-colors timeframe-btn" data-timeframe="7d">7D</button>
-                            <button onclick="changeTimeframe('30d')" class="px-3 py-1 text-sm bg-slate-700 hover:bg-slate-600 rounded transition-colors timeframe-btn" data-timeframe="30d">30D</button>
-                        </div>
-                    </div>
-                    
-                    <div class="relative h-96">
-                        <canvas id="priceChart"></canvas>
-                    </div>
-                </div>
+<body>
+    <div class="trading-layout">
+        <!-- Sidebar -->
+        <nav class="sidebar">
+            <div class="sidebar-header">
+                <a href="/" class="logo">
+                    <div class="logo-icon">📈</div>
+                    <span>MemeX Pro</span>
+                </a>
             </div>
             
-            <!-- Trading Panel -->
-            <div class="space-y-6">
-                <div class="pro-card p-6">
-                    <h3 class="text-xl font-bold text-white mb-4">Quick Trade</h3>
-                    <div class="space-y-4">
-                        <div>
-                            <label class="block text-sm text-gray-300 mb-2">Amount</label>
-                            <input type="number" id="trade-amount" class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white" placeholder="Enter amount" min="1">
+            <div class="sidebar-nav">
+                <div class="nav-item">
+                    <a href="/dashboard" class="nav-link" data-page="dashboard">
+                        <div class="nav-icon">
+                            <i class="fas fa-chart-line"></i>
                         </div>
-                        <div class="grid grid-cols-2 gap-3">
-                            <button onclick="executeTrade('buy')" class="w-full py-2 bg-green-600 hover:bg-green-500 text-white rounded-lg font-semibold transition-colors">
-                                <i class="fas fa-arrow-up mr-2"></i>Buy
-                            </button>
-                            <button onclick="executeTrade('sell')" class="w-full py-2 bg-red-600 hover:bg-red-500 text-white rounded-lg font-semibold transition-colors">
-                                <i class="fas fa-arrow-down mr-2"></i>Sell
-                            </button>
-                        </div>
-                        <div class="text-center text-sm text-gray-400">
-                            Use Discord commands to trade
-                        </div>
-                    </div>
+                        <span>Dashboard</span>
+                    </a>
                 </div>
                 
-                <!-- Market Events -->
-                <div class="pro-card p-6">
-                    <h3 class="text-xl font-bold text-white mb-4">Market Events</h3>
-                    <div id="market-events" class="space-y-3">
-                        <div class="flex items-center space-x-3 p-3 bg-slate-700/30 rounded-lg">
-                            <i class="fas fa-pizza-slice text-orange-400"></i>
-                            <div class="text-sm text-gray-300">Loading events...</div>
+                <div class="nav-item">
+                    <a href="/stock" class="nav-link active" data-page="stock">
+                        <div class="nav-icon">
+                            <i class="fas fa-search"></i>
+                        </div>
+                        <span>Stock Details</span>
+                    </a>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="content-header">
+                <div class="header-left">
+                    <a href="/dashboard" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i>
+                        Back to Dashboard
+                    </a>
+                    <div class="stock-header-info">
+                        <h1 class="page-title" id="stock-symbol">LOADING...</h1>
+                        <div class="stock-subtitle" id="stock-name">Loading stock details...</div>
+                    </div>
+                </div>
+                <div class="header-actions">
+                    <div class="status-indicator connection-status">
+                        <div class="status-dot disconnected"></div>
+                        <span class="status-text">Connecting...</span>
+                    </div>
+                    <button class="btn btn-secondary refresh-btn" onclick="refreshStockData()">
+                        <i class="fas fa-sync-alt"></i>
+                        Refresh
+                    </button>
+                </div>
+            </header>
+
+            <!-- Content Area -->
+            <div class="content-area">
+                <!-- Stock Overview -->
+                <div class="grid grid-cols-4 gap-4 mb-4">
+                    <div class="stat-card">
+                        <div class="stat-value" id="current-price">$0.00</div>
+                        <div class="stat-label">Current Price</div>
+                        <div class="stat-change" id="price-change">$0.00 (0.00%)</div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-value" id="market-cap">$0</div>
+                        <div class="stat-label">Market Cap</div>
+                        <div class="stat-change text-muted">Total Value</div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-value" id="volume-24h">0</div>
+                        <div class="stat-label">24h Volume</div>
+                        <div class="stat-change text-muted">Shares Traded</div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-value" id="volatility">0%</div>
+                        <div class="stat-label">Volatility</div>
+                        <div class="stat-change text-muted">Price Stability</div>
+                    </div>
+                </div>
+
+                <!-- Main Chart and Trading Panel -->
+                <div class="grid grid-cols-3 gap-4">
+                    <!-- Price Chart -->
+                    <div class="trading-card" style="grid-column: span 2;">
+                        <div class="card-header">
+                            <h2 class="card-title">Price Chart</h2>
+                            <div class="chart-controls">
+                                <button class="btn btn-secondary chart-timeframe active" data-timeframe="1h">1H</button>
+                                <button class="btn btn-secondary chart-timeframe" data-timeframe="1d">1D</button>
+                                <button class="btn btn-secondary chart-timeframe" data-timeframe="1w">1W</button>
+                                <button class="btn btn-secondary chart-timeframe" data-timeframe="1m">1M</button>
+                            </div>
+                        </div>
+                        
+                        <div class="chart-container" style="height: 500px;">
+                            <canvas id="stock-price-chart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Trading Panel -->
+                    <div class="trading-card">
+                        <div class="card-header">
+                            <h2 class="card-title">Trade Panel</h2>
+                            <div class="card-subtitle">Buy/Sell this stock</div>
+                        </div>
+                        
+                        <div class="trade-panel">
+                            <div class="trade-tabs">
+                                <button class="trade-tab active" data-tab="buy">Buy</button>
+                                <button class="trade-tab" data-tab="sell">Sell</button>
+                            </div>
+                            
+                            <div class="trade-form">
+                                <div class="form-group">
+                                    <label>Amount to invest</label>
+                                    <input type="number" id="trade-amount" placeholder="1000" class="form-input">
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label>Estimated shares</label>
+                                    <div class="estimated-shares" id="estimated-shares">0 shares</div>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label>Order type</label>
+                                    <select id="order-type" class="form-input">
+                                        <option value="market">Market Order</option>
+                                        <option value="limit">Limit Order</option>
+                                    </select>
+                                </div>
+                                
+                                <button class="btn btn-success w-full trade-btn" onclick="executeTrade('buy')">
+                                    <i class="fas fa-arrow-up"></i>
+                                    Buy Stock
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Additional Info Grid -->
+                <div class="grid grid-cols-2 gap-4 mt-4">
+                    <!-- Stock Statistics -->
+                    <div class="trading-card">
+                        <div class="card-header">
+                            <h2 class="card-title">Stock Statistics</h2>
+                            <div class="card-subtitle">Key metrics and performance indicators</div>
+                        </div>
+                        
+                        <div class="stats-list">
+                            <div class="stats-row">
+                                <span class="stats-label">Open</span>
+                                <span class="stats-value" id="open-price">$0.00</span>
+                            </div>
+                            <div class="stats-row">
+                                <span class="stats-label">High</span>
+                                <span class="stats-value text-bull" id="high-price">$0.00</span>
+                            </div>
+                            <div class="stats-row">
+                                <span class="stats-label">Low</span>
+                                <span class="stats-value text-bear" id="low-price">$0.00</span>
+                            </div>
+                            <div class="stats-row">
+                                <span class="stats-label">Previous Close</span>
+                                <span class="stats-value" id="prev-close">$0.00</span>
+                            </div>
+                            <div class="stats-row">
+                                <span class="stats-label">52 Week High</span>
+                                <span class="stats-value" id="week-high">$0.00</span>
+                            </div>
+                            <div class="stats-row">
+                                <span class="stats-label">52 Week Low</span>
+                                <span class="stats-value" id="week-low">$0.00</span>
+                            </div>
+                            <div class="stats-row">
+                                <span class="stats-label">Avg Volume</span>
+                                <span class="stats-value" id="avg-volume">0</span>
+                            </div>
+                            <div class="stats-row">
+                                <span class="stats-label">Market Cap</span>
+                                <span class="stats-value" id="stats-market-cap">$0</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Recent Activity -->
+                    <div class="trading-card">
+                        <div class="card-header">
+                            <h2 class="card-title">Recent Trading Activity</h2>
+                            <div class="card-subtitle">Latest trades for this stock</div>
+                        </div>
+                        
+                        <div class="activity-feed" id="stock-activity">
+                            <div class="text-center text-muted p-4">
+                                <i class="fas fa-chart-line mb-2"></i>
+                                <div>No recent activity</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Technical Analysis -->
+                <div class="trading-card mt-4">
+                    <div class="card-header">
+                        <h2 class="card-title">Technical Analysis</h2>
+                        <div class="card-subtitle">AI-powered insights and trend analysis</div>
+                    </div>
+                    
+                    <div class="grid grid-cols-3 gap-4">
+                        <div class="technical-indicator">
+                            <div class="indicator-header">
+                                <span class="indicator-name">RSI (14)</span>
+                                <span class="indicator-value" id="rsi-value">50.0</span>
+                            </div>
+                            <div class="indicator-bar">
+                                <div class="indicator-fill" id="rsi-fill" style="width: 50%"></div>
+                            </div>
+                            <div class="indicator-signal" id="rsi-signal">Neutral</div>
+                        </div>
+                        
+                        <div class="technical-indicator">
+                            <div class="indicator-header">
+                                <span class="indicator-name">MACD</span>
+                                <span class="indicator-value" id="macd-value">0.00</span>
+                            </div>
+                            <div class="indicator-bar">
+                                <div class="indicator-fill" id="macd-fill" style="width: 50%"></div>
+                            </div>
+                            <div class="indicator-signal" id="macd-signal">Neutral</div>
+                        </div>
+                        
+                        <div class="technical-indicator">
+                            <div class="indicator-header">
+                                <span class="indicator-name">Trend</span>
+                                <span class="indicator-value" id="trend-value">Sideways</span>
+                            </div>
+                            <div class="trend-arrows" id="trend-arrows">
+                                <span class="trend-arrow">→</span>
+                            </div>
+                            <div class="indicator-signal" id="trend-signal">Hold</div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
+        </main>
+    </div>
 
-        <!-- Recent Transactions -->
-        <div class="pro-card p-6">
-            <h3 class="text-xl font-bold text-white mb-6">Recent Transactions</h3>
-            <div class="overflow-x-auto">
-                <table class="w-full text-sm">
-                    <thead>
-                        <tr class="border-b border-slate-700">
-                            <th class="text-left py-3 text-gray-300">Time</th>
-                            <th class="text-left py-3 text-gray-300">Type</th>
-                            <th class="text-right py-3 text-gray-300">Amount</th>
-                            <th class="text-right py-3 text-gray-300">Price</th>
-                            <th class="text-right py-3 text-gray-300">Total</th>
-                        </tr>
-                    </thead>
-                    <tbody id="transactions-table">
-                        <tr>
-                            <td colspan="5" class="py-4 text-center text-gray-400">Loading transactions...</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-        
-    </main>
+    <script>
+        // Simple stock page initialization
+        document.addEventListener('DOMContentLoaded', function() {
+            function initializeStock() {
+                if (typeof TradingDashboard !== 'undefined') {
+                    // Use singleton getInstance method
+                    window.tradingDashboard = TradingDashboard.getInstance();
+                    console.log('Stock page initialized successfully');
+                } else {
+                    setTimeout(initializeStock, 100);
+                }
+            }
+            initializeStock();
+        });
+    </script>
 
-    <script src="/js/stock-chart.js"></script>
+    <style>
+        /* Stock Details specific styles */
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .stock-header-info {
+            margin-left: 1rem;
+        }
+
+        .stock-subtitle {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            margin-top: 0.25rem;
+        }
+
+        .chart-controls {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .chart-timeframe {
+            padding: 0.5rem 1rem;
+            font-size: 0.75rem;
+        }
+
+        .chart-timeframe.active {
+            background: var(--color-accent);
+            color: white;
+        }
+
+        .trade-panel {
+            padding: 0;
+        }
+
+        .trade-tabs {
+            display: flex;
+            border-bottom: 1px solid var(--color-border);
+        }
+
+        .trade-tab {
+            flex: 1;
+            padding: 1rem;
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .trade-tab.active {
+            color: var(--text-primary);
+            border-bottom: 2px solid var(--color-accent);
+        }
+
+        .trade-form {
+            padding: 1.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 0.75rem;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-md);
+            color: var(--text-primary);
+            font-size: 0.875rem;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--color-accent);
+        }
+
+        .estimated-shares {
+            padding: 0.75rem;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-md);
+            color: var(--text-secondary);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.875rem;
+        }
+
+        .w-full {
+            width: 100%;
+        }
+
+        .stats-list {
+            padding: 0;
+        }
+
+        .stats-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid var(--color-border);
+        }
+
+        .stats-row:last-child {
+            border-bottom: none;
+        }
+
+        .stats-label {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+
+        .stats-value {
+            color: var(--text-primary);
+            font-weight: 600;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.875rem;
+        }
+
+        .technical-indicator {
+            text-align: center;
+            padding: 1rem;
+        }
+
+        .indicator-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+        }
+
+        .indicator-name {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        .indicator-value {
+            font-weight: 600;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--text-primary);
+        }
+
+        .indicator-bar {
+            height: 8px;
+            background: var(--bg-tertiary);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 0.5rem;
+        }
+
+        .indicator-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--color-bull), var(--color-accent));
+            transition: width 0.3s ease;
+        }
+
+        .indicator-signal {
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: var(--color-accent);
+        }
+
+        .trend-arrows {
+            margin: 0.5rem 0;
+        }
+
+        .trend-arrow {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+    </style>
 </body>
 </html>

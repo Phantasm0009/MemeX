@@ -1,0 +1,269 @@
+/* Simplified CSS for testing */
+body {
+    background-color: #0a0a0a !important;
+    color: white !important;
+    font-family: Arial, sans-serif !important;
+    margin: 0 !important;
+    padding: 20px !important;
+}
+
+.trading-layout {
+    display: flex;
+    background-color: #1a1a1a;
+    min-height: 100vh;
+}
+
+.sidebar {
+    width: 280px;
+    background-color: #1e1e1e;
+    padding: 20px;
+    border-right: 1px solid #333;
+}
+
+.main-content {
+    flex: 1;
+    padding: 20px;
+    background-color: #0a0a0a;
+}
+
+.sidebar-header {
+    margin-bottom: 30px;
+}
+
+.logo {
+    color: white;
+    text-decoration: none;
+    font-size: 1.5rem;
+    font-weight: bold;
+}
+
+.nav-item {
+    margin-bottom: 10px;
+}
+
+.nav-link {
+    color: #b3b3b3;
+    text-decoration: none;
+    padding: 10px;
+    display: block;
+    border-radius: 8px;
+    transition: all 0.3s;
+}
+
+.nav-link:hover,
+.nav-link.active {
+    background-color: #2a2a2a;
+    color: white;
+}
+
+.content-header {
+    margin-bottom: 30px;
+    border-bottom: 1px solid #333;
+    padding-bottom: 20px;
+}
+
+.page-title {
+    color: white;
+    font-size: 2rem;
+    margin-bottom: 10px;
+}
+
+.trading-card {
+    background-color: #1e1e1e;
+    border: 1px solid #333;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.card-title {
+    color: white;
+    font-size: 1.2rem;
+    margin-bottom: 10px;
+}
+
+.stat-card {
+    background-color: #1e1e1e;
+    border: 1px solid #333;
+    border-radius: 8px;
+    padding: 20px;
+    text-align: center;
+}
+
+.stat-value {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #3b82f6;
+    margin-bottom: 5px;
+}
+
+.stat-label {
+    color: #b3b3b3;
+    font-size: 0.9rem;
+}
+
+.stock-table {
+    width: 100%;
+    border-collapse: collapse;
+    color: white;
+}
+
+.stock-table th,
+.stock-table td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid #333;
+}
+
+.stock-table th {
+    background-color: #2a2a2a;
+    color: #b3b3b3;
+    font-weight: 600;
+}
+
+/* Grid system */
+.grid {
+    display: grid;
+    gap: 1rem;
+}
+
+.grid-cols-2 {
+    grid-template-columns: repeat(2, 1fr);
+}
+
+.grid-cols-3 {
+    grid-template-columns: repeat(3, 1fr);
+}
+
+.grid-cols-4 {
+    grid-template-columns: repeat(4, 1fr);
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+/* Utility classes */
+.text-center { text-align: center; }
+.text-bull { color: #00d4aa; }
+.text-bear { color: #ff4757; }
+.text-neutral { color: #ffa726; }
+.text-primary { color: #3b82f6; }
+.text-muted { color: #666; }
+.mb-2 { margin-bottom: 0.5rem; }
+.mb-4 { margin-bottom: 1rem; }
+.mt-4 { margin-top: 1rem; }
+.p-4 { padding: 1rem; }
+
+/* Chart containers */
+.chart-container {
+    height: 300px;
+    position: relative;
+}
+
+/* Loading animation */
+.loading::after {
+    content: "";
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border: 2px solid #666;
+    border-radius: 50%;
+    border-top-color: #3b82f6;
+    animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Button styles */
+.btn {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.3s;
+}
+
+.btn-secondary {
+    background-color: #2a2a2a;
+    color: white;
+    border: 1px solid #444;
+}
+
+.btn-secondary:hover {
+    background-color: #333;
+}
+
+/* Status indicator */
+.connection-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+}
+
+.status-dot.connected {
+    background-color: #00d4aa;
+}
+
+.status-dot.disconnected {
+    background-color: #ff4757;
+}
+
+.status-dot.connecting {
+    background-color: #ffa726;
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+/* Header actions */
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.content-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* Activity feed */
+.activity-feed {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .trading-layout {
+        flex-direction: column;
+    }
+    
+    .sidebar {
+        width: 100%;
+    }
+    
+    .grid-cols-2,
+    .grid-cols-3,
+    .grid-cols-4 {
+        grid-template-columns: 1fr;
+    }
+}

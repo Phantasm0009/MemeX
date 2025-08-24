@@ -6,6 +6,13 @@ export class EnhancedGlobalEvents {
     this.frozenStocks = new Map();
     this.mergedStocks = new Map();
     this.weekendEffectActive = false;
+    
+    // Event tracking properties for dashboard display
+    this.lastEventName = null;
+    this.lastEventDescription = null;
+    this.lastEventDuration = null;
+    this.lastEventRarity = null;
+    this.lastEventType = null;
   }
 
   // Main event checker - called every minute
@@ -41,6 +48,13 @@ export class EnhancedGlobalEvents {
         const event = await fn();
         if (event) {
           this.lastEventTime = now;
+          // Store event information for dashboard display
+          this.lastEventName = event.name;
+          this.lastEventDescription = event.description;
+          this.lastEventDuration = event.duration || 60000;
+          this.lastEventRarity = event.rarity || 'Common';
+          this.lastEventType = event.type;
+          
           console.log(`🌍 Global event triggered: ${event.name}`);
           return event;
         }

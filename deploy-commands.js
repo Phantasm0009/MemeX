@@ -79,17 +79,26 @@ const rest = new REST().setToken(token);
 
 (async () => {
     try {
+        // Always clear both global and guild commands to prevent duplicates
         if (shouldClear || shouldRefresh) {
-            console.log('🗑️  Clearing existing commands...');
+            console.log('🗑️  Clearing existing commands to prevent duplicates...');
             
-            if (isGlobal || !guildId) {
-                // Clear global commands
+            // Clear global commands first
+            try {
                 await rest.put(Routes.applicationCommands(clientId), { body: [] });
                 console.log('✅ Successfully cleared all global commands');
-            } else {
-                // Clear guild commands
-                await rest.put(Routes.applicationGuildCommands(clientId, guildId), { body: [] });
-                console.log(`✅ Successfully cleared all guild commands for ${guildId}`);
+            } catch (error) {
+                console.log('⚠️  Could not clear global commands (might not exist)');
+            }
+            
+            // Clear guild commands if guild ID is provided
+            if (guildId) {
+                try {
+                    await rest.put(Routes.applicationGuildCommands(clientId, guildId), { body: [] });
+                    console.log(`✅ Successfully cleared all guild commands for ${guildId}`);
+                } catch (error) {
+                    console.log('⚠️  Could not clear guild commands (might not exist)');
+                }
             }
             
             if (shouldClear && !shouldRefresh) {

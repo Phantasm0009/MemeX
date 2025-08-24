@@ -3,6 +3,7 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath, pathToFileURL } from 'url';
 import { completeQuest, getUserQuestProgress } from '../utils/supabaseDb.js';
+import { updateDiscordUserInfo } from '../utils/marketAPI.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -18,11 +19,42 @@ for (const file of fs.readdirSync(commandsPath)) {
 }
 
 export default async function interactionCreate(interaction) {
+  // Handle button interactions
+  if (interaction.isButton()) {
+    // Check if any command can handle this button interaction
+    for (const command of commands.values()) {
+      if (command.handleButtonInteraction) {
+        const handled = await command.handleButtonInteraction(interaction);
+        if (handled) return;
+      }
+    }
+    return;
+  }
+  
   if (!interaction.isChatInputCommand()) return;
   const command = commands.get(interaction.commandName);
   if (!command) return;
   
   try {
+    // Sync Discord user info to backend cache
+    try {
+      const member = interaction.guild?.members.cache.get(interaction.user.id) || 
+                    await interaction.guild?.members.fetch(interaction.user.id).catch(() => null);
+      
+      const userData = {
+        id: interaction.user.id,
+        username: interaction.user.username,
+        globalName: interaction.user.globalName,
+        displayName: member?.displayName || interaction.user.displayName,
+        discriminator: interaction.user.discriminator,
+        tag: interaction.user.tag
+      };
+      
+      await updateDiscordUserInfo(userData);
+    } catch (syncError) {
+      console.log('User sync error (non-critical):', syncError.message);
+    }
+    
     // Quest tracking for bot command usage
     const userId = interaction.user.id;
     const commandName = interaction.commandName;

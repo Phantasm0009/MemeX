@@ -7,7 +7,7 @@ export function createPriceChart(stockSymbol, priceHistory, italianName = '') {
   
   if (prices.length < 2) {
     return {
-      chart: '📈 Not enough data for chart',
+      chart: '� Not enough data for chart',
       priceChange: '0.00',
       currentPrice: prices[0] || 0,
       dataPoints: prices.length
@@ -18,16 +18,16 @@ export function createPriceChart(stockSymbol, priceHistory, italianName = '') {
   const lastPrice = prices[prices.length - 1];
   const priceChange = ((lastPrice - firstPrice) / firstPrice) * 100;
   
-  // Generate ASCII chart
-  const chartHeight = 8;
-  const chartWidth = Math.min(prices.length, 30);
+  // Generate simple ASCII chart
+  const chartHeight = 6;
+  const chartWidth = Math.min(prices.length, 25);
   const maxPrice = Math.max(...prices);
   const minPrice = Math.min(...prices);
   const priceRange = maxPrice - minPrice || 0.01;
   
-  let chart = '';
+  let chart = '```\n';
   
-  // Create the chart
+  // Create the chart using simple ASCII characters
   for (let row = chartHeight - 1; row >= 0; row--) {
     const threshold = minPrice + (priceRange * row / (chartHeight - 1));
     let line = '';
@@ -36,22 +36,21 @@ export function createPriceChart(stockSymbol, priceHistory, italianName = '') {
       const priceIndex = Math.floor((col / chartWidth) * prices.length);
       const price = prices[priceIndex];
       
-      if (price >= threshold && price < threshold + (priceRange / chartHeight)) {
-        line += priceChange >= 0 ? '📈' : '📉';
+      if (price >= threshold - (priceRange / chartHeight / 2) && price <= threshold + (priceRange / chartHeight / 2)) {
+        line += priceChange >= 0 ? '*' : 'o';
       } else if (price > threshold) {
-        line += '▓';
+        line += '█';
       } else {
-        line += '░';
+        line += '·';
       }
     }
     chart += line + '\n';
   }
   
-  // Add price labels
-  chart += `$${minPrice.toFixed(4)}${' '.repeat(Math.max(0, chartWidth * 2 - 20))}$${maxPrice.toFixed(4)}\n`;
+  chart += '```';
   
   return {
-    chart: `\`\`\`\n${chart}\`\`\``,
+    chart: chart,
     priceChange: priceChange.toFixed(2),
     currentPrice: lastPrice,
     dataPoints: prices.length

@@ -1,5 +1,6 @@
 import { SlashCommandBuilder, EmbedBuilder } from 'discord.js';
 import { getAllStocks, checkBackendHealth } from '../utils/marketAPI.js';
+import fetch from 'node-fetch';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -22,7 +23,6 @@ export default {
           { name: '🇮🇹 Italian Stocks Only', value: 'italian' }
         )),
   async execute(interaction) {
-    // Defer reply only once at the start
     await interaction.deferReply();
     
     try {
@@ -33,13 +33,9 @@ export default {
       
       const market = await getAllStocks();
       if (!market || Object.keys(market).length === 0) {
-        const errorEmbed = new EmbedBuilder()
-          .setTitle('❌ Market Unavailable')
-          .setDescription('Unable to fetch market data. Please try again later.')
-          .setColor('#ff4757')
-          .setTimestamp();
-        
-        return interaction.editReply({ embeds: [errorEmbed] });
+        return interaction.editReply({
+          content: '❌ Market data unavailable. Please try again later.'
+        });
       }
 
       // Load meta data
@@ -53,156 +49,223 @@ export default {
       
       switch (viewType) {
         case 'gainers':
-          stockEntries = stockEntries
-            .filter(([, data]) => data.lastChange > 0)
-            .sort(([, a], [, b]) => b.lastChange - a.lastChange)
-            .slice(0, 8);
+          stockEntries = stockEntries.filter(([, data]) => data.lastChange > 0);
+          stockEntries.sort(([, a], [, b]) => b.lastChange - a.lastChange);
           break;
         case 'losers':
-          stockEntries = stockEntries
-            .filter(([, data]) => data.lastChange < 0)
-            .sort(([, a], [, b]) => a.lastChange - b.lastChange)
-            .slice(0, 8);
+          stockEntries = stockEntries.filter(([, data]) => data.lastChange < 0);
+          stockEntries.sort(([, a], [, b]) => a.lastChange - b.lastChange);
           break;
         case 'italian':
           stockEntries = stockEntries.filter(([symbol]) => meta[symbol]?.italian);
+          stockEntries.sort(([, a], [, b]) => b.price - a.price);
           break;
         default:
-          stockEntries = stockEntries.sort(([, a], [, b]) => b.price - a.price);
+          stockEntries.sort(([, a], [, b]) => b.price - a.price);
       }
 
-      // Calculate market stats
-      const totalStocks = Object.keys(market).length - 1;
+      // Show ALL stocks - no more artificial limits!
+      // We'll split into multiple embeds if needed
+      const filteredStocksCount = stockEntries.length;
+      const allMarketStocks = Object.keys(market).filter(key => key !== 'lastEvent').length;
+
+      // Calculate market metrics
       const marketCap = stockEntries.reduce((sum, [, data]) => sum + data.price, 0);
       const avgPrice = marketCap / stockEntries.length;
       const gainers = stockEntries.filter(([, data]) => data.lastChange > 0).length;
       const losers = stockEntries.filter(([, data]) => data.lastChange < 0).length;
+      const neutral = allMarketStocks - gainers - losers;
 
-      // Create main embed
-      const mainEmbed = new EmbedBuilder()
-        .setTitle('🇮🇹 Italian Meme Stock Exchange 📈')
-        .setDescription(`
-          **${market.lastEvent || 'Market is buzzing with Italian brainrot energy! 🍝'}**
-          
-          ${!backendHealthy ? '⚠️ *Using cached data - backend offline*' : '🟢 *Live data from backend*'}
-        `)
-        .setColor('#009246') // Italian flag green
+      // Create professional trading interface embed
+      const embed = new EmbedBuilder()
+        .setTitle('📊 **MemeX TRADING TERMINAL**')
+        .setDescription('```yaml\nMarket Status: LIVE\nTrading Session: 24/7 Active\nData Feed: Real-time\n```')
+        .setColor('#00d4aa')
         .setTimestamp()
         .setFooter({ 
-          text: `🍝 ${stockEntries.length} stocks displayed • Updated every minute • Andiamo!` 
+          text: `MemeX Trading Platform • ${viewType.toUpperCase()} View • ${backendHealthy ? '🟢 ONLINE' : '🔴 OFFLINE'}`, 
+          iconURL: 'https://cdn.discordapp.com/attachments/1234567890/placeholder-icon.png' 
         });
 
-      // Add market summary
-      mainEmbed.addFields({
-        name: '📊 Market Snapshot',
-        value: `
-          💰 **Market Cap:** $${marketCap.toFixed(2)}
-          📈 **Average Price:** $${avgPrice.toFixed(4)}
-          🚀 **Gainers:** ${gainers} | 📉 **Losers:** ${losers} | ➡️ **Neutral:** ${stockEntries.length - gainers - losers}
-        `,
+      // Add market overview with professional metrics
+      let overviewText = `\`\`\`yaml\nMarket Cap: $${(marketCap/1000).toFixed(1)}K\nAvg Price: $${avgPrice.toFixed(2)}\nGainers: ${gainers} | Losers: ${losers} | Neutral: ${neutral}\n\`\`\``;
+      
+      embed.addFields({
+        name: '📊 **Market Analytics**',
+        value: overviewText,
         inline: false
       });
 
-      // Create stock display
-      const stockChunks = [];
-      for (let i = 0; i < stockEntries.length; i += 3) {
-        stockChunks.push(stockEntries.slice(i, i + 3));
-      }
+      // Fetch and display active events
+      try {
+        const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:3001';
+        const response = await fetch(`${BACKEND_URL}/api/global-events`);
+        
+        if (response.ok) {
+          const eventData = await response.json();
+          let activeEventsText = '';
+          let hasActiveEvents = false;
 
-      for (const chunk of stockChunks.slice(0, 5)) { // Max 5 rows to avoid embed limits
-        for (const [symbol, data] of chunk) {
-          const stockMeta = meta[symbol] || {};
-          const change = data.lastChange || 0;
-          
-          // Enhanced emoji system
-          let emoji = '🔸';
-          let trendText = '';
-          
-          if (change > 15) { emoji = '🚀'; trendText = 'MOON'; }
-          else if (change > 10) { emoji = '💎'; trendText = 'PUMP'; }
-          else if (change > 5) { emoji = '📈'; trendText = 'UP'; }
-          else if (change > 0) { emoji = '⬆️'; trendText = 'RISE'; }
-          else if (change < -15) { emoji = '💥'; trendText = 'REKT'; }
-          else if (change < -10) { emoji = '🔥'; trendText = 'DUMP'; }
-          else if (change < -5) { emoji = '📉'; trendText = 'DOWN'; }
-          else if (change < 0) { emoji = '⬇️'; trendText = 'DIP'; }
-          else { emoji = '➡️'; trendText = 'FLAT'; }
+          // Check for active event from the enhanced system
+          if (eventData.globalEvents?.activeEvent) {
+            const event = eventData.globalEvents.activeEvent;
+            const minutesAgo = Math.floor(event.timeAgo / 60000);
+            const secondsAgo = Math.floor((event.timeAgo % 60000) / 1000);
+            const timeText = minutesAgo > 0 ? `${minutesAgo}m ${secondsAgo}s ago` : `${secondsAgo}s ago`;
+            
+            // Determine how long the event lasts
+            const durationMinutes = Math.floor(event.duration / 60000);
+            const remainingTime = event.duration - event.timeAgo;
+            const remainingMinutes = Math.max(0, Math.floor(remainingTime / 60000));
+            const remainingSeconds = Math.max(0, Math.floor((remainingTime % 60000) / 1000));
+            
+            if (remainingTime > 0) {
+              const rarityEmoji = {
+                'common': '🟢',
+                'uncommon': '🟡', 
+                'rare': '🔴',
+                'ultra rare': '🟣',
+                'legendary': '🟠'
+              }[event.rarity.toLowerCase()] || '🟢';
+              
+              activeEventsText += `🎭 **${event.name}** ${rarityEmoji}\n`;
+              activeEventsText += `⏱️ \`${timeText}\` • \`${remainingMinutes}m ${remainingSeconds}s left\`\n`;
+              activeEventsText += `📋 ${event.description}\n\n`;
+              hasActiveEvents = true;
+            }
+          }
 
-          // Volatility indicator
-          const vol = stockMeta.volatility || 'medium';
-          const volEmoji = {
-            'low': '🟢',
-            'medium': '🟡', 
-            'high': '🟠',
-            'extreme': '🔴'
-          }[vol] || '🟡';
+          // Check for frozen stocks
+          if (eventData.globalEvents?.frozenStocks && eventData.globalEvents.frozenStocks.length > 0) {
+            activeEventsText += `🧊 **Frozen:** ${eventData.globalEvents.frozenStocks.join(', ')}\n`;
+            hasActiveEvents = true;
+          }
 
-          const italianFlag = stockMeta.italian ? ' 🇮🇹' : '';
-          const coreItalian = stockMeta.coreItalian ? ' ⭐' : '';
-          
-          const fieldName = `${emoji} ${symbol}${italianFlag}${coreItalian}`;
-          const fieldValue = `
-            **${stockMeta.italianName || symbol}**
-            💰 $${data.price.toFixed(4)}
-            📊 ${change >= 0 ? '+' : ''}${change.toFixed(2)}% *${trendText}*
-            ${volEmoji} ${vol.toUpperCase()} volatility
-          `;
-          
-          mainEmbed.addFields({ 
-            name: fieldName, 
-            value: fieldValue.trim(), 
-            inline: true 
-          });
+          // Check for active mergers
+          if (eventData.globalEvents?.activeMerges && eventData.globalEvents.activeMerges.length > 0) {
+            const mergeText = eventData.globalEvents.activeMerges.map(merge => 
+              `🔄 **${merge.stock1}** ↔️ **${merge.stock2}** \`${merge.timeLeft}s\``
+            ).join('\n');
+            activeEventsText += mergeText + '\n';
+            hasActiveEvents = true;
+          }
+
+          // Add weekend effect check
+          const now = new Date();
+          const isWeekend = now.getDay() === 0 || now.getDay() === 6; // Sunday = 0, Saturday = 6
+          if (isWeekend) {
+            activeEventsText += `🏖️ **Weekend Mode:** \`Reduced volatility\`\n`;
+            hasActiveEvents = true;
+          }
+
+          if (hasActiveEvents) {
+            embed.addFields({
+              name: '🌍 Active Market Events',
+              value: activeEventsText.trim(),
+              inline: false
+            });
+          } else {
+            embed.addFields({
+              name: '� Active Market Events',
+              value: '🌙 **Market is calm** • No active events\n📊 Event system monitoring • `/event list` for all events',
+              inline: false
+            });
+          }
         }
+      } catch (eventError) {
+        // If event fetching fails, silently continue without events display
+        console.log('Could not fetch events for market display:', eventError.message);
+        embed.addFields({
+          name: '🌍 Active Market Events',
+          value: '🌙 **Market is calm** • No active events\n📊 Event system monitoring • `/event list` for all events',
+          inline: false
+        });
       }
 
-      // Add special section for view types
-      if (viewType === 'italian') {
-        const italianCount = stockEntries.length;
-        mainEmbed.setDescription(`
-          **🇮🇹 ITALIAN STOCKS ONLY - Autentico Brainrot! 🍝**
-          
-          ${market.lastEvent || 'Showing all authentic Italian meme stocks!'}
-          
-          *Displaying ${italianCount} Italian stocks with special pasta powers*
-        `);
+      // Create beautiful organized stock display
+      let stockDisplays = [];
+      
+      // Group stocks by price ranges for better organization
+      const megaStocks = stockEntries.filter(([, data]) => data.price >= 10000);
+      const largeStocks = stockEntries.filter(([, data]) => data.price >= 100 && data.price < 10000);
+      const smallStocks = stockEntries.filter(([, data]) => data.price < 100);
+      
+      // Format function for clean stock display
+      const formatStock = (symbol, data, meta) => {
+        const change = data.lastChange || 0;
+        const changeIcon = change > 0 ? '�' : change < 0 ? '�' : '⚪';
+        const changeText = `${change >= 0 ? '+' : ''}${change.toFixed(1)}%`;
+        
+        // Price formatting with better readability
+        let priceStr;
+        if (data.price >= 1000) {
+          priceStr = `$${(data.price / 1000).toFixed(1)}K`;
+        } else if (data.price >= 1) {
+          priceStr = `$${data.price.toFixed(2)}`;
+        } else {
+          priceStr = `$${data.price.toFixed(3)}`;
+        }
+        
+        return `${changeIcon} **${symbol}** ${priceStr} \`${changeText}\``;
+      };
+
+      // Add mega stocks section (>= $10K)
+      if (megaStocks.length > 0) {
+        const megaDisplay = megaStocks.map(([symbol, data]) => 
+          formatStock(symbol, data, meta[symbol] || {})
+        ).join('\n');
+        
+        embed.addFields({
+          name: '� Mega Caps ($10K+)',
+          value: megaDisplay,
+          inline: true
+        });
       }
 
-      // Add trading tips
-      let tip = '💡 Pro tip: ';
-      switch (viewType) {
-        case 'gainers':
-          tip += 'Consider taking profits on strong gainers!';
-          break;
-        case 'losers':
-          tip += 'Look for buying opportunities on quality dips!';
-          break;
-        case 'italian':
-          tip += 'Italian stocks get bonuses during pasta hours (12-2 PM)!';
-          break;
-        default:
-          tip += 'Check individual stocks with `/stock <symbol>` for detailed info!';
+      // Add large stocks section ($100 - $10K)
+      if (largeStocks.length > 0) {
+        const largeDisplay = largeStocks.map(([symbol, data]) => 
+          formatStock(symbol, data, meta[symbol] || {})
+        ).join('\n');
+        
+        embed.addFields({
+          name: '🏢 Large Caps ($100-$10K)',
+          value: largeDisplay,
+          inline: true
+        });
       }
 
-      mainEmbed.addFields({
-        name: '🎯 Trading Insight',
-        value: tip,
+      // Add small stocks section (< $100)
+      if (smallStocks.length > 0) {
+        const smallDisplay = smallStocks.map(([symbol, data]) => 
+          formatStock(symbol, data, meta[symbol] || {})
+        ).join('\n');
+        
+        embed.addFields({
+          name: '🪙 Small Caps (<$100)',
+          value: smallDisplay,
+          inline: true
+        });
+      }
+
+      // Add market summary footer
+      const marketSummary = `� **${allMarketStocks} total stocks** • 🔄 **Updates every minute**\n💡 Use \`/stock <symbol>\` for detailed analysis`;
+      
+      embed.addFields({
+        name: '📈 Market Summary',
+        value: marketSummary,
         inline: false
       });
 
-      const replyOptions = { embeds: [mainEmbed] };
-      await interaction.editReply(replyOptions);
+      await interaction.editReply({
+        embeds: [embed]
+      });
       
     } catch (error) {
       console.error('Market command error:', error);
-      
-      const errorEmbed = new EmbedBuilder()
-        .setTitle('❌ Market Error')
-        .setDescription('There was an error loading market data. Please try again.')
-        .setColor('#ff4757')
-        .setTimestamp();
-      
-      await interaction.editReply({ embeds: [errorEmbed] });
+      await interaction.editReply({
+        content: '❌ Error loading market data. Please try again.'
+      });
     }
   }
 };

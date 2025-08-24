@@ -1,14 +1,15 @@
 import { SlashCommandBuilder, EmbedBuilder } from 'discord.js';
-import { getAllUsers, getHoldings } from '../utils/supabaseDb.js';
-import { getAllStocks } from '../utils/marketAPI.js';
+import fetch from 'node-fetch';
+
+const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:3001';
 
 export default {
   data: new SlashCommandBuilder()
     .setName('leaderboard')
-    .setDescription('View the top traders in the Italian Meme Stock Exchange')
+    .setDescription('🏆 Elite trader rankings and portfolio performance leaders')
     .addIntegerOption(option =>
       option.setName('limit')
-        .setDescription('Number of top traders to show (1-20)')
+        .setDescription('Number of top performers to display (1-20)')
         .setMinValue(1)
         .setMaxValue(20)
         .setRequired(false)),
@@ -17,150 +18,130 @@ export default {
     
     try {
       const limit = interaction.options.getInteger('limit') || 10;
-      const users = await getAllUsers();
-      const market = await getAllStocks();
       
-      if (users.length === 0) {
+      // Sync current user's Discord info to backend
+      try {
+        console.log(`📝 Syncing Discord info for user ${interaction.user.id}...`);
+        const syncResponse = await fetch(`${BACKEND_URL}/api/user/${interaction.user.id}/discord-info`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            username: interaction.user.username,
+            globalName: interaction.user.globalName,
+            displayName: interaction.user.displayName || interaction.user.globalName || interaction.user.username,
+            discriminator: interaction.user.discriminator
+          })
+        });
+        
+        if (syncResponse.ok) {
+          console.log(`✅ Successfully synced Discord info for ${interaction.user.username}`);
+        }
+      } catch (syncError) {
+        console.log('⚠️ Failed to sync Discord info:', syncError.message);
+      }
+      
+      // Fetch leaderboard data from backend API
+      console.log('🏆 Fetching leaderboard from backend...');
+      const response = await fetch(`${BACKEND_URL}/api/leaderboard?limit=${limit}&includeHoldings=true`);
+      
+      if (!response.ok) {
+        throw new Error(`Backend API error: ${response.status} ${response.statusText}`);
+      }
+      
+      const data = await response.json();
+      const leaderboard = data.leaderboard || [];
+      
+      if (leaderboard.length === 0) {
         const embed = new EmbedBuilder()
-          .setTitle('👑 Italian Meme Stock Leaderboard')
-          .setDescription('No traders yet! Start trading to claim the throne! 🍝')
-          .setColor('#ffd700')
+          .setTitle('� **ELITE TRADER RANKINGS**')
+          .setDescription('```yaml\nMarket Status: INITIALIZING\nTrader Count: 0\nRankings: UNAVAILABLE\n```')
+          .addFields({
+            name: '🏆 **Market Notice**',
+            value: 'No trading activity detected. Start your portfolio journey with `/buy` to appear on the leaderboard.',
+            inline: false
+          })
+          .setColor('#ffa726')
+          .setFooter({ text: 'MemeX Trading Platform • Market Analytics' })
           .setTimestamp();
         
         return interaction.editReply({ embeds: [embed] });
       }
 
-      // Calculate net worth for each user (balance + portfolio value)
-      const userNetWorths = [];
-      
-      for (const user of users) {
-        try {
-          const holdings = await getHoldings(user.id);
-          let portfolioValue = 0;
-          
-          for (const holding of holdings) {
-            const stockPrice = market[holding.stock]?.price || 0;
-            portfolioValue += stockPrice * holding.amount;
-          }
-          
-          const netWorth = user.balance + portfolioValue;
-          const profit = netWorth - 1000; // Starting balance
-          const profitPercentage = ((profit / 1000) * 100);
-          
-          userNetWorths.push({
-            userId: user.id,
-            balance: user.balance,
-            portfolioValue,
-            netWorth,
-            profit,
-            profitPercentage,
-            stockCount: holdings.length
-          });
-        } catch (error) {
-          console.error(`Error calculating net worth for user ${user.id}:`, error);
-          // Add user with just balance if portfolio calculation fails
-          userNetWorths.push({
-            userId: user.id,
-            balance: user.balance,
-            portfolioValue: 0,
-            netWorth: user.balance,
-            profit: user.balance - 1000,
-            profitPercentage: ((user.balance - 1000) / 1000) * 100,
-            stockCount: 0
-          });
-        }
-      }
-      
-      // Sort by net worth descending
-      userNetWorths.sort((a, b) => b.netWorth - a.netWorth);
-      
-      // Take top users
-      const topUsers = userNetWorths.slice(0, limit);
-      
       const embed = new EmbedBuilder()
-        .setTitle('👑 Italian Meme Stock Exchange Leaderboard')
-        .setDescription('*Chi è il più ricco? Who\'s the richest trader?* 🇮🇹💰')
-        .setColor('#ffd700')
-        .setTimestamp()
-        .setFooter({ text: `Showing top ${topUsers.length} traders • 🍝 Mamma mia!` });
+        .setTitle('🏆 **ELITE TRADER RANKINGS**')
+        .setDescription('```yaml\nMarket Status: ACTIVE\nTop Performers: ' + Math.min(limit, leaderboard.length) + '\nData Source: LIVE\n```')
+        .setColor('#00d4aa')
+        .setFooter({ text: 'MemeX Trading Platform • Elite Performance Metrics' })
+        .setTimestamp();
 
       // Add leaderboard entries
       let leaderboardText = '';
       
-      for (let i = 0; i < topUsers.length; i++) {
-        const userData = topUsers[i];
-        const rank = i + 1;
+      for (let i = 0; i < leaderboard.length; i++) {
+        const userData = leaderboard[i];
+        const rank = userData.rank || (i + 1);
         
-        // Rank emojis
-        let rankEmoji = '';
-        if (rank === 1) rankEmoji = '🥇';
-        else if (rank === 2) rankEmoji = '🥈';
-        else if (rank === 3) rankEmoji = '🥉';
-        else rankEmoji = `${rank}.`;
+        // Medal system for top 3
+        let medal = '';
+        if (rank === 1) medal = '🥇';
+        else if (rank === 2) medal = '🥈';
+        else if (rank === 3) medal = '🥉';
+        else medal = `${rank}.`;
         
-        // Performance indicators
-        let performanceEmoji = '';
-        if (userData.profitPercentage > 50) performanceEmoji = '💎';
-        else if (userData.profitPercentage > 20) performanceEmoji = '🚀';
-        else if (userData.profitPercentage > 0) performanceEmoji = '📈';
-        else if (userData.profitPercentage > -20) performanceEmoji = '🎯';
-        else performanceEmoji = '📉';
+        // Get percentage change indicator
+        const changePercent = userData.profitPercentage || 0;
+        let changeIndicator = '';
+        if (changePercent > 0) {
+          changeIndicator = `+${changePercent.toFixed(1)}%`;
+        } else if (changePercent < 0) {
+          changeIndicator = `${changePercent.toFixed(1)}%`;
+        } else {
+          changeIndicator = '0.0%';
+        }
         
-        leaderboardText += `${rankEmoji} ${performanceEmoji} <@${userData.userId}>\n`;
-        leaderboardText += `💎 **Net Worth:** $${userData.netWorth.toFixed(2)}\n`;
-        leaderboardText += `💵 Cash: $${userData.balance.toFixed(2)} | 📊 Portfolio: $${userData.portfolioValue.toFixed(2)}\n`;
-        leaderboardText += `📈 P&L: ${userData.profit >= 0 ? '+' : ''}$${userData.profit.toFixed(2)} (${userData.profitPercentage >= 0 ? '+' : ''}${userData.profitPercentage.toFixed(1)}%)\n`;
-        leaderboardText += `🎯 Stocks: ${userData.stockCount}\n\n`;
+        // Use Discord username if available, otherwise use display name
+        const displayName = userData.username || userData.displayName || `User#${userData.id.slice(-4)}`;
+        
+        leaderboardText += `${medal} **${displayName}** \`$${userData.totalValue.toLocaleString('en-US', { maximumFractionDigits: 1 })}M\` \`${changeIndicator}\`\n`;
       }
 
       embed.addFields({
-        name: '🏆 Top Traders',
-        value: leaderboardText || 'No data available',
+        name: '💎 **Top Portfolio Holdings**',
+        value: leaderboardText || 'No traders found',
         inline: false
       });
 
-      // Add market stats
-      const totalMarketCap = Object.values(market)
-        .filter(data => typeof data === 'object' && data.price)
-        .reduce((sum, data) => sum + data.price, 0);
-      
-      const totalNetWorth = userNetWorths.reduce((sum, user) => sum + user.netWorth, 0);
+      // Add market statistics using professional format
+      const totalNetWorth = leaderboard.reduce((sum, user) => sum + user.totalValue, 0);
+      const avgNetWorth = totalNetWorth / leaderboard.length;
+      const avgProfit = leaderboard.reduce((sum, user) => sum + user.profitPercentage, 0) / leaderboard.length;
       
       embed.addFields({
-        name: '📊 Market Statistics',
-        value: `
-          💰 **Total Market Cap:** $${totalMarketCap.toFixed(2)}
-          👥 **Total Traders:** ${users.length}
-          💎 **Combined Net Worth:** $${totalNetWorth.toFixed(2)}
-          📈 **Average Net Worth:** $${(totalNetWorth / users.length).toFixed(2)}
-        `,
+        name: '� **Market Analytics**',
+        value: `\`\`\`yaml\nActive Traders: ${data.totalUsers || leaderboard.length}\nTotal Volume: $${(totalNetWorth / 1000000).toFixed(1)}M\nAvg Portfolio: $${(avgNetWorth / 1000000).toFixed(1)}M\nMarket Trend: ${avgProfit >= 0 ? 'BULLISH' : 'BEARISH'}\n\`\`\``,
         inline: false
       });
 
-      // Fun facts
-      const richestUser = topUsers[0];
-      const poorestUser = userNetWorths[userNetWorths.length - 1];
-      const avgProfit = userNetWorths.reduce((sum, user) => sum + user.profitPercentage, 0) / userNetWorths.length;
+      // Performance insights with professional styling
+      const richestUser = leaderboard[0];
+      const poorestUser = leaderboard[leaderboard.length - 1];
       
       embed.addFields({
-        name: '🎯 Trading Insights',
-        value: `
-          🥇 **Richest Trader:** $${richestUser.netWorth.toFixed(2)} net worth
-          📉 **Biggest Loss:** ${poorestUser.profitPercentage.toFixed(1)}% from starting
-          📊 **Average Performance:** ${avgProfit >= 0 ? '+' : ''}${avgProfit.toFixed(1)}%
-          💡 **Pro Tip:** ${avgProfit > 0 ? 'Market is bullish! 🚀' : 'Buy the dip! 💎🙌'}
-        `,
+        name: '🎯 **Performance Insights**',
+        value: `\`\`\`yaml\nTop Holdings: $${(richestUser.totalValue / 1000000).toFixed(1)}M\nPerformance Range: ${poorestUser.profitPercentage.toFixed(1)}% → ${richestUser.profitPercentage.toFixed(1)}%\nAvg Return: ${avgProfit >= 0 ? '+' : ''}${avgProfit.toFixed(1)}%\nMarket Signal: ${avgProfit > 0 ? 'BUY' : 'HODL'}\n\`\`\``,
         inline: false
       });
 
-      await interaction.editReply({ embeds: [embed], allowedMentions: { parse: [] } });
+      await interaction.editReply({ embeds: [embed] });
       
     } catch (error) {
       console.error('Leaderboard command error:', error);
       
       const errorEmbed = new EmbedBuilder()
         .setTitle('❌ Leaderboard Error')
-        .setDescription('Unable to fetch leaderboard data. Please try again later.')
+        .setDescription(`Unable to fetch leaderboard data: ${error.message}`)
         .setColor('#ff4757')
         .setTimestamp();
       

@@ -4,7 +4,7 @@ import { getUserQuests, claimQuestReward, getUser } from '../utils/supabaseDb.js
 export default {
   data: new SlashCommandBuilder()
     .setName('claim')
-    .setDescription('🎁 Claim rewards from completed quests'),
+    .setDescription('💎 Professional reward collection and mission completion'),
 
   async execute(interaction) {
     await interaction.deferReply();
@@ -20,11 +20,16 @@ export default {
       
       if (!quests || quests.length === 0) {
         const noQuestsEmbed = new EmbedBuilder()
-          .setColor('#FF6B6B')
-          .setTitle('🎁 Claim Rewards')
-          .setDescription('🍝 No quests found! Generate new quests first.')
-          .setTimestamp()
-          .setFooter({ text: '🇮🇹 Italian Meme Stock Exchange' });
+          .setTitle('💎 **REWARD COLLECTION**')
+          .setDescription('```yaml\nStatus: NO MISSIONS AVAILABLE\nActive Rewards: 0\nPending Claims: None\n```')
+          .addFields({
+            name: '🎯 **Mission System**',
+            value: 'Complete daily trading missions to earn rewards.\nUse `/quests` to view available missions.',
+            inline: false
+          })
+          .setColor('#ffa726')
+          .setFooter({ text: 'MemeX Trading Platform • Reward Center' })
+          .setTimestamp();
         
         return await interaction.editReply({ embeds: [noQuestsEmbed] });
       }
@@ -34,11 +39,16 @@ export default {
       
       if (unclaimedQuests.length === 0) {
         const nothingToClaimEmbed = new EmbedBuilder()
-          .setColor('#FFA07A')
-          .setTitle('🎁 Claim Rewards')
-          .setDescription('🍕 No completed quests to claim! Complete your daily quests first.\n\nUse `/quests` to see your progress.')
-          .setTimestamp()
-          .setFooter({ text: '🇮🇹 Italian Meme Stock Exchange' });
+          .setTitle('💎 **REWARD COLLECTION**')
+          .setDescription('```yaml\nStatus: NO PENDING REWARDS\nCompleted Missions: All Claimed\nNext Reset: 00:00 UTC\n```')
+          .addFields({
+            name: '� **Mission Progress**',
+            value: 'Complete daily trading missions to earn rewards.\nUse `/quests` to view available missions and progress.',
+            inline: false
+          })
+          .setColor('#ffa726')
+          .setFooter({ text: 'MemeX Trading Platform • Reward Center' })
+          .setTimestamp();
         
         return await interaction.editReply({ embeds: [nothingToClaimEmbed] });
       }
@@ -61,11 +71,16 @@ export default {
 
       if (claimedQuests.length === 0) {
         const claimErrorEmbed = new EmbedBuilder()
-          .setColor('#FF6B6B')
-          .setTitle('❌ Claim Error')
-          .setDescription('🍝 Mamma mia! There was an error claiming your rewards. Please try again.')
-          .setTimestamp()
-          .setFooter({ text: '🇮🇹 Italian Meme Stock Exchange' });
+          .setTitle('❌ **CLAIM FAILED**')
+          .setDescription('```yaml\nOperation: REWARD_CLAIM\nStatus: ERROR\nReason: System Error\n```')
+          .addFields({
+            name: '🔧 **Error Details**',
+            value: 'Unable to process reward claim. Please try again or contact support.',
+            inline: false
+          })
+          .setColor('#ff4757')
+          .setFooter({ text: 'MemeX Trading Platform • Error Handler' })
+          .setTimestamp();
         
         return await interaction.editReply({ embeds: [claimErrorEmbed] });
       }
@@ -73,60 +88,39 @@ export default {
       // Get updated user balance
       const user = await getUser(userId);
       
-      // Create success embed
+      // Create professional success embed
       const successEmbed = new EmbedBuilder()
-        .setColor('#50C878')
-        .setTitle('🎁 Rewards Claimed!')
-        .setDescription(`🎉 **Congratulations!** You've claimed your quest rewards!`)
-        .addFields(
-          {
-            name: '💰 Rewards Earned',
-            value: `+${totalRewards} Pasta Coins`,
-            inline: true
-          },
-          {
-            name: '🏦 New Balance',
-            value: `${user?.balance || 0} coins`,
-            inline: true
-          },
-          {
-            name: '✅ Quests Completed',
-            value: `${claimedQuests.length} quest${claimedQuests.length !== 1 ? 's' : ''}`,
-            inline: true
-          }
-        )
-        .setTimestamp()
-        .setFooter({ text: '🇮🇹 Italian Meme Stock Exchange' });
+        .setTitle('✅ **REWARDS CLAIMED**')
+        .setDescription('```yaml\nOperation: REWARD_CLAIM\nStatus: SUCCESS\nProcessed: ' + claimedQuests.length + ' missions\n```')
+        .setColor('#00d4aa')
+        .setFooter({ text: 'MemeX Trading Platform • Reward Processing' })
+        .setTimestamp();
+
+      successEmbed.addFields([
+        {
+          name: '💰 **Capital Injection**',
+          value: `\`\`\`\nReward Total: $${totalRewards.toLocaleString()}\nNew Balance: $${(user?.balance || 0).toLocaleString()}\nNet Change: +$${totalRewards.toLocaleString()}\`\`\``,
+          inline: false
+        },
+        {
+          name: '📊 **Mission Summary**',
+          value: `\`\`\`\nCompleted: ${claimedQuests.length} missions\nRewards: $${totalRewards.toLocaleString()}\nNext Reset: 00:00 UTC\nStatus: PROCESSED\`\`\``,
+          inline: false
+        }
+      ]);
 
       // Add details about claimed quests
       if (claimedQuests.length > 0) {
         const questDetails = claimedQuests.map(quest => 
-          `🎯 **${quest.quest_type.toUpperCase()}**: +${quest.reward} coins`
+          `• **${quest.quest_type.replace(/_/g, ' ').toUpperCase()}** \`$${quest.reward.toLocaleString()}\``
         ).join('\n');
         
         successEmbed.addFields({
-          name: '📋 Claimed Quests',
+          name: '🎯 **Processed Missions**',
           value: questDetails,
           inline: false
         });
       }
-
-      // Add encouragement message
-      const encouragementMessages = [
-        '🍝 Bravissimo! Keep completing quests!',
-        '🇮🇹 Perfetto! Your pasta empire grows!',
-        '🎯 Eccellente! More quests await tomorrow!',
-        '💪 Fantastico! You\'re a true Italian trader!',
-        '🌟 Magnifico! The stocks are impressed!'
-      ];
-      
-      const randomMessage = encouragementMessages[Math.floor(Math.random() * encouragementMessages.length)];
-      
-      successEmbed.addFields({
-        name: '🎊 Celebration',
-        value: randomMessage,
-        inline: false
-      });
 
       await interaction.editReply({ embeds: [successEmbed] });
 

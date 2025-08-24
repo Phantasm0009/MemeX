@@ -1,5 +1,27 @@
-// Simplified backend server with quests and leaderboard endpoints
+// Simplified backendconsole.log('🚀 Starting Simple Italian Meme Stock Exchange Backend');
+console.log(`🔧 Loading .env from: ${envPath}`);
+console.log(`🔍 .env exists: ${fs.existsSync(envPath)}`);
+
+// Initialize Supabase
+const SUPABASE_URL = process.env.SUPABASE_URL?.trim() || '';
+const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY?.trim() || '';
+
+let supabase = null;
+let useSupabase = false;
+
+if (SUPABASE_URL && SUPABASE_ANON_KEY && SUPABASE_URL.length > 10 && SUPABASE_ANON_KEY.length > 10) {
+  try {
+    supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    useSupabase = true;
+    console.log('✅ Supabase configured for transactions');
+  } catch (error) {
+    console.log('⚠️ Supabase connection failed, falling back to JSON:', error.message);
+    useSupabase = false;
+  }
+} else {
+  console.log('⚠️ Supabase credentials not found, transactions will use JSON fallback');
 // Removes problematic dependencies that cause module loading errors
+}
 
 import express from 'express';
 import cors from 'cors';
@@ -9,6 +31,7 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { Client, GatewayIntentBits } from 'discord.js';
+import { createClient } from '@supabase/supabase-js';
 
 // Basic imports only - no complex dependencies
 const __filename = fileURLToPath(import.meta.url);
@@ -566,8 +589,8 @@ initializeFiles();
 // Clean up any corrupted market data
 cleanupMarketData();
 
-// Simple price update scheduler (every 15 minutes)
-cron.schedule('*/15 * * * *', () => {
+// Simple price update scheduler (every 5 minutes)
+cron.schedule('*/5 * * * *', () => {
   console.log('⏰ Scheduled price update triggered');
   try {
     const market = JSON.parse(fs.readFileSync(marketPath));

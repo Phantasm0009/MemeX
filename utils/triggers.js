@@ -63,67 +63,67 @@ export function getEventBonuses(messages) {
     }
   }
   
-  // Apply bonuses based on trigger counts
+  // Apply bonuses based on trigger counts (INCREASED for more excitement!)
   if (pastaCount >= 1) {
     // All Italian stocks get pasta boost
-    bonuses['SKIBI'] = 0.25;
-    bonuses['SUS'] = 0.15;
-    bonuses['SAHUR'] = 0.15;
-    bonuses['LABUB'] = 0.15;
-    bonuses['OHIO'] = 0.15;
-    bonuses['RIZZL'] = 0.15;
-    bonuses['GYATT'] = 0.15;
-    bonuses['FRIED'] = 0.15;
-    bonuses['SIGMA'] = 0.15;
-    bonuses['TRALA'] = 0.15;
-    bonuses['CROCO'] = 0.15;
-    bonuses['FANUM'] = 0.15;
-    bonuses['CAPPU'] = 0.15;
-    bonuses['BANANI'] = 0.15;
-    bonuses['LARILA'] = 0.15;
+    bonuses['SKIBI'] = 0.35; // was 0.25
+    bonuses['SUS'] = 0.25;   // was 0.15
+    bonuses['SAHUR'] = 0.25;
+    bonuses['LABUB'] = 0.25;
+    bonuses['OHIO'] = 0.25;
+    bonuses['RIZZL'] = 0.25;
+    bonuses['GYATT'] = 0.25;
+    bonuses['FRIED'] = 0.25;
+    bonuses['SIGMA'] = 0.25;
+    bonuses['TRALA'] = 0.25;
+    bonuses['CROCO'] = 0.25;
+    bonuses['FANUM'] = 0.25;
+    bonuses['CAPPU'] = 0.25;
+    bonuses['BANANI'] = 0.25;
+    bonuses['LARILA'] = 0.25;
     
     // SKIBI gets extra boost during pasta hours
     if (isPastaHours) {
-      bonuses['SKIBI'] = 0.30;
-      lastEvent = `🍝 Gabibbi Toiletto time! SKIBI gets +30% during pasta hours (${pastaCount} pasta mentions)`;
+      bonuses['SKIBI'] = 0.50; // was 0.30
+      lastEvent = `🍝 Gabibbi Toiletto time! SKIBI gets +50% during pasta hours (${pastaCount} pasta mentions)`;
     } else {
-      lastEvent = `🍝 Pasta Protocol! All Italian stocks +15-25% (${pastaCount} pasta mentions)`;
+      lastEvent = `🍝 Pasta Protocol! All Italian stocks +25-35% (${pastaCount} pasta mentions)`;
     }
   }
   
   if (pizzaCount >= 1) {
-    bonuses['SAHUR'] = (bonuses['SAHUR'] || 0) + 0.15;
-    lastEvent = `🍕 Tamburello Mistico! SAHUR +15% from pizza power (${pizzaCount} pizza mentions)`;
+    bonuses['SAHUR'] = (bonuses['SAHUR'] || 0) + 0.25; // was 0.15
+    lastEvent = `🍕 Tamburello Mistico! SAHUR +25% from pizza power (${pizzaCount} pizza mentions)`;
   }
   
   if (romanceCount >= 2) {
-    bonuses['RIZZL'] = (bonuses['RIZZL'] || 0) + 0.25;
-    lastEvent = `💕 Casanova activated! RIZZL +25% from romance surge (${romanceCount} romance mentions)`;
+    bonuses['RIZZL'] = (bonuses['RIZZL'] || 0) + 0.40; // was 0.25
+    lastEvent = `💕 Casanova activated! RIZZL +40% from romance surge (${romanceCount} romance mentions)`;
   }
   
   if (imposterCount >= 1) {
-    bonuses['SUS'] = (bonuses['SUS'] || 0) - 0.20;
-    lastEvent = `😱 Tra-I-Nostri panic! SUS -20% from imposter reports (${imposterCount} sus mentions)`;
+    bonuses['SUS'] = (bonuses['SUS'] || 0) - 0.35; // was -0.20, more dramatic crash
+    lastEvent = `😱 Tra-I-Nostri panic! SUS -35% from imposter reports (${imposterCount} sus mentions)`;
   }
   
   if (beachCount >= 1 && isBeachHours) {
-    bonuses['GYATT'] = (bonuses['GYATT'] || 0) + 0.20; // Double volatility effect
-    lastEvent = `🏖️ Culone beach time! GYATT volatility doubled during beach hours (${beachCount} beach mentions)`;
+    bonuses['GYATT'] = (bonuses['GYATT'] || 0) + 0.35; // was 0.20
+    lastEvent = `🏖️ Culone beach time! GYATT +35% during beach hours (${beachCount} beach mentions)`;
   }
   
   if (oilShortageCount >= 1) {
-    bonuses['FRIED'] = (bonuses['FRIED'] || 0) + 0.40;
-    lastEvent = `🫒 Friggitrice shortage! FRIED +40% during oil crisis (${oilShortageCount} oil mentions)`;
+    bonuses['FRIED'] = (bonuses['FRIED'] || 0) + 0.60; // was 0.40
+    lastEvent = `🫒 Friggitrice shortage! FRIED +60% during oil crisis (${oilShortageCount} oil mentions)`;
   }
   
   if (sharknadoCount >= 1) {
-    bonuses['TRALA'] = (bonuses['TRALA'] || 0) + 0.50;
-    lastEvent = `🦈🌪️ Sharknado event! TRALA +50% - 3-legged shark in Nikes detected! (${sharknadoCount} shark mentions)`;
+    bonuses['TRALA'] = (bonuses['TRALA'] || 0) + 0.75; // was 0.50
+    lastEvent = `🦈🌪️ Sharknado event! TRALA +75% - 3-legged shark in Nikes detected! (${sharknadoCount} shark mentions)`;
   }
   
   if (espressoShortageCount >= 1) {
-    bonuses['CAPPU'] = (bonuses['CAPPU'] || 0) + 0.20;
-    lastEvent = `☕ Ballerina Cappuccina shortage! CAPPU +20% during espresso crisis (${espressoShortageCount} coffee mentions)`;
+    bonuses['CAPPU'] = (bonuses['CAPPU'] || 0) + 0.35; // was 0.20
+    lastEvent = `☕ Ballerina Cappuccina shortage! CAPPU +35% during espresso crisis (${espressoShortageCount} coffee mentions)`;
   }
   
   // Sunday immunity for LABUB
@@ -200,9 +200,9 @@ export function getRandomChaosEvent() {
         const stocks = ['SKIBI', 'SUS', 'SAHUR', 'LABUB', 'OHIO', 'RIZZL', 'GYATT', 'FRIED', 'SIGMA', 'TRALA', 'CROCO', 'CAPPU', 'BANANI', 'LARILA'];
         const taxedStock = stocks[Math.floor(Math.random() * stocks.length)];
         return { 
-          [taxedStock]: -0.10,
-          'FANUM': 0.05,
-          lastEvent: `👵💰 Tassa Nonna collects! FANUM taxes ${taxedStock} -10%!` 
+          [taxedStock]: -0.15, // was -0.10
+          'FANUM': 0.10,       // was 0.05
+          lastEvent: `👵💰 Tassa Nonna collects! FANUM taxes ${taxedStock} -15%!` 
         };
       }
     },
@@ -211,8 +211,8 @@ export function getRandomChaosEvent() {
       description: 'Chimpanzini Bananini shows invincibility',
       effect: () => {
         return { 
-          'BANANI': 0.10,
-          lastEvent: '🦍🍌 Chimpanzini Bananini is invincible! +10% ape power!' 
+          'BANANI': 0.20, // was 0.10
+          lastEvent: '🦍🍌 Chimpanzini Bananini is invincible! +20% ape power!' 
         };
       }
     },
@@ -221,29 +221,53 @@ export function getRandomChaosEvent() {
       description: 'Sudden meme market bull run!',
       effect: () => {
         return { 
-          'SKIBI': 0.08,
-          'SUS': 0.08,
-          'SAHUR': 0.08,
-          'LABUB': 0.08,
-          'OHIO': 0.08,
-          'RIZZL': 0.08,
-          'GYATT': 0.08,
-          'FRIED': 0.08,
-          'SIGMA': 0.08,
-          'TRALA': 0.08,
-          'CROCO': 0.08,
-          'FANUM': 0.08,
-          'CAPPU': 0.08,
-          'BANANI': 0.08,
-          'LARILA': 0.08,
-          lastEvent: '🚀 Meme bull run! All stocks +8%!' 
+          'SKIBI': 0.15,  // was 0.08
+          'SUS': 0.15,
+          'SAHUR': 0.15,
+          'LABUB': 0.15,
+          'OHIO': 0.15,
+          'RIZZL': 0.15,
+          'GYATT': 0.15,
+          'FRIED': 0.15,
+          'SIGMA': 0.15,
+          'TRALA': 0.15,
+          'CROCO': 0.15,
+          'FANUM': 0.15,
+          'CAPPU': 0.15,
+          'BANANI': 0.15,
+          'LARILA': 0.15,
+          lastEvent: '🚀 Meme bull run! All stocks +15%!' 
+        };
+      }
+    },
+    {
+      name: 'BEAR_MARKET',
+      description: 'Sudden market crash!',
+      effect: () => {
+        return { 
+          'SKIBI': -0.12,
+          'SUS': -0.12,
+          'SAHUR': -0.12,
+          'LABUB': 0,    // Sunday immunity protects
+          'OHIO': -0.12,
+          'RIZZL': -0.12,
+          'GYATT': -0.12,
+          'FRIED': -0.12,
+          'SIGMA': -0.12,
+          'TRALA': -0.12,
+          'CROCO': -0.12,
+          'FANUM': -0.12,
+          'CAPPU': -0.12,
+          'BANANI': -0.05, // Partial protection
+          'LARILA': -0.12,
+          lastEvent: '📉 Market crash! Most stocks -12% (LABUB protected, BANANI resilient)' 
         };
       }
     }
   ];
   
-  // 15% chance of chaos event (increased for more action)
-  if (Math.random() < 0.15) {
+  // 25% chance of chaos event (was 15%, increased for more action)
+  if (Math.random() < 0.25) {
     const event = events[Math.floor(Math.random() * events.length)];
     return event.effect();
   }

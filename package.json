@@ -22,6 +22,7 @@
     "deploy-commands": "node deploy-commands.js",
     "clear-commands": "node deploy-commands.js --clear",
     "refresh-commands": "node deploy-commands.js --refresh",
+    "fix-duplicates": "node fix-duplicate-commands.js",
     "stop": "pm2 stop all",
     "deploy": "pm2 start ecosystem.config.js --env production"
   },
@@ -40,6 +41,7 @@
     "node-cron": "^3.0.3",
     "node-fetch": "^3.3.2",
     "puppeteer": "^21.11.0",
+    "quickchart-js": "^3.1.3",
     "snoowrap": "^1.23.0",
     "socket.io": "^4.7.5",
     "socket.io-client": "^4.7.5"
