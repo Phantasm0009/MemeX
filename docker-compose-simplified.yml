@@ -82,7 +82,7 @@ services:
       - "80:80"
       - "443:443"
     volumes:
-      - ./docker/nginx-api-subdomain.conf:/etc/nginx/nginx.conf:ro
+      - ./docker/nginx-api-subdomain-http.conf:/etc/nginx/nginx.conf:ro
       - ./docker/ssl:/etc/nginx/ssl:ro
       - /etc/letsencrypt:/etc/letsencrypt:ro
       - /var/www/certbot:/var/www/certbot:ro
