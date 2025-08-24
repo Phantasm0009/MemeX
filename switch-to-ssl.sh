@@ -16,6 +16,11 @@ sudo systemctl disable nginx
 echo "📥 Updating repository..."
 git pull origin main
 
+# Stop and remove existing Docker nginx container if it exists
+echo "🧹 Cleaning up existing nginx container..."
+docker stop memex-nginx 2>/dev/null || true
+docker rm memex-nginx 2>/dev/null || true
+
 # Start Docker nginx with SSL
 echo "🐳 Starting Docker nginx with SSL..."
 docker run -d \
