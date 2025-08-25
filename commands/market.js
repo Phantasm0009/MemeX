@@ -24,6 +24,7 @@ export default {
         )),
   async execute(interaction) {
     console.log(`🎯 Market command started for user ${interaction.user.username}`);
+    console.log(`🎯 MARKET COMMAND: EXECUTION STARTED - THIS IS A TEST`);
     
     await interaction.deferReply();
     console.log(`🎯 Market command: Reply deferred`);
@@ -38,11 +39,19 @@ export default {
       console.log(`🎯 Market command: Backend healthy = ${backendHealthy}`);
       
       console.log(`🎯 Market command: About to call getAllStocks()`);
-      const market = await getAllStocks();
-      console.log(`🎯 Market command: getAllStocks() returned:`, typeof market, market ? `keys: ${Object.keys(market).length}` : 'null/undefined');
+      let market;
+      try {
+        market = await getAllStocks();
+        console.log(`🎯 Market command: getAllStocks() SUCCESS - type:`, typeof market, market ? `keys: ${Object.keys(market).length}` : 'null/undefined');
+      } catch (getAllStocksError) {
+        console.log(`🎯 Market command: getAllStocks() ERROR:`, getAllStocksError.message);
+        console.log(`🎯 Market command: getAllStocks() ERROR STACK:`, getAllStocksError.stack);
+        market = null;
+      }
       
       if (!market || Object.keys(market).length === 0) {
         console.log(`❌ Market command: Market data check failed - market:`, !!market, `keys:`, market ? Object.keys(market).length : 'N/A');
+        console.log(`🎯 MARKET COMMAND: ABOUT TO SEND UNAVAILABLE MESSAGE`);
         return interaction.editReply({
           content: '❌ Market data unavailable. Please try again later.'
         });

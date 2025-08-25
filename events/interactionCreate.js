@@ -94,6 +94,11 @@ export default async function interactionCreate(interaction) {
     
     console.log(`🚀 Executing command: ${interaction.commandName}`);
     
+    // Special debug for market command
+    if (interaction.commandName === 'market') {
+      console.log(`🎯 MARKET COMMAND DEBUGGING: Starting market command execution`);
+    }
+    
     // Let individual commands handle their own deferral
     await command.execute(interaction);
     
