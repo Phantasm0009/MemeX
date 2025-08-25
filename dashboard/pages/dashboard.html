@@ -114,6 +114,15 @@
             object-fit: cover;
             border: 2px solid var(--color-accent);
             box-shadow: 0 0 15px var(--glow-purple);
+            display: block;
+        }
+        
+        /* Fallback when image fails to load */
+        .logo-icon img[alt]:after {
+            content: "🚀";
+            font-size: 2rem;
+            display: inline-block;
+            color: var(--color-accent);
         }
 
         .brand-text h1 {
@@ -1012,7 +1021,7 @@
     <footer class="footer">
         <div class="footer-links">
             <a href="https://discord.com/oauth2/authorize?client_id=1399789085962539056&permissions=8&scope=bot%20applications.commands" target="_blank" class="footer-link">🤖 Invite Bot</a>
-            <a href="#" class="footer-link">💬 Join Discord</a>
+            <a href="https://discord.gg/4EAAFkSG4W" class="footer-link">💬 Join Discord</a>
         </div>
         <div class="footer-credit">Built with ❤️ for memes</div>
     </footer>
@@ -1625,8 +1634,33 @@
             loadTradingHistory();
         }
 
+        // Handle logo image loading errors
+        function handleLogoError() {
+            const logoImg = document.querySelector('.logo-icon img');
+            if (logoImg) {
+                // Replace with emoji fallback if image fails to load
+                const logoContainer = logoImg.parentElement;
+                logoContainer.innerHTML = '🚀';
+                logoContainer.style.fontSize = '2.5rem';
+                logoContainer.style.textAlign = 'center';
+                logoContainer.style.lineHeight = '2.5rem';
+                console.log('📷 Logo image failed to load, using emoji fallback');
+            }
+        }
+
         // Initialize dashboard on page load
         document.addEventListener('DOMContentLoaded', function() {
+            // Set up logo image error handling
+            const logoImg = document.querySelector('.logo-icon img');
+            if (logoImg) {
+                logoImg.onerror = handleLogoError;
+                
+                // Also check if image is already broken
+                if (!logoImg.complete || logoImg.naturalHeight === 0) {
+                    handleLogoError();
+                }
+            }
+            
             initDashboard();
         });
     </script>

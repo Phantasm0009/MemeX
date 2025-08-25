@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📱 Mobile Test - MemeX Dashboard</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #0a0a0a;
+            color: #ffffff;
+        }
+        .test-container {
+            background: #1a1a1a;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        .test-header {
+            color: #8b5cf6;
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+        }
+        .viewport-info {
+            background: #2a2a2a;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+        }
+        .test-button {
+            background: #8b5cf6;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            margin: 5px;
+            cursor: pointer;
+        }
+        .test-button:hover {
+            background: #06b6d4;
+        }
+        .responsive-test {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .test-card {
+            background: #2a2a2a;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #333;
+        }
+        @media (max-width: 768px) {
+            .responsive-test {
+                grid-template-columns: 1fr;
+            }
+            .test-header {
+                font-size: 1.2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <div class="test-header">📱 MemeX Mobile Responsiveness Test</div>
+        <div class="viewport-info" id="viewport-info">
+            Loading viewport information...
+        </div>
+        
+        <div style="margin-top: 15px;">
+            <button class="test-button" onclick="window.open('/dashboard/pages/dashboard.html', '_blank')">🚀 Test Main Dashboard</button>
+            <button class="test-button" onclick="window.open('/dashboard/pages/dashboard-new.html', '_blank')">📊 Test New Dashboard</button>
+            <button class="test-button" onclick="testResponsive()">📱 Test Responsive Layout</button>
+        </div>
+    </div>
+
+    <div class="test-container">
+        <div class="test-header">📊 Responsive Layout Test</div>
+        <div class="responsive-test" id="responsive-test">
+            <div class="test-card">
+                <h3>🚀 SKIBI</h3>
+                <p>Price: $42.30</p>
+                <p>Change: +12.5%</p>
+            </div>
+            <div class="test-card">
+                <h3>🇮🇹 LABUB</h3>
+                <p>Price: $156.78</p>
+                <p>Change: -3.2%</p>
+            </div>
+            <div class="test-card">
+                <h3>🔥 OHIO</h3>
+                <p>Price: $89.45</p>
+                <p>Change: +8.7%</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="test-container">
+        <div class="test-header">🎯 Test Instructions</div>
+        <div>
+            <h4>Desktop (>768px):</h4>
+            <ul>
+                <li>✅ Full navigation visible</li>
+                <li>✅ All table columns shown</li>
+                <li>✅ Two-column layouts</li>
+                <li>✅ Side-by-side stats</li>
+            </ul>
+            
+            <h4>Tablet (<=768px):</h4>
+            <ul>
+                <li>✅ Single column layout</li>
+                <li>✅ Stacked navigation</li>
+                <li>✅ Responsive table</li>
+                <li>✅ Touch-friendly buttons</li>
+            </ul>
+            
+            <h4>Mobile (<=480px):</h4>
+            <ul>
+                <li>✅ Minimal table columns</li>
+                <li>✅ Compact header</li>
+                <li>✅ Full-width elements</li>
+                <li>✅ Optimized touch targets</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        function updateViewportInfo() {
+            const width = window.innerWidth;
+            const height = window.innerHeight;
+            const device = width <= 480 ? 'Mobile' : width <= 768 ? 'Tablet' : 'Desktop';
+            
+            document.getElementById('viewport-info').innerHTML = `
+                Screen: ${width} x ${height}px<br>
+                Device Type: ${device}<br>
+                User Agent: ${navigator.userAgent.slice(0, 50)}...
+            `;
+        }
+
+        function testResponsive() {
+            const tests = [
+                { width: 1200, height: 800, name: 'Desktop' },
+                { width: 768, height: 1024, name: 'Tablet' },
+                { width: 480, height: 854, name: 'Mobile Large' },
+                { width: 320, height: 568, name: 'Mobile Small' }
+            ];
+            
+            tests.forEach((test, index) => {
+                setTimeout(() => {
+                    window.resizeTo(test.width, test.height);
+                    console.log(`Testing ${test.name}: ${test.width}x${test.height}`);
+                }, index * 1000);
+            });
+        }
+
+        // Update viewport info on load and resize
+        window.addEventListener('load', updateViewportInfo);
+        window.addEventListener('resize', updateViewportInfo);
+    </script>
+</body>
+</html>

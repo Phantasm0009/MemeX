@@ -33,6 +33,11 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
+// Serve the icon.png file from root dashboard directory
+app.get('/icon.png', (req, res) => {
+  res.sendFile(path.join(__dirname, 'icon.png'));
+});
+
 // Serve CSS and JS files from public directory
 app.use('/css', express.static(path.join(__dirname, 'public', 'css')));
 app.use('/js', express.static(path.join(__dirname, 'public', 'js')));
