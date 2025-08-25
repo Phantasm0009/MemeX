@@ -40,6 +40,13 @@ export default {
       const holdings = await getHoldings(interaction.user.id);
       const stockPrices = await getAllStocks();
       
+      console.log(`🔍 Portfolio Debug - User: ${interaction.user.id}`);
+      console.log(`📊 Stock prices type: ${typeof stockPrices}, keys: ${Object.keys(stockPrices || {}).length}`);
+      console.log(`💼 Holdings count: ${holdings?.length || 0}`);
+      if (holdings?.length > 0) {
+        console.log(`📝 Holdings: ${holdings.map(h => `${h.stock}:${h.amount}`).join(', ')}`);
+      }
+      
       // Load meta data
       let meta = {};
       if (fs.existsSync(metaPath)) {
@@ -55,7 +62,9 @@ export default {
       const holdingsWithValue = [];
       
       for (const holding of holdings) {
+        console.log(`🔍 Processing holding: ${holding.stock} (${holding.amount} shares)`);
         const stockData = stockPrices[holding.stock];
+        console.log(`📈 Stock data for ${holding.stock}:`, stockData ? 'Found' : 'NOT FOUND');
         const price = stockData?.price || 0;
         const value = price * holding.amount;
         const change = stockData?.lastChange || 0;
