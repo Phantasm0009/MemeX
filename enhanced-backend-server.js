@@ -630,6 +630,257 @@ app.post('/api/update-prices', (req, res) => {
   }
 });
 
+// User Management Endpoints
+let userData = {};
+const usersPath = path.join(__dirname, 'database.json');
+
+// Load user data
+function loadUsers() {
+  if (fs.existsSync(usersPath)) {
+    try {
+      const data = JSON.parse(fs.readFileSync(usersPath, 'utf8'));
+      userData = data.users || {};
+    } catch (err) {
+      console.log('⚠️ Error reading database.json, starting with empty users');
+      userData = {};
+    }
+  }
+}
+
+// Save user data
+function saveUsers() {
+  try {
+    const data = { users: userData };
+    fs.writeFileSync(usersPath, JSON.stringify(data, null, 2));
+  } catch (err) {
+    console.error('❌ Error saving users:', err.message);
+  }
+}
+
+// Initialize user data
+loadUsers();
+
+// Sync Discord user info
+app.post('/api/users/discord-sync', (req, res) => {
+  try {
+    const { id, username, globalName, displayName, discriminator } = req.body;
+    
+    if (!id) {
+      return res.status(400).json({ error: 'User ID is required' });
+    }
+    
+    // Initialize user if doesn't exist
+    if (!userData[id]) {
+      userData[id] = {
+        id,
+        balance: 1000,
+        portfolio: {},
+        totalValue: 1000,
+        transactions: [],
+        lastActivity: Date.now(),
+        quests: {},
+        achievements: []
+      };
+    }
+    
+    // Update Discord info
+    userData[id].username = username;
+    userData[id].globalName = globalName;
+    userData[id].displayName = displayName;
+    userData[id].discriminator = discriminator;
+    userData[id].lastSync = Date.now();
+    
+    saveUsers();
+    console.log(`✅ Discord user synced: ${username} (${id})`);
+    
+    res.json({
+      success: true,
+      user: userData[id]
+    });
+  } catch (error) {
+    console.error('❌ Error syncing Discord user:', error.message);
+    res.status(500).json({ error: 'Failed to sync Discord user' });
+  }
+});
+
+// Get user info
+app.get('/api/users/:userId', (req, res) => {
+  try {
+    const userId = req.params.userId;
+    const user = userData[userId];
+    
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    
+    res.json({ user });
+  } catch (error) {
+    console.error('❌ Error fetching user:', error.message);
+    res.status(500).json({ error: 'Failed to fetch user' });
+  }
+});
+
+// Leaderboard endpoint
+app.get('/api/leaderboard', (req, res) => {
+  try {
+    const users = Object.values(userData);
+    
+    // Calculate total value for each user (balance + portfolio value)
+    const leaderboard = users.map(user => {
+      let portfolioValue = 0;
+      
+      if (user.portfolio) {
+        Object.entries(user.portfolio).forEach(([symbol, amount]) => {
+          const stock = stockDatabase[symbol];
+          if (stock && amount > 0) {
+            portfolioValue += stock.price * amount;
+          }
+        });
+      }
+      
+      const totalValue = (user.balance || 1000) + portfolioValue;
+      
+      return {
+        id: user.id,
+        username: user.username || user.displayName || user.globalName || `User_${user.id}`,
+        displayName: user.displayName || user.globalName || user.username,
+        balance: user.balance || 1000,
+        portfolioValue: Math.round(portfolioValue * 100) / 100,
+        totalValue: Math.round(totalValue * 100) / 100,
+        lastActivity: user.lastActivity || Date.now()
+      };
+    }).sort((a, b) => b.totalValue - a.totalValue);
+    
+    console.log(`📊 Leaderboard requested - returning ${leaderboard.length} users`);
+    
+    res.json({
+      leaderboard,
+      totalUsers: leaderboard.length,
+      lastUpdate: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('❌ Error fetching leaderboard:', error.message);
+    res.status(500).json({ error: 'Failed to fetch leaderboard' });
+  }
+});
+
+// Buy stock endpoint
+app.post('/api/users/:userId/buy', (req, res) => {
+  try {
+    const userId = req.params.userId;
+    const { symbol, amount } = req.body;
+    
+    if (!userData[userId]) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    
+    const stock = stockDatabase[symbol.toUpperCase()];
+    if (!stock) {
+      return res.status(404).json({ error: 'Stock not found' });
+    }
+    
+    const totalCost = stock.price * amount;
+    const user = userData[userId];
+    
+    if ((user.balance || 1000) < totalCost) {
+      return res.status(400).json({ error: 'Insufficient funds' });
+    }
+    
+    // Update user balance and portfolio
+    user.balance = (user.balance || 1000) - totalCost;
+    user.portfolio = user.portfolio || {};
+    user.portfolio[symbol.toUpperCase()] = (user.portfolio[symbol.toUpperCase()] || 0) + amount;
+    user.lastActivity = Date.now();
+    
+    // Add transaction
+    user.transactions = user.transactions || [];
+    user.transactions.push({
+      type: 'buy',
+      symbol: symbol.toUpperCase(),
+      amount,
+      price: stock.price,
+      total: totalCost,
+      timestamp: Date.now()
+    });
+    
+    saveUsers();
+    
+    res.json({
+      success: true,
+      user,
+      transaction: {
+        type: 'buy',
+        symbol: symbol.toUpperCase(),
+        amount,
+        price: stock.price,
+        total: totalCost
+      }
+    });
+  } catch (error) {
+    console.error('❌ Error processing buy order:', error.message);
+    res.status(500).json({ error: 'Failed to process buy order' });
+  }
+});
+
+// Sell stock endpoint
+app.post('/api/users/:userId/sell', (req, res) => {
+  try {
+    const userId = req.params.userId;
+    const { symbol, amount } = req.body;
+    
+    if (!userData[userId]) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    
+    const stock = stockDatabase[symbol.toUpperCase()];
+    if (!stock) {
+      return res.status(404).json({ error: 'Stock not found' });
+    }
+    
+    const user = userData[userId];
+    const currentHolding = user.portfolio?.[symbol.toUpperCase()] || 0;
+    
+    if (currentHolding < amount) {
+      return res.status(400).json({ error: 'Insufficient stock holdings' });
+    }
+    
+    const totalValue = stock.price * amount;
+    
+    // Update user balance and portfolio
+    user.balance = (user.balance || 1000) + totalValue;
+    user.portfolio[symbol.toUpperCase()] = currentHolding - amount;
+    user.lastActivity = Date.now();
+    
+    // Add transaction
+    user.transactions = user.transactions || [];
+    user.transactions.push({
+      type: 'sell',
+      symbol: symbol.toUpperCase(),
+      amount,
+      price: stock.price,
+      total: totalValue,
+      timestamp: Date.now()
+    });
+    
+    saveUsers();
+    
+    res.json({
+      success: true,
+      user,
+      transaction: {
+        type: 'sell',
+        symbol: symbol.toUpperCase(),
+        amount,
+        price: stock.price,
+        total: totalValue
+      }
+    });
+  } catch (error) {
+    console.error('❌ Error processing sell order:', error.message);
+    res.status(500).json({ error: 'Failed to process sell order' });
+  }
+});
+
 // Helper functions
 function generateHistoricalData(currentPrice, days) {
   const historical = [];
@@ -751,11 +1002,13 @@ app.listen(PORT, () => {
   console.log(`🔗 Market: http://localhost:${PORT}/api/market`);
   console.log(`🔗 Stocks: http://localhost:${PORT}/api/stocks`);
   console.log(`🔗 Stock Info: http://localhost:${PORT}/api/stock/SKIBI`);
+  console.log(`🔗 Leaderboard: http://localhost:${PORT}/api/leaderboard`);
+  console.log(`🔗 User Info: http://localhost:${PORT}/api/users/USER_ID`);
   console.log(`🔗 TikTok Scraping: http://localhost:${PORT}/api/scrape/tiktok/SKIBI`);
   console.log(`🔗 Trend Analysis: http://localhost:${PORT}/api/trends/SKIBI`);
   console.log(`🔗 Global Events: http://localhost:${PORT}/api/global-events`);
   console.log(`🔗 Update Prices: http://localhost:${PORT}/api/update-prices (POST)`);
-  console.log('🎭 Features: Market Data, TikTok Scraping, Trend Analysis, Global Events, Real-time Updates');
+  console.log('🎭 Features: Market Data, User Management, Leaderboard, TikTok Scraping, Trend Analysis, Global Events');
 });
 
 // Graceful shutdown
