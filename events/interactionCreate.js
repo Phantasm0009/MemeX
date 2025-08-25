@@ -10,15 +10,25 @@ const __dirname = path.dirname(__filename);
 
 const commands = new Collection();
 const commandsPath = path.join(__dirname, '../commands');
+console.log(`🔍 Loading commands from: ${commandsPath}`);
 for (const file of fs.readdirSync(commandsPath)) {
   if (file.endsWith('.js')) {
     const filePath = path.join(commandsPath, file);
     const command = (await import(pathToFileURL(filePath).href)).default;
     commands.set(command.data.name, command);
+    console.log(`✅ Loaded command: ${command.data.name}`);
   }
 }
+console.log(`📊 Total commands loaded: ${commands.size}`);
+console.log(`🔍 Available commands: ${Array.from(commands.keys()).join(', ')}`);
 
 export default async function interactionCreate(interaction) {
+  console.log(`🎯 INTERACTION RECEIVED: Type=${interaction.type}, IsCommand=${interaction.isChatInputCommand()}`);
+  
+  if (interaction.isChatInputCommand()) {
+    console.log(`🎯 SLASH COMMAND: ${interaction.commandName} from ${interaction.user.username}`);
+  }
+  
   // Handle button interactions
   if (interaction.isButton()) {
     // Check if any command can handle this button interaction
@@ -34,12 +44,16 @@ export default async function interactionCreate(interaction) {
   if (!interaction.isChatInputCommand()) return;
   
   console.log(`🎯 Command received: ${interaction.commandName} from ${interaction.user.username}`);
+  console.log(`🔍 Commands available: ${commands.has(interaction.commandName) ? 'FOUND' : 'NOT FOUND'}`);
   
   const command = commands.get(interaction.commandName);
   if (!command) {
     console.log(`❌ Command not found: ${interaction.commandName}`);
+    console.log(`📋 Available commands: ${Array.from(commands.keys()).join(', ')}`);
     return;
   }
+  
+  console.log(`✅ Command found: ${interaction.commandName}`);
   
   try {
     // Sync Discord user info to backend cache
