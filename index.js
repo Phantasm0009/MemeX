@@ -76,16 +76,19 @@ async function registerCommands() {
     }
   }
   
+  console.log(`🔍 Registering ${commands.length} commands:`);
+  commands.forEach(cmd => console.log(`   - /${cmd.name}: ${cmd.description}`));
+  console.log(`🎯 GUILD_ID: ${GUILD_ID ? GUILD_ID : 'NOT SET (will use GLOBAL commands)'}`);
+  
   const rest = new REST({ version: '10' }).setToken(TOKEN);
   try {
     console.log('Started refreshing application (/) commands.');
     
-    if (GUILD_ID) {
-      await rest.put(Routes.applicationGuildCommands(CLIENT_ID, GUILD_ID), { body: commands });
-      console.log('Successfully reloaded guild commands.');
-    } else {
-      await rest.put(Routes.applicationCommands(CLIENT_ID), { body: commands });
-    }
+    // FORCE GLOBAL REGISTRATION FOR DEBUGGING
+    console.log('🚨 FORCING GLOBAL COMMAND REGISTRATION FOR DEBUG');
+    await rest.put(Routes.applicationCommands(CLIENT_ID), { body: commands });
+    console.log('✅ Successfully reloaded GLOBAL commands.');
+    
   } catch (err) {
     console.error('Failed to register commands:', err);
   }
