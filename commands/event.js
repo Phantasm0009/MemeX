@@ -1,7 +1,7 @@
 import { SlashCommandBuilder, EmbedBuilder } from 'discord.js';
 import fetch from 'node-fetch';
 
-const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:3001';
+const BACKEND_URL = process.env.BACKEND_URL || 'https://api.memexbot.xyz';
 
 // Event definitions with effects and descriptions
 const EVENT_DEFINITIONS = {

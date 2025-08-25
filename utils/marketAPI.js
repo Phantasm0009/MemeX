@@ -8,7 +8,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const marketPath = path.join(__dirname, '../market.json');
 
-const BACKEND_URL = process.env.BACKEND_URL || 'http://backend:3001';
+const BACKEND_URL = process.env.BACKEND_URL || 'https://api.memexbot.xyz';
 
 class MarketAPIClient {
   constructor(baseUrl = BACKEND_URL) {

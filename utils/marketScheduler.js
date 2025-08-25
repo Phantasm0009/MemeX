@@ -18,7 +18,7 @@ const dailyWebhook = new WebhookClient({ url: DAILY_WEBHOOK_URL });
 const weeklyWebhook = new WebhookClient({ url: WEEKLY_WEBHOOK_URL });
 
 // Backend URL for leaderboard data
-const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:3001';
+const BACKEND_URL = process.env.BACKEND_URL || 'https://api.memexbot.xyz';
 
 export class MarketScheduler {
   constructor() {

@@ -5,7 +5,7 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:3001';
+const BACKEND_URL = process.env.BACKEND_URL || 'https://api.memexbot.xyz';
 const DASHBOARD_URL = process.env.DASHBOARD_URL || 'http://localhost:3002';
 
 async function checkHealth() {

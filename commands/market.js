@@ -121,7 +121,7 @@ export default {
 
       // Fetch and display active events
       try {
-        const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:3001';
+        const BACKEND_URL = process.env.BACKEND_URL || 'https://api.memexbot.xyz';
         const response = await fetch(`${BACKEND_URL}/api/global-events`);
         
         if (response.ok) {
