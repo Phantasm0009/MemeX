@@ -23,11 +23,13 @@ export default {
           { name: '🇮🇹 Italian Stocks Only', value: 'italian' }
         )),
   async execute(interaction) {
+    console.log(`🚨 MARKET COMMAND EXECUTION STARTED - USER: ${interaction.user.username}`);
     console.log(`🎯 Market command started for user ${interaction.user.username}`);
     console.log(`🎯 MARKET COMMAND: EXECUTION STARTED - THIS IS A TEST`);
     
     await interaction.deferReply();
     console.log(`🎯 Market command: Reply deferred`);
+    console.log(`🚨 MARKET COMMAND: ABOUT TO TRY GETALLSTOCKS`);
     
     try {
       const viewType = interaction.options.getString('view') || 'overview';
@@ -39,10 +41,12 @@ export default {
       console.log(`🎯 Market command: Backend healthy = ${backendHealthy}`);
       
       console.log(`🎯 Market command: About to call getAllStocks()`);
+      console.log(`🚨 CALLING getAllStocks() NOW - THIS SHOULD TRIGGER OUR DEBUG`);
       let market;
       try {
         market = await getAllStocks();
         console.log(`🎯 Market command: getAllStocks() SUCCESS - type:`, typeof market, market ? `keys: ${Object.keys(market).length}` : 'null/undefined');
+        console.log(`🚨 MARKET COMMAND: getAllStocks() RETURNED:`, market ? 'HAS DATA' : 'NO DATA');
       } catch (getAllStocksError) {
         console.log(`🎯 Market command: getAllStocks() ERROR:`, getAllStocksError.message);
         console.log(`🎯 Market command: getAllStocks() ERROR STACK:`, getAllStocksError.stack);
