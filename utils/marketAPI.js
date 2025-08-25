@@ -50,6 +50,7 @@ class MarketAPIClient {
         
         const data = await response.json();
         console.log(`✅ API Request successful`);
+        console.log(`🚨 RAW API RESPONSE for ${endpoint}:`, typeof data, data ? 'has data' : 'no data');
         return data;
         
       } catch (error) {
@@ -68,12 +69,15 @@ class MarketAPIClient {
 
   // Get all market data
   async getMarket() {
+    console.log('🚨 getMarket() CALLED - START');
     try {
       const response = await this.makeRequest('/api/market');
+      console.log(`🚨 getMarket() - Got response:`, typeof response);
       console.log(`🔍 API Response type: ${typeof response}, success: ${response?.success}, data length: ${response?.data?.length}`);
       
       // Handle new standalone API server response format
       if (response.success && response.data) {
+        console.log('🚨 Processing array response format');
         // Convert array of stocks back to object format for Discord bot compatibility
         const marketData = {};
         let processedCount = 0;
@@ -95,6 +99,7 @@ class MarketAPIClient {
         console.log(`📊 Processed ${processedCount} stocks, object keys: ${Object.keys(marketData).length}`);
         console.log(`🗝️ Stock symbols: ${Object.keys(marketData).join(', ')}`);
         console.log(`🔍 First stock data:`, Object.keys(marketData)[0] ? marketData[Object.keys(marketData)[0]] : 'None');
+        console.log('🚨 getMarket() RETURNING CONVERTED DATA');
         return marketData;
       }
       
@@ -210,7 +215,15 @@ const marketAPI = new MarketAPIClient();
 
 // Export functions that match the current interface
 export async function getAllStocks() {
-  return await marketAPI.getMarket();
+  console.log('🚨 getAllStocks() CALLED - ENTRY POINT');
+  try {
+    const result = await marketAPI.getMarket();
+    console.log('🚨 getAllStocks() RESULT:', typeof result, result ? Object.keys(result).length : 'null/undefined');
+    return result;
+  } catch (error) {
+    console.log('🚨 getAllStocks() ERROR:', error.message);
+    throw error;
+  }
 }
 
 export async function updateDiscordUserInfo(userId, discordUser) {
