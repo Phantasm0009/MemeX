@@ -23,9 +23,11 @@ console.log(`📊 Total commands loaded: ${commands.size}`);
 console.log(`🔍 Available commands: ${Array.from(commands.keys()).join(', ')}`);
 
 export default async function interactionCreate(interaction) {
+  console.log(`🚨 IMMEDIATE INTERACTION ALERT: ANY INTERACTION RECEIVED!!!`);
   console.log(`🎯 INTERACTION RECEIVED: Type=${interaction.type}, IsCommand=${interaction.isChatInputCommand()}`);
   
   if (interaction.isChatInputCommand()) {
+    console.log(`🚨 SLASH COMMAND RECEIVED: ${interaction.commandName} from ${interaction.user.username}`);
     console.log(`🎯 SLASH COMMAND: ${interaction.commandName} from ${interaction.user.username}`);
   }
   
