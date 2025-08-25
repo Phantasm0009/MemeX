@@ -93,6 +93,8 @@ class MarketAPIClient {
           }
         });
         console.log(`📊 Processed ${processedCount} stocks, object keys: ${Object.keys(marketData).length}`);
+        console.log(`🗝️ Stock symbols: ${Object.keys(marketData).join(', ')}`);
+        console.log(`🔍 First stock data:`, Object.keys(marketData)[0] ? marketData[Object.keys(marketData)[0]] : 'None');
         return marketData;
       }
       
