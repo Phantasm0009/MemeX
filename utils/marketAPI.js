@@ -8,7 +8,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const marketPath = path.join(__dirname, '../market.json');
 
-const BACKEND_URL = process.env.BACKEND_URL || 'http://159.203.134.206:3001';
+const BACKEND_URL = process.env.BACKEND_URL || 'http://backend:3001';
 
 class MarketAPIClient {
   constructor(baseUrl = BACKEND_URL) {
@@ -69,8 +69,37 @@ class MarketAPIClient {
   // Get all market data
   async getMarket() {
     try {
-      const data = await this.makeRequest('/api/market');
-      return data.market;
+      const response = await this.makeRequest('/api/market');
+      
+      // Handle new standalone API server response format
+      if (response.success && response.data) {
+        // Convert array of stocks back to object format for Discord bot compatibility
+        const marketData = {};
+        response.data.forEach(stock => {
+          if (stock.symbol && stock.symbol !== 'lastEvent') {
+            marketData[stock.symbol] = {
+              price: stock.price,
+              change: stock.change,
+              volume: stock.volume,
+              high24h: stock.high24h,
+              low24h: stock.low24h,
+              name: stock.name,
+              italianName: stock.italianName,
+              description: stock.description
+            };
+          }
+        });
+        return marketData;
+      }
+      
+      // Handle legacy backend response format
+      if (response.market) {
+        return response.market;
+      }
+      
+      // If no expected format, throw error to trigger fallback
+      throw new Error('Invalid response format from backend');
+      
     } catch (error) {
       console.error('❌ Failed to fetch market data from backend:', error.message);
       console.log('🔄 Falling back to local market data...');
