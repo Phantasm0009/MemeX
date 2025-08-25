@@ -81,7 +81,7 @@ curl -sSL https://raw.githubusercontent.com/Phantasm0009/MemeX/main/deploy-docke
 
 ```bash
 # Navigate to app directory
-cd /var/www/memexbot
+
 
 # Edit environment variables
 nano .env
