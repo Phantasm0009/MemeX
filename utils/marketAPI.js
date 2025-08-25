@@ -70,11 +70,13 @@ class MarketAPIClient {
   async getMarket() {
     try {
       const response = await this.makeRequest('/api/market');
+      console.log(`🔍 API Response type: ${typeof response}, success: ${response?.success}, data length: ${response?.data?.length}`);
       
       // Handle new standalone API server response format
       if (response.success && response.data) {
         // Convert array of stocks back to object format for Discord bot compatibility
         const marketData = {};
+        let processedCount = 0;
         response.data.forEach(stock => {
           if (stock.symbol && stock.symbol !== 'lastEvent') {
             marketData[stock.symbol] = {
@@ -87,8 +89,10 @@ class MarketAPIClient {
               italianName: stock.italianName,
               description: stock.description
             };
+            processedCount++;
           }
         });
+        console.log(`📊 Processed ${processedCount} stocks, object keys: ${Object.keys(marketData).length}`);
         return marketData;
       }
       
