@@ -2,8 +2,37 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🚀 The Meme Stock Exchange — Trade 🚀, Lose 💀, Win 💎</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>🚀 MemeX - The Italian Meme Stock Exchange</title>
+    
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="Trade Italian meme stocks in real-time! Join MemeX Discord bot for Skibidi, Among Us, Ohio and more meme investments with virtual currency.">
+    <meta name="keywords" content="MemeX, Italian meme stocks, Discord bot, virtual trading, cryptocurrency, meme trading, Skibidi, Among Us, Ohio">
+    <meta name="author" content="MemeX Team">
+    <meta name="robots" content="index, follow">
+    
+    <!-- Open Graph Meta Tags -->
+    <meta property="og:title" content="🚀 MemeX - The Italian Meme Stock Exchange">
+    <meta property="og:description" content="Trade Italian meme stocks in real-time! Join MemeX Discord bot for virtual meme investments.">
+    <meta property="og:image" content="/icon.png">
+    <meta property="og:url" content="https://memexbot.xyz">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="MemeX">
+    
+    <!-- Twitter Card Meta Tags -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="� MemeX - The Italian Meme Stock Exchange">
+    <meta name="twitter:description" content="Trade Italian meme stocks in real-time! Join MemeX Discord bot for virtual meme investments.">
+    <meta name="twitter:image" content="/icon.png">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="/icon.png">
+    <link rel="apple-touch-icon" href="/icon.png">
+    
+    <!-- Theme Color -->
+    <meta name="theme-color" content="#8b5cf6">
+    <meta name="msapplication-TileColor" content="#8b5cf6">
+    
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
@@ -76,6 +105,15 @@
         .logo-icon {
             font-size: 2.5rem;
             filter: drop-shadow(0 0 10px var(--glow-purple));
+        }
+        
+        .logo-icon img {
+            width: 2.5rem;
+            height: 2.5rem;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid var(--color-accent);
+            box-shadow: 0 0 15px var(--glow-purple);
         }
 
         .brand-text h1 {
@@ -567,22 +605,223 @@
         }
 
         /* Responsive design */
+        @media (max-width: 1200px) {
+            .hero-content {
+                padding: 0 1rem;
+            }
+            
+            .quick-stats {
+                gap: 1.5rem;
+            }
+            
+            .analytics-grid {
+                grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            }
+        }
+
         @media (max-width: 768px) {
+            .hero-header {
+                padding: 1rem;
+            }
+            
             .hero-content {
                 flex-direction: column;
                 gap: 1rem;
+                text-align: center;
+            }
+            
+            .brand-text h1 {
+                font-size: 1.5rem;
+            }
+            
+            .tagline {
+                font-size: 0.9rem;
             }
 
             .quick-stats {
                 gap: 1rem;
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+            
+            .quick-stat {
+                min-width: 80px;
+            }
+            
+            .quick-stat-value {
+                font-size: 1rem;
+            }
+            
+            .quick-stat-label {
+                font-size: 0.75rem;
             }
 
             .two-column-layout {
                 grid-template-columns: 1fr;
+                gap: 1rem;
             }
 
             .main-container {
                 padding: 1rem;
+                gap: 1rem;
+            }
+            
+            .section-header {
+                padding: 1rem;
+            }
+            
+            .section-title {
+                font-size: 1.25rem;
+            }
+            
+            /* Mobile-friendly table */
+            .market-table {
+                font-size: 0.875rem;
+            }
+            
+            .market-table th,
+            .market-table td {
+                padding: 0.75rem 0.5rem;
+            }
+            
+            .stock-ticker {
+                font-size: 0.9rem;
+            }
+            
+            .stock-emoji {
+                font-size: 1.25rem;
+            }
+            
+            /* Hide some columns on mobile */
+            .market-table th:nth-child(5), /* Volume */
+            .market-table td:nth-child(5),
+            .market-table th:nth-child(6), /* Holders */
+            .market-table td:nth-child(6),
+            .market-table th:nth-child(7), /* Chart */
+            .market-table td:nth-child(7) {
+                display: none;
+            }
+            
+            .stock-detail-header {
+                flex-direction: column;
+                gap: 1rem;
+                text-align: center;
+                padding: 1rem;
+            }
+            
+            .stock-detail-info h2 {
+                font-size: 1.5rem;
+            }
+            
+            .stock-detail-content {
+                padding: 1rem;
+            }
+            
+            .stock-chart-container {
+                height: 250px;
+            }
+            
+            .analytics-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+            
+            .footer-links {
+                flex-direction: column;
+                gap: 1rem;
+                align-items: center;
+            }
+            
+            .footer-link {
+                width: 100%;
+                max-width: 200px;
+                text-align: center;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .hero-header {
+                padding: 0.75rem;
+            }
+            
+            .brand-text h1 {
+                font-size: 1.25rem;
+            }
+            
+            .logo-icon {
+                font-size: 2rem;
+            }
+            
+            .logo-icon img {
+                width: 2rem;
+                height: 2rem;
+            }
+            
+            .quick-stats {
+                flex-direction: column;
+                gap: 0.75rem;
+            }
+            
+            .main-container {
+                padding: 0.75rem;
+            }
+            
+            .market-table {
+                font-size: 0.8rem;
+            }
+            
+            .market-table th,
+            .market-table td {
+                padding: 0.5rem 0.25rem;
+            }
+            
+            /* Further hide columns for very small screens */
+            .market-table th:nth-child(4), /* % Change */
+            .market-table td:nth-child(4) {
+                display: none;
+            }
+            
+            .stock-detail-info h2 {
+                font-size: 1.25rem;
+            }
+            
+            .stock-detail-price {
+                font-size: 1rem;
+            }
+            
+            .view-details-btn {
+                padding: 0.4rem 0.8rem;
+                font-size: 0.8rem;
+            }
+            
+            .close-btn {
+                padding: 0.4rem 0.8rem;
+                font-size: 0.8rem;
+            }
+        }
+
+        /* Touch-friendly improvements */
+        @media (hover: none) {
+            .market-table tbody tr:hover {
+                background: transparent;
+                box-shadow: none;
+            }
+            
+            .market-table tbody tr:active {
+                background: rgba(139, 92, 246, 0.1);
+                box-shadow: 0 0 20px var(--glow-purple);
+            }
+            
+            .view-details-btn:hover,
+            .footer-link:hover {
+                background: var(--color-accent);
+                box-shadow: none;
+            }
+            
+            .view-details-btn:active,
+            .footer-link:active {
+                background: var(--color-blue);
+                box-shadow: 0 0 15px var(--glow-purple);
             }
         }
     </style>
@@ -593,10 +832,12 @@
         <div class="hero-content">
             <div class="hero-left">
                 <div class="logo">
-                    <div class="logo-icon">🚀</div>
+                    <div class="logo-icon">
+                        <img src="/icon.png" alt="MemeX Logo" />
+                    </div>
                     <div class="brand-text">
-                        <h1>The Meme Stock Exchange</h1>
-                        <div class="tagline">Trade 🚀, Lose 💀, Win 💎</div>
+                        <h1>MemeX</h1>
+                        <div class="tagline">Italian Meme Stock Exchange</div>
                     </div>
                 </div>
             </div>

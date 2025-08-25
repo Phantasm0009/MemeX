@@ -97,7 +97,7 @@ async function registerCommands() {
 // Create market update embed
 function createMarketEmbed(marketData, stats) {
   const embed = new EmbedBuilder()
-    .setTitle('📈 Meme Stock Exchange Update')
+    .setTitle('📈 MemeX Market Update')
     .setDescription(marketData.lastEvent || 'Market is trading normally')
     .setColor(stats.positiveStocks > stats.negativeStocks ? '#00ff00' : stats.negativeStocks > stats.positiveStocks ? '#ff0000' : '#ffff00')
     .setTimestamp()
@@ -209,6 +209,11 @@ client.once('ready', async () => {
   console.log(`🤖 Logged in as ${client.user.tag}`);
   console.log(`📊 Monitoring ${client.guilds.cache.size} guild(s)`);
   
+  // Set bot activity status to show "MemeX"
+  client.user.setActivity('MemeX | Italian Meme Stock Exchange | /help', { 
+    type: 'WATCHING' 
+  });
+  
   // Initialize quest scheduler
   scheduleDailyQuestReset();
   
@@ -273,8 +278,8 @@ client.once('ready', async () => {
   // Send startup message
   if (marketChannel) {
     const embed = new EmbedBuilder()
-      .setTitle('🚀 Stock Bot Online!')
-      .setDescription('The meme stock exchange is now active. Use `/market` to see current prices!')
+      .setTitle('🚀 MemeX Bot Online!')
+      .setDescription('The Italian Meme Stock Exchange is now active. Use `/market` to see current prices!')
       .setColor('#00ff00')
       .setTimestamp();
     
@@ -303,8 +308,8 @@ process.on('SIGINT', () => {
   console.log('\n🛑 Shutting down gracefully...');
   if (marketChannel) {
     const embed = new EmbedBuilder()
-      .setTitle('📴 Stock Bot Offline')
-      .setDescription('The stock bot is shutting down. Trading will resume when I come back online!')
+      .setTitle('📴 MemeX Bot Offline')
+      .setDescription('The MemeX bot is shutting down. Trading will resume when I come back online!')
       .setColor('#ff0000')
       .setTimestamp();
     
