@@ -23,13 +23,19 @@ export default {
           { name: '🇮🇹 Italian Stocks Only', value: 'italian' }
         )),
   async execute(interaction) {
+    console.log(`🎯 Market command started for user ${interaction.user.username}`);
+    
     await interaction.deferReply();
+    console.log(`🎯 Market command: Reply deferred`);
     
     try {
       const viewType = interaction.options.getString('view') || 'overview';
+      console.log(`🎯 Market command: View type = ${viewType}`);
       
       // Check backend status
+      console.log(`🎯 Market command: Checking backend health...`);
       const backendHealthy = await checkBackendHealth();
+      console.log(`🎯 Market command: Backend healthy = ${backendHealthy}`);
       
       console.log(`🎯 Market command: About to call getAllStocks()`);
       const market = await getAllStocks();

@@ -32,8 +32,14 @@ export default async function interactionCreate(interaction) {
   }
   
   if (!interaction.isChatInputCommand()) return;
+  
+  console.log(`🎯 Command received: ${interaction.commandName} from ${interaction.user.username}`);
+  
   const command = commands.get(interaction.commandName);
-  if (!command) return;
+  if (!command) {
+    console.log(`❌ Command not found: ${interaction.commandName}`);
+    return;
+  }
   
   try {
     // Sync Discord user info to backend cache
@@ -86,8 +92,12 @@ export default async function interactionCreate(interaction) {
     const commandResult = await completeQuest(userId, 'use_command');
     console.log(`Command quest result for ${userId}: ${commandResult}`);
     
+    console.log(`🚀 Executing command: ${interaction.commandName}`);
+    
     // Let individual commands handle their own deferral
     await command.execute(interaction);
+    
+    console.log(`✅ Command completed: ${interaction.commandName}`);
     
   } catch (err) {
     console.error(`${interaction.commandName} command error:`, err);
