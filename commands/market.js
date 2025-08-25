@@ -31,8 +31,12 @@ export default {
       // Check backend status
       const backendHealthy = await checkBackendHealth();
       
+      console.log(`🎯 Market command: About to call getAllStocks()`);
       const market = await getAllStocks();
+      console.log(`🎯 Market command: getAllStocks() returned:`, typeof market, market ? `keys: ${Object.keys(market).length}` : 'null/undefined');
+      
       if (!market || Object.keys(market).length === 0) {
+        console.log(`❌ Market command: Market data check failed - market:`, !!market, `keys:`, market ? Object.keys(market).length : 'N/A');
         return interaction.editReply({
           content: '❌ Market data unavailable. Please try again later.'
         });
