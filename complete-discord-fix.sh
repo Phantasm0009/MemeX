@@ -22,9 +22,31 @@ docker rm memex-discord-bot-ultimate-v3
 
 # Start a new Discord bot container with correct backend URL
 echo -e "${YELLOW}🚀 Starting fresh Discord bot container...${NC}"
+
+# Copy environment variables from host .env file
+if [ -f ".env" ]; then
+    echo -e "${BLUE}📋 Loading environment variables from host .env file...${NC}"
+    source .env
+else
+    echo -e "${RED}❌ No .env file found on host! Please create one first.${NC}"
+    exit 1
+fi
+
 docker run -d \
   --name memex-discord-bot-ultimate-v3 \
   --network memex-network-ultimate-v3 \
+  -e BOT_TOKEN="$BOT_TOKEN" \
+  -e CLIENT_ID="$CLIENT_ID" \
+  -e GUILD_ID="$GUILD_ID" \
+  -e MARKET_CHANNEL_ID="$MARKET_CHANNEL_ID" \
+  -e SUPABASE_URL="$SUPABASE_URL" \
+  -e SUPABASE_ANON_KEY="$SUPABASE_ANON_KEY" \
+  -e TWITTER_BEARER_TOKEN="$TWITTER_BEARER_TOKEN" \
+  -e YOUTUBE_API_KEY="$YOUTUBE_API_KEY" \
+  -e REDDIT_CLIENT_ID="$REDDIT_CLIENT_ID" \
+  -e REDDIT_CLIENT_SECRET="$REDDIT_CLIENT_SECRET" \
+  -e REDDIT_ACCESS_TOKEN="$REDDIT_ACCESS_TOKEN" \
+  -e BOT_DEVELOPERS="$BOT_DEVELOPERS" \
   -e BACKEND_URL=http://memex-backend-ultimate-v3:3001 \
   node:20-alpine \
   sh -c "
@@ -37,11 +59,11 @@ docker run -d \
     npm install --only=production
     echo '🔧 Setting environment variables...'
     cat > .env << 'ENV_EOF'
-# Discord Bot Configuration
-BOT_TOKEN=MTM5OTc4OTA4NTk2MjUzOTA1Ng.Gl7tsx.OnxIG-uIxSBLMktl4yu3TZPjwowOTESOeYHgOQ
-CLIENT_ID=1399789085962539056
-GUILD_ID=1409262971485552853
-MARKET_CHANNEL_ID=1409263219322781726
+# Discord Bot Configuration - loaded from environment
+BOT_TOKEN=\$BOT_TOKEN
+CLIENT_ID=\$CLIENT_ID
+GUILD_ID=\$GUILD_ID
+MARKET_CHANNEL_ID=\$MARKET_CHANNEL_ID
 
 # Server Configuration
 NODE_ENV=production
@@ -49,19 +71,19 @@ BACKEND_PORT=3001
 DASHBOARD_PORT=3002
 BACKEND_URL=http://memex-backend-ultimate-v3:3001
 
-# Database (Supabase - recommended for production)
-SUPABASE_URL=https://noxrbccikhdlnbbgfqlr.supabase.co
-SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5veHJiY2Npa2hkbG5iYmdmcWxyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ4NTg5ODQsImV4cCI6MjA3MDQzNDk4NH0.OiZOHe4QVmI1wb68JjmOxYJEshXHGnCe1y3yuyH1614
+# Database (Supabase - loaded from environment)
+SUPABASE_URL=\$SUPABASE_URL
+SUPABASE_ANON_KEY=\$SUPABASE_ANON_KEY
 
-# API Keys for Real Trend Data
-TWITTER_BEARER_TOKEN=AAAAAAAAAAAAAAAAAAAAANU73QEAAAAAwbIOVaGxcBEsWJHfkiZwq9zzb2o%3DtFfvb1sqU44pxxSfUqV89v10NOIWGeObmXUOwukebpDjIDtfvT
-YOUTUBE_API_KEY=AIzaSyBAQdStbgrC-FGdmTdRr1buA94VQE2zhoQ
-REDDIT_CLIENT_ID=StiTSNBJZf5y70OCPtf8Yw
-REDDIT_CLIENT_SECRET=s5GoimiecycgJVLnOraWY0D1aBQA0w
-REDDIT_ACCESS_TOKEN=eyJhbGciOiJSUzI1NiIsImtpZCI6IlNIQTI1NjpzS3dsMnlsV0VtMjVmcXhwTU40cWY4MXE2OWFFdWFyMnpLMUdhVGxjdWNZIiwidHlwIjoiSldUIn0.eyJzdWIiOiJ1c2VyIiwiZXhwIjoxNzU1Mjc2MDg4LjU1MjgyLCJpYXQiOjE3NTUxODk2ODguNTUyODE5LCJqdGkiOiJ0TlJJcWx4UXpDV2NLaGpFTzRiWkRhQnpSUVFIdnciLCJjaWQiOiJTdGlUU05CSlpmNXk3ME9DUHRmOFl3IiwibGlkIjoidDJfcGJlcnc4ZDUiLCJhaWQiOiJ0Ml9wYmVydzhkNSIsImxjYSI6MTY1NjQzMTM1NzAwMCwic2NwIjoiZUp5S1Z0SlNpZ1VFQUFEX193TnpBU2MiLCJmbG8iOjl9.XmAWNbl2W-cCHYPCsa2yWET4yyX1fBXe6VRjPNsXEPJqr-z1T0ksVZYAhNkpZ5PKy399kug9XAKmCNB-sboVDG9Edj-oCBzsgBRfNWzQqcbcCqB2r7YE2VCwaavSPHovkqklEeSpuY7u2plsQPvEmvB2w8imzCKJfqbVyItXGaAqFjdgTwqOlcCpAr5KuBaVuRvlpuTc_abf486G0SEpfbq8Dd1HH7aSWE-qHollk_N4c0lIQnZ0D2HiZJ_MXpT
+# API Keys for Real Trend Data - loaded from environment
+TWITTER_BEARER_TOKEN=\$TWITTER_BEARER_TOKEN
+YOUTUBE_API_KEY=\$YOUTUBE_API_KEY
+REDDIT_CLIENT_ID=\$REDDIT_CLIENT_ID
+REDDIT_CLIENT_SECRET=\$REDDIT_CLIENT_SECRET
+REDDIT_ACCESS_TOKEN=\$REDDIT_ACCESS_TOKEN
 
-# Bot Developer IDs (comma-separated list of Discord user IDs)
-BOT_DEVELOPERS=1225485426349969518
+# Bot Developer IDs - loaded from environment
+BOT_DEVELOPERS=\$BOT_DEVELOPERS
 ENV_EOF
     echo '🚀 Starting Discord bot...'
     node index.js
