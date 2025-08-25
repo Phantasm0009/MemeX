@@ -38,6 +38,16 @@ app.get('/icon.png', (req, res) => {
   res.sendFile(path.join(__dirname, 'icon.png'));
 });
 
+// Serve favicon.ico file from root dashboard directory  
+app.get('/favicon.ico', (req, res) => {
+  res.sendFile(path.join(__dirname, 'favicon.ico'));
+});
+
+// Serve web app manifest
+app.get('/site.webmanifest', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'site.webmanifest'));
+});
+
 // Serve CSS and JS files from public directory
 app.use('/css', express.static(path.join(__dirname, 'public', 'css')));
 app.use('/js', express.static(path.join(__dirname, 'public', 'js')));

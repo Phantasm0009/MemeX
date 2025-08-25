@@ -1,0 +1,40 @@
+{
+    "name": "MemeX - Italian Meme Stock Exchange",
+    "short_name": "MemeX",
+    "description": "Trade Italian meme stocks in real-time with Discord bot integration",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#0a0a0a",
+    "theme_color": "#8b5cf6",
+    "orientation": "portrait-primary",
+    "icons": [
+        {
+            "src": "/favicon.ico",
+            "sizes": "16x16 24x24 32x32 48x48 64x64",
+            "type": "image/x-icon"
+        },
+        {
+            "src": "/favicon.ico",
+            "sizes": "192x192",
+            "type": "image/x-icon",
+            "purpose": "any maskable"
+        },
+        {
+            "src": "/favicon.ico",
+            "sizes": "512x512", 
+            "type": "image/x-icon",
+            "purpose": "any maskable"
+        }
+    ],
+    "categories": ["finance", "games", "entertainment"],
+    "lang": "en",
+    "scope": "/",
+    "screenshots": [
+        {
+            "src": "/favicon.ico",
+            "sizes": "1280x720",
+            "type": "image/x-icon",
+            "form_factor": "wide"
+        }
+    ]
+}
