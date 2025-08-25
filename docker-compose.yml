@@ -13,7 +13,7 @@ services:
       - BOT_DEVELOPERS=${BOT_DEVELOPERS}
       - SUPABASE_URL=${SUPABASE_URL}
       - SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
-      - BACKEND_URL=http://backend:3001
+      - BACKEND_URL=https://api.memexbot.xyz
       - TWITTER_BEARER_TOKEN=${TWITTER_BEARER_TOKEN}
       - YOUTUBE_API_KEY=${YOUTUBE_API_KEY}
       - REDDIT_CLIENT_ID=${REDDIT_CLIENT_ID}
@@ -76,7 +76,7 @@ services:
       - NODE_ENV=production
       - PORT=3002
       - DASHBOARD_PORT=3002
-      - BACKEND_URL=http://backend:3001
+      - BACKEND_URL=https://api.memexbot.xyz
     networks:
       - memex-network
     depends_on:
