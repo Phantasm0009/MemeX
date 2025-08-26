@@ -1,0 +1,36 @@
+User-agent: *
+Allow: /
+
+# Allow all search engines to crawl the site
+Allow: /pages/
+Allow: /api/
+Allow: /css/
+Allow: /js/
+
+# Sitemap location
+Sitemap: https://memexbot.xyz/sitemap.xml
+
+# Crawl delay (be nice to search engines)
+Crawl-delay: 1
+
+# Specific directives for major search engines
+User-agent: Googlebot
+Allow: /
+Crawl-delay: 1
+
+User-agent: Bingbot  
+Allow: /
+Crawl-delay: 1
+
+User-agent: Slurp
+Allow: /
+Crawl-delay: 1
+
+# Block sensitive endpoints
+Disallow: /api/admin/
+Disallow: /api/internal/
+
+# Allow favicon and manifest
+Allow: /favicon.ico
+Allow: /site.webmanifest
+Allow: /icon.png
