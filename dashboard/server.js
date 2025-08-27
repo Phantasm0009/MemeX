@@ -51,14 +51,18 @@ app.get('/site.webmanifest', (req, res) => {
 // Serve sitemap for SEO (explicit headers to satisfy crawlers)
 app.get('/sitemap.xml', (req, res) => {
   res.setHeader('Content-Type', 'application/xml; charset=UTF-8');
-  res.setHeader('Cache-Control', 'public, max-age=3600'); // 1 hour
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
   res.sendFile(path.join(__dirname, 'public', 'sitemap.xml'));
 });
 
 // Serve robots.txt for SEO (explicit headers)
 app.get('/robots.txt', (req, res) => {
   res.setHeader('Content-Type', 'text/plain; charset=UTF-8');
-  res.setHeader('Cache-Control', 'public, max-age=3600');
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
   res.sendFile(path.join(__dirname, 'public', 'robots.txt'));
 });
 
