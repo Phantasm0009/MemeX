@@ -6,6 +6,9 @@ import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import axios from 'axios';
+import { SitemapStream, streamToPromise } from 'sitemap';
+import { Readable } from 'stream';
+import fs from 'fs';
 
 dotenv.config();
 
@@ -23,6 +26,7 @@ const io = new Server(server, {
 
 const PORT = process.env.DASHBOARD_PORT || process.env.PORT || 3002;
 const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:3001';
+const PUBLIC_BASE_URL = process.env.PUBLIC_BASE_URL || 'https://memexbot.xyz';
 
 console.log('🚀 Starting Italian Meme Dashboard');
 console.log(`📊 Dashboard Port: ${PORT}`);
@@ -49,12 +53,79 @@ app.get('/site.webmanifest', (req, res) => {
 });
 
 // Serve sitemap for SEO (explicit headers to satisfy crawlers)
-app.get('/sitemap.xml', (req, res) => {
-  res.setHeader('Content-Type', 'application/xml; charset=UTF-8');
-  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-  res.setHeader('Pragma', 'no-cache');
-  res.setHeader('Expires', '0');
-  res.sendFile(path.join(__dirname, 'public', 'sitemap.xml'));
+// Simple in-memory cache for sitemap generation
+let sitemapCache = { xml: null, ts: 0 };
+const SITEMAP_TTL_MS = 60 * 60 * 1000; // 1 hour
+
+// Helper to collect links (static + dynamic)
+async function collectSitemapLinks() {
+  const links = [
+    { url: '/', changefreq: 'daily', priority: 1.0 },
+    { url: '/dashboard', changefreq: 'daily', priority: 0.9 },
+    { url: '/stock', changefreq: 'daily', priority: 0.8 },
+  ];
+
+  // Try backend for dynamic stock symbols
+  try {
+    const data = await fetchFromBackend('/api/market');
+    const market = data && (data.market || data);
+    if (market && typeof market === 'object') {
+      const symbols = Object.keys(market).slice(0, 100);
+      for (const sym of symbols) {
+        links.push({ url: `/stock/${encodeURIComponent(sym)}`, changefreq: 'daily', priority: 0.7 });
+      }
+      return links;
+    }
+  } catch (e) {
+    console.warn('Sitemap backend fetch failed, falling back to local market.json:', e.message);
+  }
+
+  // Fallback: local market.json
+  try {
+    const localMarketPath = path.join(__dirname, '..', 'market.json');
+    if (fs.existsSync(localMarketPath)) {
+      const market = JSON.parse(fs.readFileSync(localMarketPath, 'utf8'));
+      const symbols = Object.keys(market).slice(0, 100);
+      for (const sym of symbols) {
+        links.push({ url: `/stock/${encodeURIComponent(sym)}`, changefreq: 'daily', priority: 0.7 });
+      }
+    }
+  } catch (e) {
+    console.warn('Sitemap local market.json fallback failed:', e.message);
+  }
+
+  return links;
+}
+
+// Dynamic sitemap with caching
+app.get('/sitemap.xml', async (req, res) => {
+  try {
+    const now = Date.now();
+    if (sitemapCache.xml && (now - sitemapCache.ts) < SITEMAP_TTL_MS) {
+      res.setHeader('Content-Type', 'application/xml; charset=UTF-8');
+      res.setHeader('Cache-Control', 'public, max-age=3600');
+      return res.status(200).send(sitemapCache.xml);
+    }
+
+    const links = await collectSitemapLinks();
+    const stream = new SitemapStream({ hostname: PUBLIC_BASE_URL });
+    const xml = await streamToPromise(Readable.from(links).pipe(stream));
+
+    sitemapCache = { xml: xml.toString(), ts: now };
+
+    res.setHeader('Content-Type', 'application/xml; charset=UTF-8');
+    res.setHeader('Cache-Control', 'public, max-age=3600');
+    res.status(200).send(sitemapCache.xml);
+  } catch (error) {
+    console.error('Sitemap generation error:', error);
+    // Fallback to static file if available
+    try {
+      res.setHeader('Content-Type', 'application/xml; charset=UTF-8');
+      return res.sendFile(path.join(__dirname, 'public', 'sitemap.xml'));
+    } catch {
+      return res.status(500).end();
+    }
+  }
 });
 
 // Serve robots.txt for SEO (explicit headers)
