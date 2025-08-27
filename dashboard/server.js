@@ -48,15 +48,17 @@ app.get('/site.webmanifest', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'site.webmanifest'));
 });
 
-// Serve sitemap for SEO
+// Serve sitemap for SEO (explicit headers to satisfy crawlers)
 app.get('/sitemap.xml', (req, res) => {
-  res.type('application/xml');
+  res.setHeader('Content-Type', 'application/xml; charset=UTF-8');
+  res.setHeader('Cache-Control', 'public, max-age=3600'); // 1 hour
   res.sendFile(path.join(__dirname, 'public', 'sitemap.xml'));
 });
 
-// Serve robots.txt for SEO
+// Serve robots.txt for SEO (explicit headers)
 app.get('/robots.txt', (req, res) => {
-  res.type('text/plain');
+  res.setHeader('Content-Type', 'text/plain; charset=UTF-8');
+  res.setHeader('Cache-Control', 'public, max-age=3600');
   res.sendFile(path.join(__dirname, 'public', 'robots.txt'));
 });
 
