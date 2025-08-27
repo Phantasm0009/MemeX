@@ -13,7 +13,7 @@
     "dev": "concurrently \"npm run backend\" \"npm run dashboard\" \"npm start\"",
     "production": "concurrently \"npm run backend\" \"npm run dashboard\" \"npm start\"",
     "setup": "node setup.js",
-    "build": "npm ci --only=production",
+    "build": "npm install --only=production",
     "test": "echo \"No tests yet\" && exit 0",
     "test-deployment": "node test-deployment.js",
     "health": "node health-check.js",
