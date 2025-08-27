@@ -7,6 +7,7 @@ WORKDIR /app
 COPY package*.json ./
 
 # Install dependencies
+# Install dependencies
 RUN npm install --only=production && npm cache clean --force
 
 # Copy application code
