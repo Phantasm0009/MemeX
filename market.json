@@ -1,152 +1,152 @@
 {
   "SKIBI": {
-    "price": 0.06797657505358308,
-    "lastChange": 35.920767817566315,
+    "price": 0.75,
+    "lastChange": 0,
     "lastTikTokUpdate": 1755819003339,
     "change": 2.5464030112310603,
     "lastUpdate": 1755963900204,
     "timestamp": 1755973121498,
-    "high24h": 37.275525,
-    "low24h": 1.1246468183446545
+    "high24h": 0.75,
+    "low24h": 0.75
   },
   "SUS": {
-    "price": 941.2625312929739,
-    "lastChange": -6.461553395202236,
+    "price": 0.2,
+    "lastChange": 0,
     "lastTikTokUpdate": 1755819004608,
     "change": -0.3151815490809433,
     "lastUpdate": 1755963900204,
     "timestamp": 1755973121499,
-    "high24h": 191.58657159391947,
-    "low24h": 25.85
+    "high24h": 0.2,
+    "low24h": 0.2
   },
   "SAHUR": {
-    "price": 7.885256151639833,
-    "lastChange": 28.907600147625796,
+    "price": 1.1,
+    "lastChange": 0,
     "lastTikTokUpdate": 1755818705027,
     "change": -0.9756262141479758,
     "lastUpdate": 1755963900204,
     "timestamp": 1755973121499,
-    "high24h": 111.1383,
-    "low24h": 8.717002448935705
+    "high24h": 1.1,
+    "low24h": 1.1
   },
   "LABUB": {
-    "price": 2117668.8991897185,
-    "lastChange": 11.138006804498007,
+    "price": 4.5,
+    "lastChange": 0,
     "lastTikTokUpdate": 1755819006904,
     "change": -2.0559662167188897,
     "lastUpdate": 1755963900204,
     "timestamp": 1755973121499,
-    "high24h": 88179.53300350123,
-    "low24h": 541.075
+    "high24h": 4.5,
+    "low24h": 4.5
   },
   "OHIO": {
-    "price": 15785.30953219443,
-    "lastChange": 23.449906291396964,
+    "price": 1.25,
+    "lastChange": 0,
     "lastTikTokUpdate": 1755818707049,
     "change": -2.052198049984872,
     "lastUpdate": 1755963900204,
     "timestamp": 1755973121499,
-    "high24h": 12239.31756190788,
-    "low24h": 43.4
+    "high24h": 1.25,
+    "low24h": 1.25
   },
   "RIZZL": {
-    "price": 1040.5783977334927,
-    "lastChange": 8.972260347187722,
+    "price": 0.35,
+    "lastChange": 0,
     "lastTikTokUpdate": 1755819009126,
     "change": 1.7136294496003617,
     "lastUpdate": 1755963900204,
     "timestamp": 1755973121499,
-    "high24h": 628.9585350333564,
-    "low24h": 17.511000000000003
+    "high24h": 0.35,
+    "low24h": 0.35
   },
   "GYATT": {
-    "price": 0.016625509631634564,
-    "lastChange": 66.25509631634564,
+    "price": 0.15,
+    "lastChange": 0,
     "lastTikTokUpdate": 1755819010268,
     "change": -0.24892145193052073,
     "lastUpdate": 1755963900204,
     "timestamp": 1755973121499,
-    "high24h": 7.000624999999999,
-    "low24h": 0.020529144477694206
+    "high24h": 0.15,
+    "low24h": 0.15
   },
   "FRIED": {
-    "price": 0.3484455251184644,
-    "lastChange": 14.48740167329053,
+    "price": 0.1,
+    "lastChange": 0,
     "lastTikTokUpdate": 1755819011251,
     "change": -2.2243891132610507,
     "lastUpdate": 1755963900204,
     "timestamp": 1755973121500,
-    "high24h": 1.9561499999999998,
-    "low24h": 0.2590087626515751
+    "high24h": 0.1,
+    "low24h": 0.1
   },
   "SIGMA": {
-    "price": 183743.21316710688,
-    "lastChange": 17.587817277010625,
+    "price": 5,
+    "lastChange": 0,
     "lastTikTokUpdate": 1755819013649,
     "change": -1.8138351247739377,
     "lastUpdate": 1755963900204,
     "timestamp": 1755973121500,
-    "high24h": 25230.05433028506,
-    "low24h": 272.85
+    "high24h": 5,
+    "low24h": 5
   },
   "TRALA": {
-    "price": 11094.3349443317,
-    "lastChange": -5.799081494341031,
+    "price": 0.65,
+    "lastChange": 0,
     "lastTikTokUpdate": 1755449712760,
     "change": -1.1234120087191783,
     "lastUpdate": 1755963900204,
     "timestamp": 1755973121500,
-    "high24h": 1956.229480567255,
-    "low24h": 47.918
+    "high24h": 0.65,
+    "low24h": 0.65
   },
   "CROCO": {
-    "price": 10.130365598328465,
-    "lastChange": -31.643725539034428,
+    "price": 0.45,
+    "lastChange": 0,
     "lastTikTokUpdate": 1755819015946,
     "change": 1.4335782086674147,
     "lastUpdate": 1755963900204,
     "timestamp": 1755973121500,
-    "high24h": 27.42850251275979,
-    "low24h": 4.362500000000001
+    "high24h": 0.45,
+    "low24h": 0.45
   },
   "FANUM": {
-    "price": 6962.411591282209,
-    "lastChange": -6.292380080042396,
+    "price": 0.3,
+    "lastChange": 0,
     "lastTikTokUpdate": 1755819017041,
     "change": 0.0715660586848248,
     "lastUpdate": 1755963900204,
     "timestamp": 1755973121500,
-    "high24h": 872.9518787431945,
-    "low24h": 21.1375
+    "high24h": 0.3,
+    "low24h": 0.3
   },
   "CAPPU": {
-    "price": 344484.0235849222,
-    "lastChange": 7.144018638895062,
+    "price": 2.75,
+    "lastChange": 0,
     "lastTikTokUpdate": 1755819018014,
     "change": 0.6269519165280748,
     "lastUpdate": 1755963900204,
     "timestamp": 1755973121500,
-    "high24h": 61820.448323401564,
-    "low24h": 86.671
+    "high24h": 2.75,
+    "low24h": 2.75
   },
   "BANANI": {
-    "price": 12440.228016664067,
-    "lastChange": 16.91714615092412,
+    "price": 0.4,
+    "lastChange": 0,
     "change": -0.011600099892675075,
     "lastUpdate": 1755963900204,
     "timestamp": 1755973121500,
-    "high24h": 1466.025666629786,
-    "low24h": 23.4625
+    "high24h": 0.4,
+    "low24h": 0.4
   },
   "LARILA": {
-    "price": 17679.514391040655,
-    "lastChange": -5.295206943549704,
+    "price": 3.25,
+    "lastChange": 0,
     "lastTikTokUpdate": 1755819019991,
     "change": -0.5607228069275507,
     "lastUpdate": 1755963900204,
     "timestamp": 1755973121501,
-    "high24h": 15401.863741151261,
-    "low24h": 246.961
+    "high24h": 3.25,
+    "low24h": 3.25
   },
-  "lastEvent": "📉 Market crash! Most stocks -12% (LABUB protected, BANANI resilient)"
+  "lastEvent": "🔄 Market reset completed! 15 stocks returned to baseline prices."
 }

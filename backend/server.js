@@ -878,7 +878,7 @@ function getVolatility(level) {
 }
 
 // Full price updates every 5 minutes for optimal market timing
-cron.schedule('*/5 * * * *', async () => {
+cron.schedule('*/15 * * * *', async () => {
   const now = new Date();
   console.log(`⏰ Full market update (5min) - ${now.toLocaleTimeString()}`);
   try {

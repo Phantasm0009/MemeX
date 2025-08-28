@@ -16,11 +16,11 @@ function getRandomInRange(min, max) {
 
 function getVolatility(level) {
   switch (level) {
-    case 'low': return 0.08;      // 8% max change (much more exciting!)
-    case 'medium': return 0.15;   // 15% max change (was 3%)
-    case 'high': return 0.25;     // 25% max change (was 7%)
-    case 'extreme': return 0.45;  // 45% max change (was 15%)
-    default: return 0.15;         // Default to medium volatility
+    case 'low': return 0.02;      // 2% max change (reduced from 8%)
+    case 'medium': return 0.04;   // 4% max change (reduced from 15%)
+    case 'high': return 0.06;     // 6% max change (reduced from 25%)
+    case 'extreme': return 0.08;  // 8% max change (reduced from 45%)
+    default: return 0.04;         // Default to medium volatility
   }
 }
 
@@ -61,8 +61,8 @@ export async function updatePrices(triggers = {}, enableChaos = true) {
       return await updatePrices(triggers, enableChaos);
     }
     
-    // Add random chaos events (30% chance for much more excitement!)
-    if (enableChaos && Math.random() < 0.30) {
+    // Add random chaos events (10% chance for more stability)
+    if (enableChaos && Math.random() < 0.10) {
       const chaosEvent = getRandomChaosEvent();
       if (chaosEvent.lastEvent) {
         Object.assign(triggers, chaosEvent);
@@ -117,6 +117,13 @@ export async function updatePrices(triggers = {}, enableChaos = true) {
     // Calculate new price
     const priceMultiplier = 1 + randomChange + eventBonus + trendBoost;
     let newPrice = oldPrice * priceMultiplier;
+    
+    // Apply price cap protection to prevent runaway inflation
+    const maxPrice = stockMeta.maxPrice || 1000; // Default max price of $1000
+    if (newPrice > maxPrice) {
+      newPrice = maxPrice * 0.95; // Cap at 95% of max price with slight pullback
+      console.log(`💰 ${symbol} hit price cap of $${maxPrice}, applying correction`);
+    }
     
     // Apply minimum price for BANANI (Chimpanzini Bananini cannot drop below $0.20)
     if (symbol === 'BANANI' && stockMeta.minimumPrice) {
@@ -210,7 +217,8 @@ export function initializeMarket() {
         "name": "Skibidi Toilet",
         "italianName": "Gabibbi Toiletto",
         "specialPower": "pasta_hours",
-        "description": "Gains +30% during pasta-eating hours"
+        "description": "Gains +30% during pasta-eating hours",
+        "maxPrice": 100
       },
       "SUS": { 
         "volatility": "high", 
@@ -218,7 +226,8 @@ export function initializeMarket() {
         "name": "Among Us",
         "italianName": "Tra-I-Nostri", 
         "specialPower": "imposter_panic",
-        "description": "Imposter reports cause -20% panic dumps"
+        "description": "Imposter reports cause -20% panic dumps",
+        "maxPrice": 50
       },
       "SAHUR": { 
         "volatility": "extreme", 
@@ -226,7 +235,8 @@ export function initializeMarket() {
         "name": "Tun Tun Sahur",
         "italianName": "Tamburello Mistico",
         "specialPower": "pizza_emoji",
-        "description": "+15% when pizza emojis appear"
+        "description": "+15% when pizza emojis appear",
+        "maxPrice": 150
       },
       "LABUB": { 
         "volatility": "low", 
@@ -234,7 +244,8 @@ export function initializeMarket() {
         "name": "Labubu",
         "italianName": "Mostriciattolo",
         "specialPower": "sunday_immunity",
-        "description": "Immune to market crashes on Sundays"
+        "description": "Immune to market crashes on Sundays",
+        "maxPrice": 500
       },
       "OHIO": { 
         "volatility": "high", 
@@ -242,7 +253,8 @@ export function initializeMarket() {
         "name": "Ohio Final Boss",
         "italianName": "Caporetto Finale",
         "specialPower": "random_steal",
-        "description": "Randomly steals 5% from other stocks"
+        "description": "Randomly steals 5% from other stocks",
+        "maxPrice": 200
       },
       "RIZZL": { 
         "volatility": "medium", 
@@ -250,7 +262,8 @@ export function initializeMarket() {
         "name": "Rizzler",
         "italianName": "Casanova",
         "specialPower": "romance_boost",
-        "description": "+25% when romance novels are mentioned"
+        "description": "+25% when romance novels are mentioned",
+        "maxPrice": 75
       },
       "GYATT": { 
         "volatility": "extreme", 
@@ -258,7 +271,8 @@ export function initializeMarket() {
         "name": "Gyatt",
         "italianName": "Culone",
         "specialPower": "beach_hours",
-        "description": "Volatility doubles during beach hours"
+        "description": "Volatility doubles during beach hours",
+        "maxPrice": 30
       },
       "FRIED": { 
         "volatility": "high", 
@@ -266,7 +280,8 @@ export function initializeMarket() {
         "name": "Deep Fryer",
         "italianName": "Friggitrice",
         "specialPower": "oil_shortage",
-        "description": "+40% during olive oil shortage events"
+        "description": "+40% during olive oil shortage events",
+        "maxPrice": 25
       },
       "SIGMA": { 
         "volatility": "low", 
@@ -274,7 +289,8 @@ export function initializeMarket() {
         "name": "Sigma Male",
         "italianName": "Machio",
         "specialPower": "bear_flex",
-        "description": "Flexes on bears during market dips"
+        "description": "Flexes on bears during market dips",
+        "maxPrice": 750
       },
       "TRALA": { 
         "volatility": "medium", 
@@ -283,7 +299,8 @@ export function initializeMarket() {
         "italianName": "Tralalero Tralala",
         "specialPower": "sharknado",
         "description": "3-legged shark in Nike sneakers - +50% during sharknado events",
-        "coreItalian": true
+        "coreItalian": true,
+        "maxPrice": 100
       },
       "CROCO": { 
         "volatility": "extreme", 
@@ -292,7 +309,8 @@ export function initializeMarket() {
         "italianName": "Bombardiro Crocodilo",
         "specialPower": "random_nuke",
         "description": "Explosive reptile - Randomly nukes another stock (-100%)",
-        "coreItalian": true
+        "coreItalian": true,
+        "maxPrice": 80
       },
       "FANUM": { 
         "volatility": "medium", 
@@ -300,7 +318,8 @@ export function initializeMarket() {
         "name": "Fanum Tax",
         "italianName": "Tassa Nonna",
         "specialPower": "weekly_tax",
-        "description": "Steals 10% from portfolios weekly"
+        "description": "Steals 10% from portfolios weekly",
+        "maxPrice": 60
       },
       "CAPPU": { 
         "volatility": "medium", 
@@ -309,7 +328,8 @@ export function initializeMarket() {
         "italianName": "Ballerina Cappuccina",
         "specialPower": "espresso_shortage",
         "description": "Coffee-headed dancer - +20% during espresso shortages",
-        "coreItalian": true
+        "coreItalian": true,
+        "maxPrice": 400
       },
       "BANANI": { 
         "volatility": "low", 
@@ -319,7 +339,8 @@ export function initializeMarket() {
         "specialPower": "price_floor",
         "description": "Invincible ape - Cannot drop below $0.20",
         "coreItalian": true,
-        "minimumPrice": 0.20
+        "minimumPrice": 0.20,
+        "maxPrice": 50
       },
       "LARILA": { 
         "volatility": "high", 
@@ -328,7 +349,8 @@ export function initializeMarket() {
         "italianName": "Lirili Larila",
         "specialPower": "time_freeze",
         "description": "Time-controlling cactus-elephant - Freezes other stocks hourly",
-        "coreItalian": true
+        "coreItalian": true,
+        "maxPrice": 600
       }
     };
     fs.writeFileSync(metaPath, JSON.stringify(defaultMeta, null, 2));
@@ -363,4 +385,63 @@ export function getMarketStats() {
     neutralStocks: stockCount - positiveStocks - negativeStocks,
     stockCount
   };
+}
+
+// Reset all prices to default values
+export function resetPrices() {
+  try {
+    console.log('🔄 Resetting all stock prices to default values...');
+    
+    // Load current market data
+    let market = {};
+    if (fs.existsSync(marketPath)) {
+      market = JSON.parse(fs.readFileSync(marketPath, 'utf8'));
+    }
+    
+    // Default prices for all stocks
+    const defaultPrices = {
+      "SKIBI": 0.75,
+      "SUS": 0.20,
+      "SAHUR": 1.10,
+      "LABUB": 4.50,
+      "OHIO": 1.25,
+      "RIZZL": 0.35,
+      "GYATT": 0.15,
+      "FRIED": 0.10,
+      "SIGMA": 5.00,
+      "TRALA": 0.65,
+      "CROCO": 0.45,
+      "FANUM": 0.30,
+      "CAPPU": 2.75,
+      "BANANI": 0.40,
+      "LARILA": 3.25
+    };
+    
+    // Reset each stock price
+    let resetCount = 0;
+    for (const [symbol, defaultPrice] of Object.entries(defaultPrices)) {
+      if (market[symbol]) {
+        const oldPrice = market[symbol].price;
+        market[symbol].price = defaultPrice;
+        market[symbol].lastChange = 0;
+        market[symbol].high24h = defaultPrice;
+        market[symbol].low24h = defaultPrice;
+        console.log(`  ${symbol}: $${oldPrice.toFixed(2)} → $${defaultPrice}`);
+        resetCount++;
+      }
+    }
+    
+    // Add reset event message
+    market.lastEvent = `🔄 Market reset completed! ${resetCount} stocks returned to baseline prices.`;
+    
+    // Save the reset market
+    fs.writeFileSync(marketPath, JSON.stringify(market, null, 2));
+    
+    console.log(`✅ Price reset complete! ${resetCount} stocks reset to default values.`);
+    return { success: true, resetCount, message: market.lastEvent };
+    
+  } catch (error) {
+    console.error('❌ Error resetting prices:', error);
+    return { success: false, error: error.message };
+  }
 }

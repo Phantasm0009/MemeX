@@ -590,7 +590,7 @@ initializeFiles();
 cleanupMarketData();
 
 // Simple price update scheduler (every 5 minutes)
-cron.schedule('*/5 * * * *', () => {
+cron.schedule('*/15 * * * *', () => {
   console.log('⏰ Scheduled price update triggered');
   try {
     const market = JSON.parse(fs.readFileSync(marketPath));

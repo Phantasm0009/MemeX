@@ -5,6 +5,7 @@ import { fileURLToPath } from 'url';
 import { updateMarketPrices } from '../utils/marketAPI.js';
 import { updateUserBalance, getUser, getAllStocks } from '../utils/supabaseDb.js';
 import { getRandomChaosEvent } from '../utils/triggers.js';
+import { resetPrices } from '../utils/priceUpdater.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -359,42 +360,41 @@ export default {
         
       } else if (subcommand === 'resetmarket') {
         try {
-          // Default stocks with proper pricing
-          const defaultMarket = {
-            "SKIBI": { price: 42.50, lastChange: 0, name: "Skibidi Toilet", timestamp: Date.now(), high24h: 42.50, low24h: 42.50, volume24h: 0 },
-            "SUS": { price: 13.37, lastChange: 0, name: "Among Us", timestamp: Date.now(), high24h: 13.37, low24h: 13.37, volume24h: 0 },
-            "SAHUR": { price: 88.88, lastChange: 0, name: "Tun Tun Sahur", timestamp: Date.now(), high24h: 88.88, low24h: 88.88, volume24h: 0 },
-            "LABUB": { price: 156.90, lastChange: 0, name: "Labubu", timestamp: Date.now(), high24h: 156.90, low24h: 156.90, volume24h: 0 },
-            "OHIO": { price: 69.42, lastChange: 0, name: "Ohio Memes", timestamp: Date.now(), high24h: 69.42, low24h: 69.42, volume24h: 0 },
-            "RIZZL": { price: 420.69, lastChange: 0, name: "Rizz Lord", timestamp: Date.now(), high24h: 420.69, low24h: 420.69, volume24h: 0 },
-            "GYATT": { price: 777.77, lastChange: 0, name: "Gyatt Meme", timestamp: Date.now(), high24h: 777.77, low24h: 777.77, volume24h: 0 },
-            "FRIED": { price: 35.20, lastChange: 0, name: "Fried Chicken", timestamp: Date.now(), high24h: 35.20, low24h: 35.20, volume24h: 0 },
-            "SIGMA": { price: 999.99, lastChange: 0, name: "Sigma Male", timestamp: Date.now(), high24h: 999.99, low24h: 999.99, volume24h: 0 },
-            "TRALA": { price: 25.75, lastChange: 0, name: "Tra La La", timestamp: Date.now(), high24h: 25.75, low24h: 25.75, volume24h: 0 },
-            "CROCO": { price: 180.45, lastChange: 0, name: "Crocodile Meme", timestamp: Date.now(), high24h: 180.45, low24h: 180.45, volume24h: 0 }
-          };
+          const result = resetPrices();
           
-          const defaultMeta = {
-            "SKIBI": { volatility: "extreme", italian: true, name: "Skibidi Toilet", description: "🇮🇹 Gains +30% during pasta-eating hours" },
-            "SUS": { volatility: "high", italian: false, name: "Among Us", description: "Imposter reports cause -20% panic dumps" },
-            "SAHUR": { volatility: "medium", italian: true, name: "Tun Tun Sahur", description: "🇮🇹 +15% when pizza emojis appear" },
-            "LABUB": { volatility: "low", italian: false, name: "Labubu", description: "Immune to market crashes on Sundays" },
-            "OHIO": { volatility: "extreme", italian: false, name: "Ohio Memes", description: "Randomly steals 5% from other stocks" },
-            "RIZZL": { volatility: "high", italian: true, name: "Rizz Lord", description: "🇮🇹 +25% when romance novels are mentioned" },
-            "GYATT": { volatility: "extreme", italian: false, name: "Gyatt Meme", description: "Volatility doubles during beach hours" },
-            "FRIED": { volatility: "medium", italian: true, name: "Fried Chicken", description: "🇮🇹 +40% during olive oil shortage events" },
-            "SIGMA": { volatility: "low", italian: false, name: "Sigma Male", description: "Alpha energy protects from market crashes" },
-            "TRALA": { volatility: "medium", italian: true, name: "Tra La La", description: "🇮🇹 Musical meme with steady growth" },
-            "CROCO": { volatility: "high", italian: false, name: "Crocodile Meme", description: "Snaps back from losses quickly" }
-          };
-          
-          fs.writeFileSync(marketPath, JSON.stringify(defaultMarket, null, 2));
-          fs.writeFileSync(metaPath, JSON.stringify(defaultMeta, null, 2));
-          
-          await interaction.editReply('🔄 Market reset to default values! All stocks restored with proper pricing.');
+          if (result.success) {
+            const resetEmbed = new EmbedBuilder()
+              .setColor('#00ff00')
+              .setTitle('🔄 Market Reset Complete!')
+              .setDescription(`✅ Successfully reset ${result.resetCount} stocks to baseline prices`)
+              .addFields(
+                { name: '📈 Reset Stocks', value: `${result.resetCount} stocks restored`, inline: true },
+                { name: '💰 New Price Range', value: '$0.10 - $5.00', inline: true },
+                { name: '⚡ Volatility', value: 'Reduced to stable levels', inline: true }
+              )
+              .addFields({
+                name: '📋 Default Prices Restored',
+                value: '```\nSKIBI: $0.75  SUS: $0.20    SAHUR: $1.10\nLABUB: $4.50  OHIO: $1.25   RIZZL: $0.35\nGYATT: $0.15  FRIED: $0.10  SIGMA: $5.00\nTRALA: $0.65  CROCO: $0.45  FANUM: $0.30\nCAPPU: $2.75  BANANI: $0.40 LARILA: $3.25```'
+              })
+              .setFooter({ text: 'All price caps and stability features activated' })
+              .setTimestamp();
+            
+            await interaction.editReply({ embeds: [resetEmbed] });
+            
+            // Also update the backend if available
+            try {
+              await updateMarketPrices();
+              console.log('✅ Backend market data synced after reset');
+            } catch (syncError) {
+              console.log('⚠️ Backend sync failed after reset:', syncError.message);
+            }
+            
+          } else {
+            await interaction.editReply(`❌ Error resetting market: ${result.error}`);
+          }
         } catch (error) {
           console.error('Error resetting market:', error);
-          await interaction.editReply('❌ Error resetting market!');
+          await interaction.editReply('❌ Unexpected error during market reset!');
         }
         
       } else if (subcommand === 'startevent') {
