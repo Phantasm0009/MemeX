@@ -24,6 +24,35 @@ function getVolatility(level) {
   }
 }
 
+// Helper function to calculate resistance zone
+function getResistanceZone(price, maxPrice) {
+  const ratio = price / maxPrice;
+  if (ratio >= 0.95) return 'strong';
+  if (ratio >= 0.80) return 'medium';
+  return 'none';
+}
+
+// Helper function to get resistance multiplier and drift
+function getResistanceEffects(resistanceZone) {
+  switch (resistanceZone) {
+    case 'strong':
+      return {
+        volatilityMultiplier: 0.25,
+        drift: -0.005 - (Math.random() * 0.015) // -0.5% to -2%
+      };
+    case 'medium':
+      return {
+        volatilityMultiplier: 0.5,
+        drift: -0.001 - (Math.random() * 0.004) // -0.1% to -0.5%
+      };
+    default:
+      return {
+        volatilityMultiplier: 1.0,
+        drift: 0
+      };
+  }
+}
+
 export async function updatePrices(triggers = {}, enableChaos = true) {
   try {
     if (!fs.existsSync(marketPath) || !fs.existsSync(metaPath)) {
@@ -114,15 +143,29 @@ export async function updatePrices(triggers = {}, enableChaos = true) {
       console.log(`Trend fetch error for ${symbol}:`, error.message);
     }
     
-    // Calculate new price
-    const priceMultiplier = 1 + randomChange + eventBonus + trendBoost;
+    // 🚀 SOFT RESISTANCE MECHANIC
+    const maxPrice = stockMeta.maxPrice || 1000;
+    const resistanceZone = getResistanceZone(oldPrice, maxPrice);
+    const { volatilityMultiplier, drift: resistanceDrift } = getResistanceEffects(resistanceZone);
+    
+    let adjustedVolatility = volatility * volatilityMultiplier;
+    
+    // Log resistance zone activity
+    if (resistanceZone !== 'none') {
+      const priceRatio = oldPrice / maxPrice;
+      console.log(`� ${symbol} in ${resistanceZone} resistance zone (${(priceRatio * 100).toFixed(1)}% of $${maxPrice} max)`);
+    }
+    
+    // Calculate price change with adjusted volatility and resistance
+    const adjustedRandomChange = getRandomInRange(-adjustedVolatility, adjustedVolatility);
+    const totalPriceChange = adjustedRandomChange + eventBonus + trendBoost + resistanceDrift;
+    const priceMultiplier = 1 + totalPriceChange;
     let newPrice = oldPrice * priceMultiplier;
     
-    // Apply price cap protection to prevent runaway inflation
-    const maxPrice = stockMeta.maxPrice || 1000; // Default max price of $1000
+    // Hard cap at maxPrice (final safety net)
     if (newPrice > maxPrice) {
-      newPrice = maxPrice * 0.95; // Cap at 95% of max price with slight pullback
-      console.log(`💰 ${symbol} hit price cap of $${maxPrice}, applying correction`);
+      newPrice = maxPrice;
+      console.log(`💰 ${symbol} hit hard price cap at $${maxPrice}`);
     }
     
     // Apply minimum price for BANANI (Chimpanzini Bananini cannot drop below $0.20)
@@ -144,12 +187,24 @@ export async function updatePrices(triggers = {}, enableChaos = true) {
       console.log(`⚠️ Failed to save price history for ${symbol}:`, historyError.message);
     }
     
-    // Log significant changes (lowered threshold for more excitement)
-    const totalChange = (eventBonus + trendBoost) * 100;
-    if (Math.abs(totalChange) > 1) { // Was 3, now 1 for more logging
+    // Log significant changes and resistance mechanics
+    const eventTrendChange = (eventBonus + trendBoost) * 100;
+    const actualChange = ((newPrice - oldPrice) / oldPrice) * 100;
+    
+    if (Math.abs(eventTrendChange) > 1 || Math.abs(resistanceDrift * 100) > 0.1) {
       const stockName = stockMeta.name || symbol;
       const italianName = stockMeta.italianName || stockName;
-      console.log(`${symbol} (${italianName}): ${totalChange > 0 ? '+' : ''}${totalChange.toFixed(1)}% (Event: ${(eventBonus * 100).toFixed(1)}%, Trend: ${(trendBoost * 100).toFixed(1)}%)`);
+      let logMessage = `${symbol} (${italianName}): ${actualChange > 0 ? '+' : ''}${actualChange.toFixed(1)}%`;
+      
+      if (Math.abs(eventTrendChange) > 0.1) {
+        logMessage += ` (Event: ${(eventBonus * 100).toFixed(1)}%, Trend: ${(trendBoost * 100).toFixed(1)}%)`;
+      }
+      
+      if (Math.abs(resistanceDrift * 100) > 0.1) {
+        logMessage += ` [Resistance: ${(resistanceDrift * 100).toFixed(1)}%]`;
+      }
+      
+      console.log(logMessage);
     }
     
     // Special price protection log for BANANI
@@ -218,7 +273,7 @@ export function initializeMarket() {
         "italianName": "Gabibbi Toiletto",
         "specialPower": "pasta_hours",
         "description": "Gains +30% during pasta-eating hours",
-        "maxPrice": 100
+        "maxPrice": 750  // Ultra-meme trending stock
       },
       "SUS": { 
         "volatility": "high", 
@@ -227,7 +282,7 @@ export function initializeMarket() {
         "italianName": "Tra-I-Nostri", 
         "specialPower": "imposter_panic",
         "description": "Imposter reports cause -20% panic dumps",
-        "maxPrice": 50
+        "maxPrice": 350  // Mid-tier classic meme
       },
       "SAHUR": { 
         "volatility": "extreme", 
@@ -236,7 +291,7 @@ export function initializeMarket() {
         "italianName": "Tamburello Mistico",
         "specialPower": "pizza_emoji",
         "description": "+15% when pizza emojis appear",
-        "maxPrice": 150
+        "maxPrice": 200  // Niche Italian meme
       },
       "LABUB": { 
         "volatility": "low", 
@@ -245,7 +300,7 @@ export function initializeMarket() {
         "italianName": "Mostriciattolo",
         "specialPower": "sunday_immunity",
         "description": "Immune to market crashes on Sundays",
-        "maxPrice": 500
+        "maxPrice": 600  // Premium collectible meme
       },
       "OHIO": { 
         "volatility": "high", 
@@ -254,7 +309,7 @@ export function initializeMarket() {
         "italianName": "Caporetto Finale",
         "specialPower": "random_steal",
         "description": "Randomly steals 5% from other stocks",
-        "maxPrice": 200
+        "maxPrice": 800  // Ultra-meme trending stock
       },
       "RIZZL": { 
         "volatility": "medium", 
@@ -263,7 +318,7 @@ export function initializeMarket() {
         "italianName": "Casanova",
         "specialPower": "romance_boost",
         "description": "+25% when romance novels are mentioned",
-        "maxPrice": 75
+        "maxPrice": 400  // Mid-tier classic meme
       },
       "GYATT": { 
         "volatility": "extreme", 
@@ -272,7 +327,7 @@ export function initializeMarket() {
         "italianName": "Culone",
         "specialPower": "beach_hours",
         "description": "Volatility doubles during beach hours",
-        "maxPrice": 30
+        "maxPrice": 150  // Niche/dead meme
       },
       "FRIED": { 
         "volatility": "high", 
@@ -281,7 +336,7 @@ export function initializeMarket() {
         "italianName": "Friggitrice",
         "specialPower": "oil_shortage",
         "description": "+40% during olive oil shortage events",
-        "maxPrice": 25
+        "maxPrice": 100  // Niche/dead meme
       },
       "SIGMA": { 
         "volatility": "low", 
@@ -290,7 +345,7 @@ export function initializeMarket() {
         "italianName": "Machio",
         "specialPower": "bear_flex",
         "description": "Flexes on bears during market dips",
-        "maxPrice": 750
+        "maxPrice": 900  // Ultra-meme trending stock
       },
       "TRALA": { 
         "volatility": "medium", 
@@ -300,7 +355,7 @@ export function initializeMarket() {
         "specialPower": "sharknado",
         "description": "3-legged shark in Nike sneakers - +50% during sharknado events",
         "coreItalian": true,
-        "maxPrice": 100
+        "maxPrice": 180  // Niche/dead meme
       },
       "CROCO": { 
         "volatility": "extreme", 
@@ -310,7 +365,7 @@ export function initializeMarket() {
         "specialPower": "random_nuke",
         "description": "Explosive reptile - Randomly nukes another stock (-100%)",
         "coreItalian": true,
-        "maxPrice": 80
+        "maxPrice": 220  // Niche/dead meme
       },
       "FANUM": { 
         "volatility": "medium", 
@@ -319,7 +374,7 @@ export function initializeMarket() {
         "italianName": "Tassa Nonna",
         "specialPower": "weekly_tax",
         "description": "Steals 10% from portfolios weekly",
-        "maxPrice": 60
+        "maxPrice": 300  // Mid-tier classic meme
       },
       "CAPPU": { 
         "volatility": "medium", 
@@ -329,7 +384,7 @@ export function initializeMarket() {
         "specialPower": "espresso_shortage",
         "description": "Coffee-headed dancer - +20% during espresso shortages",
         "coreItalian": true,
-        "maxPrice": 400
+        "maxPrice": 450  // Mid-tier classic meme
       },
       "BANANI": { 
         "volatility": "low", 
@@ -340,7 +395,7 @@ export function initializeMarket() {
         "description": "Invincible ape - Cannot drop below $0.20",
         "coreItalian": true,
         "minimumPrice": 0.20,
-        "maxPrice": 50
+        "maxPrice": 65   // Joke/penny stock
       },
       "LARILA": { 
         "volatility": "high", 
@@ -350,7 +405,7 @@ export function initializeMarket() {
         "specialPower": "time_freeze",
         "description": "Time-controlling cactus-elephant - Freezes other stocks hourly",
         "coreItalian": true,
-        "maxPrice": 600
+        "maxPrice": 550  // Premium collectible meme
       }
     };
     fs.writeFileSync(metaPath, JSON.stringify(defaultMeta, null, 2));
