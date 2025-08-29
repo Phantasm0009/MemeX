@@ -1034,7 +1034,6 @@
                 <div class="stock-chart-container">
                     <canvas id="stock-detail-chart"></canvas>
                 </div>
-                
                 <div class="two-column-layout">
                     <div class="news-feed">
                         <h3>📰 News Feed</h3>
@@ -1042,7 +1041,6 @@
                         <div class="news-item">Reddit is going crazy for 🚀 STONK</div>
                         <div class="news-item">"This stock only goes up" — Famous Last Words</div>
                     </div>
-                    
                     <div class="stock-metrics">
                         <div class="metric-card">
                             <div class="metric-value">432</div>
@@ -1054,6 +1052,21 @@
                         </div>
                     </div>
                 </div>
+            </div>
+        </section>
+
+        <!-- Stock Comparison Panel -->
+        <section class="stock-compare-panel" id="stock-compare-panel" style="margin:2rem 0; background:var(--bg-card); border-radius:12px; padding:2rem; border:1px solid var(--border-color);">
+            <h2 style="font-size:1.3rem; font-weight:700; margin-bottom:1rem; color:var(--color-accent);"><i class="fas fa-balance-scale"></i> Compare Two Stocks</h2>
+            <div style="display:flex; gap:1rem; align-items:center; flex-wrap:wrap; margin-bottom:1rem;">
+                <label for="compare-stock-1">Stock 1:</label>
+                <select id="compare-stock-1" style="padding:0.5rem 1rem; border-radius:6px; border:1px solid var(--border-color); background:var(--bg-secondary); color:var(--text-primary);"></select>
+                <label for="compare-stock-2">Stock 2:</label>
+                <select id="compare-stock-2" style="padding:0.5rem 1rem; border-radius:6px; border:1px solid var(--border-color); background:var(--bg-secondary); color:var(--text-primary);"></select>
+                <button id="compare-btn" style="padding:0.5rem 1.5rem; border-radius:6px; background:var(--color-accent); color:#fff; border:none; font-weight:600; cursor:pointer;">Compare</button>
+            </div>
+            <div class="stock-chart-container" style="min-height:320px;">
+                <canvas id="compare-chart"></canvas>
             </div>
         </section>
 
@@ -1774,20 +1787,109 @@
             }
         }
 
-        // Initialize dashboard on page load
+        // --- Stock Comparison Feature ---
+        function populateCompareDropdowns() {
+            const select1 = document.getElementById('compare-stock-1');
+            const select2 = document.getElementById('compare-stock-2');
+            if (!select1 || !select2) return;
+            select1.innerHTML = '';
+            select2.innerHTML = '';
+            Object.keys(stockData).forEach(symbol => {
+                const option1 = document.createElement('option');
+                option1.value = symbol;
+                option1.textContent = `${stockEmojis[symbol] || ''} ${symbol}`;
+                select1.appendChild(option1);
+                const option2 = document.createElement('option');
+                option2.value = symbol;
+                option2.textContent = `${stockEmojis[symbol] || ''} ${symbol}`;
+                select2.appendChild(option2);
+            });
+            select2.selectedIndex = 1; // Default to different stocks
+        }
+
+        function generateSampleHistory(price, n = 24) {
+            const arr = [];
+            let p = price;
+            for (let i = 0; i < n; i++) {
+                const change = (Math.random() - 0.5) * 0.08;
+                p = Math.max(0.01, p * (1 + change));
+                arr.push(parseFloat(p.toFixed(2)));
+            }
+            return arr;
+        }
+
+        let compareChart = null;
+        function drawCompareChart(symbol1, symbol2) {
+            const ctx = document.getElementById('compare-chart').getContext('2d');
+            if (compareChart) compareChart.destroy();
+            const price1 = stockData[symbol1]?.price || 1;
+            const price2 = stockData[symbol2]?.price || 1;
+            const data1 = generateSampleHistory(price1);
+            const data2 = generateSampleHistory(price2);
+            compareChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: Array.from({length: 24}, (_, i) => `${i}:00`),
+                    datasets: [
+                        {
+                            label: `${stockEmojis[symbol1] || ''} ${symbol1}`,
+                            data: data1,
+                            borderColor: '#00ff88',
+                            backgroundColor: 'rgba(0,255,136,0.08)',
+                            borderWidth: 3,
+                            fill: false,
+                            tension: 0.4,
+                            pointRadius: 0,
+                            pointHoverRadius: 6
+                        },
+                        {
+                            label: `${stockEmojis[symbol2] || ''} ${symbol2}`,
+                            data: data2,
+                            borderColor: '#8b5cf6',
+                            backgroundColor: 'rgba(139,92,246,0.08)',
+                            borderWidth: 3,
+                            fill: false,
+                            tension: 0.4,
+                            pointRadius: 0,
+                            pointHoverRadius: 6
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { labels: { color: '#fff' } }
+                    },
+                    scales: {
+                        x: { ticks: { color: '#b3b3b3' }, grid: { color: '#333' } },
+                        y: { ticks: { color: '#b3b3b3', callback: v => '$' + v.toFixed(2) }, grid: { color: '#333' } }
+                    }
+                }
+            });
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
             // Set up logo image error handling
             const logoImg = document.querySelector('.logo-icon img');
             if (logoImg) {
                 logoImg.onerror = handleLogoError;
-                
-                // Also check if image is already broken
-                if (!logoImg.complete || logoImg.naturalHeight === 0) {
-                    handleLogoError();
-                }
+                if (!logoImg.complete || logoImg.naturalHeight === 0) handleLogoError();
             }
-            
             initDashboard();
+            // Stock compare feature
+            setTimeout(() => {
+                populateCompareDropdowns();
+                document.getElementById('compare-btn').onclick = function() {
+                    const s1 = document.getElementById('compare-stock-1').value;
+                    const s2 = document.getElementById('compare-stock-2').value;
+                    if (s1 && s2 && s1 !== s2) drawCompareChart(s1, s2);
+                };
+                // Draw initial chart
+                const s1 = document.getElementById('compare-stock-1').value;
+                const s2 = document.getElementById('compare-stock-2').value;
+                if (s1 && s2 && s1 !== s2) drawCompareChart(s1, s2);
+            }, 500);
         });
     </script>
 </body>
